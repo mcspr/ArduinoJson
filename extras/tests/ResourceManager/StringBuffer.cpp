@@ -2,7 +2,7 @@
 // Copyright © 2014-2025, Benoit BLANCHON
 // MIT License
 
-#include <ArduinoJson/Memory/StringBuffer.hpp>
+#include <ArduinoJson.hpp>
 #include <catch.hpp>
 
 #include "Allocators.hpp"
@@ -22,7 +22,7 @@ TEST_CASE("StringBuffer") {
     sb.save(&variant);
 
     REQUIRE(variant.type() == VariantType::TinyString);
-    REQUIRE(variant.asString() == "hi!");
+    REQUIRE(variant.asString(&resources) == "hi!");
   }
 
   SECTION("Tiny string can't contain NUL") {
@@ -32,7 +32,7 @@ TEST_CASE("StringBuffer") {
 
     REQUIRE(variant.type() == VariantType::OwnedString);
 
-    auto str = variant.asString();
+    auto str = variant.asString(&resources);
     REQUIRE(str.size() == 3);
     REQUIRE(str.c_str()[0] == 'a');
     REQUIRE(str.c_str()[1] == 0);
@@ -45,6 +45,6 @@ TEST_CASE("StringBuffer") {
     sb.save(&variant);
 
     REQUIRE(variant.type() == VariantType::OwnedString);
-    REQUIRE(variant.asString() == "alfa");
+    REQUIRE(variant.asString(&resources) == "alfa");
   }
 }

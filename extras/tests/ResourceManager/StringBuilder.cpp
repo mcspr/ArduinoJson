@@ -2,7 +2,7 @@
 // Copyright © 2014-2025, Benoit BLANCHON
 // MIT License
 
-#include <ArduinoJson/Memory/StringBuilder.hpp>
+#include <ArduinoJson.hpp>
 #include <catch.hpp>
 
 #include "Allocators.hpp"
@@ -46,7 +46,7 @@ TEST_CASE("StringBuilder") {
 
     REQUIRE(resources.overflowed() == false);
     REQUIRE(data.type() == VariantType::TinyString);
-    REQUIRE(data.asString() == "url");
+    REQUIRE(data.asString(&resources) == "url");
   }
 
   SECTION("Short string fits in first allocation") {
@@ -134,9 +134,10 @@ TEST_CASE("StringBuilder::save() deduplicates strings") {
     auto s2 = saveString(builder, "world");
     auto s3 = saveString(builder, "hello");
 
-    REQUIRE(s1.asString() == "hello");
-    REQUIRE(s2.asString() == "world");
-    REQUIRE(+s1.asString().c_str() == +s3.asString().c_str());  // same address
+    REQUIRE(s1.asString(&resources) == "hello");
+    REQUIRE(s2.asString(&resources) == "world");
+    REQUIRE(+s1.asString(&resources).c_str() ==
+            +s3.asString(&resources).c_str());  // same address
 
     REQUIRE(spy.log() ==
             AllocatorLog{
@@ -152,10 +153,10 @@ TEST_CASE("StringBuilder::save() deduplicates strings") {
     auto s1 = saveString(builder, "hello world");
     auto s2 = saveString(builder, "hello");
 
-    REQUIRE(s1.asString() == "hello world");
-    REQUIRE(s2.asString() == "hello");
-    REQUIRE(+s2.asString().c_str() !=
-            +s1.asString().c_str());  // different address
+    REQUIRE(s1.asString(&resources) == "hello world");
+    REQUIRE(s2.asString(&resources) == "hello");
+    REQUIRE(+s2.asString(&resources).c_str() !=
+            +s1.asString(&resources).c_str());  // different address
 
     REQUIRE(spy.log() ==
             AllocatorLog{
@@ -170,10 +171,10 @@ TEST_CASE("StringBuilder::save() deduplicates strings") {
     auto s1 = saveString(builder, "hello world");
     auto s2 = saveString(builder, "worl");
 
-    REQUIRE(s1.asString() == "hello world");
-    REQUIRE(s2.asString() == "worl");
-    REQUIRE(s2.asString().c_str() !=
-            s1.asString().c_str());  // different address
+    REQUIRE(s1.asString(&resources) == "hello world");
+    REQUIRE(s2.asString(&resources) == "worl");
+    REQUIRE(s2.asString(&resources).c_str() !=
+            s1.asString(&resources).c_str());  // different address
 
     REQUIRE(spy.log() ==
             AllocatorLog{

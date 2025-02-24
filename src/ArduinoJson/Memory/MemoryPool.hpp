@@ -34,6 +34,11 @@ class Slot {
     return ptr_;
   }
 
+  T& operator*() const {
+    ARDUINOJSON_ASSERT(ptr_ != nullptr);
+    return *ptr_;
+  }
+
   T* operator->() const {
     ARDUINOJSON_ASSERT(ptr_ != nullptr);
     return ptr_;
@@ -74,6 +79,14 @@ class MemoryPool {
   T* getSlot(SlotId id) const {
     ARDUINOJSON_ASSERT(id < usage_);
     return slots_ + id;
+  }
+
+  SlotId find(const T& value) const {
+    for (SlotId i = 0; i < usage_; i++) {
+      if (slots_[i] == value)
+        return i;
+    }
+    return NULL_SLOT;
   }
 
   void clear() {

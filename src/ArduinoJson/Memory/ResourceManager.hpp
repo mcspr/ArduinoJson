@@ -34,6 +34,7 @@ class ResourceManager {
   ~ResourceManager() {
     stringPool_.clear(allocator_);
     variantPools_.clear(allocator_);
+    staticStringsPools_.clear(allocator_);
   }
 
   ResourceManager(const ResourceManager&) = delete;
@@ -42,6 +43,7 @@ class ResourceManager {
   friend void swap(ResourceManager& a, ResourceManager& b) {
     swap(a.stringPool_, b.stringPool_);
     swap(a.variantPools_, b.variantPools_);
+    swap(a.staticStringsPools_, b.staticStringsPools_);
     swap_(a.allocator_, b.allocator_);
     swap_(a.overflowed_, b.overflowed_);
   }
@@ -111,14 +113,34 @@ class ResourceManager {
     stringPool_.dereference(s, allocator_);
   }
 
+  SlotId saveStaticString(const char* s) {
+    auto existingSlotId = staticStringsPools_.find(s);
+    if (existingSlotId != NULL_SLOT)
+      return existingSlotId;
+
+    auto slot = staticStringsPools_.allocSlot(allocator_);
+    if (slot)
+      *slot = s;
+    else
+      overflowed_ = true;
+
+    return slot.id();
+  }
+
+  const char* getStaticString(SlotId id) const {
+    return *staticStringsPools_.getSlot(id);
+  }
+
   void clear() {
-    variantPools_.clear(allocator_);
     overflowed_ = false;
+    variantPools_.clear(allocator_);
     stringPool_.clear(allocator_);
+    staticStringsPools_.clear(allocator_);
   }
 
   void shrinkToFit() {
     variantPools_.shrinkToFit(allocator_);
+    staticStringsPools_.shrinkToFit(allocator_);
   }
 
  private:
@@ -126,6 +148,7 @@ class ResourceManager {
   bool overflowed_;
   StringPool stringPool_;
   MemoryPoolList<SlotData> variantPools_;
+  MemoryPoolList<const char*> staticStringsPools_;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

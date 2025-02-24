@@ -23,7 +23,9 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     REQUIRE(result == true);
     CHECK(variant ==
           "hello"_s);  // linked string cannot contain '\0' at the moment
-    CHECK(spy.log() == AllocatorLog{});
+    CHECK(spy.log() == AllocatorLog{
+                           Allocate(sizeofStaticStringPool()),
+                       });
   }
 
   SECTION("const char*") {
@@ -149,7 +151,9 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
 
     REQUIRE(result == true);
     REQUIRE(variant == "world");  // stores by pointer
-    REQUIRE(spy.log() == AllocatorLog{});
+    REQUIRE(spy.log() == AllocatorLog{
+                             Allocate(sizeofStaticStringPool()),
+                         });
   }
 
   SECTION("non-static JsonString") {
@@ -264,6 +268,20 @@ TEST_CASE("JsonVariant::set() with not enough memory") {
   JsonDocument doc(FailingAllocator::instance());
 
   JsonVariant v = doc.to<JsonVariant>();
+
+  SECTION("string literal") {
+    bool result = v.set("hello world");
+
+    REQUIRE(result == false);
+    REQUIRE(v.isNull());
+  }
+
+  SECTION("static JsonString") {
+    bool result = v.set(JsonString("hello world", true));
+
+    REQUIRE(result == false);
+    REQUIRE(v.isNull());
+  }
 
   SECTION("std::string") {
     bool result = v.set("hello world!!"_s);

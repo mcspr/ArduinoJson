@@ -56,13 +56,10 @@ union VariantContent {
   bool asBoolean;
   uint32_t asUint32;
   int32_t asInt32;
-#if ARDUINOJSON_USE_EXTENSIONS
   SlotId asSlotId;
-#endif
   ArrayData asArray;
   ObjectData asObject;
   CollectionData asCollection;
-  const char* asLinkedString;
   struct StringNode* asOwnedString;
   char asTinyString[tinyStringMaxLength + 1];
 };
