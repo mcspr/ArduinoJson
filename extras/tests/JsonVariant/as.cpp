@@ -183,6 +183,7 @@ TEST_CASE("JsonVariant::as()") {
     variant.set("42");
 
     REQUIRE(variant.as<long>() == 42L);
+    REQUIRE(variant.as<double>() == 42);
     REQUIRE(variant.as<JsonString>() == "42");
     REQUIRE(variant.as<JsonString>().isStatic() == true);
   }

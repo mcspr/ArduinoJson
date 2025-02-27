@@ -199,6 +199,7 @@ class VariantData {
         return static_cast<T>(extension->asInt64);
 #endif
       case VariantType::LinkedString:
+        return parseNumber<T>(content_.asLinkedString);
       case VariantType::OwnedString:
         return parseNumber<T>(content_.asOwnedString->data);
       case VariantType::Float:

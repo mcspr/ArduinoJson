@@ -1,6 +1,11 @@
 ArduinoJson: change log
 =======================
 
+HEAD
+----
+
+* Fix conversion from static string to number
+
 v7.3.0 (2024-12-29)
 ------
 
