@@ -5,6 +5,7 @@ HEAD
 ----
 
 * Fix conversion from static string to number
+* Slightly reduce code size
 
 v7.3.0 (2024-12-29)
 ------
