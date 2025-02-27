@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v7.3.1 (2025-02-27)
+------
 
 * Fix conversion from static string to number
 * Slightly reduce code size
