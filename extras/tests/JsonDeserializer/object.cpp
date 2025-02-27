@@ -299,8 +299,8 @@ TEST_CASE("deserialize JSON object") {
       REQUIRE(spy.log() ==
               AllocatorLog{
                   Allocate(sizeofStringBuffer()),
-                  Reallocate(sizeofStringBuffer(), sizeofString("a")),
                   Allocate(sizeofPool()),
+                  Reallocate(sizeofStringBuffer(), sizeofString("a")),
                   Allocate(sizeofStringBuffer()),
                   Reallocate(sizeofStringBuffer(), sizeofString("b")),
                   Allocate(sizeofStringBuffer()),
@@ -378,7 +378,7 @@ TEST_CASE("deserialize JSON object under memory constraints") {
   }
 
   SECTION("pool allocation fails") {
-    timebomb.setCountdown(2);
+    timebomb.setCountdown(1);
     char input[] = "{\"a\":1}";
 
     DeserializationError err = deserializeJson(doc, input);

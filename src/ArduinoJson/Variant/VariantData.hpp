@@ -488,11 +488,6 @@ class VariantData {
   template <typename TAdaptedString>
   bool setString(TAdaptedString value, ResourceManager* resources);
 
-  bool setString(StringNode* s, ResourceManager*) {
-    setOwnedString(s);
-    return true;
-  }
-
   template <typename TAdaptedString>
   static void setString(VariantData* var, TAdaptedString value,
                         ResourceManager* resources) {

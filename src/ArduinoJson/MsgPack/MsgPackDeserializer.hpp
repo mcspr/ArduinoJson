@@ -408,12 +408,11 @@ class MsgPackDeserializer {
       if (memberFilter.allow()) {
         ARDUINOJSON_ASSERT(object != 0);
 
-        // Save key in memory pool.
-        auto savedKey = stringBuffer_.save();
-
-        member = object->addMember(savedKey, resources_);
-        if (!member)
+        auto keyVariant = object->addPair(&member, resources_);
+        if (!keyVariant)
           return DeserializationError::NoMemory;
+
+        keyVariant->setOwnedString(stringBuffer_.save());
       } else {
         member = 0;
       }

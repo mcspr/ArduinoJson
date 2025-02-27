@@ -275,13 +275,11 @@ class JsonDeserializer {
       if (memberFilter.allow()) {
         auto member = object.getMember(adaptString(key), resources_);
         if (!member) {
-          // Save key in memory pool.
-          auto savedKey = stringBuilder_.save();
-
-          // Allocate slot in object
-          member = object.addMember(savedKey, resources_);
-          if (!member)
+          auto keyVariant = object.addPair(&member, resources_);
+          if (!keyVariant)
             return DeserializationError::NoMemory;
+
+          keyVariant->setOwnedString(stringBuilder_.save());
         } else {
           member->clear(resources_);
         }
