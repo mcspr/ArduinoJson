@@ -279,7 +279,7 @@ class JsonDeserializer {
           if (!keyVariant)
             return DeserializationError::NoMemory;
 
-          keyVariant->setOwnedString(stringBuilder_.save());
+          stringBuilder_.save(keyVariant);
         } else {
           member->clear(resources_);
         }
@@ -388,7 +388,7 @@ class JsonDeserializer {
     if (err)
       return err;
 
-    variant.setOwnedString(stringBuilder_.save());
+    stringBuilder_.save(&variant);
 
     return DeserializationError::Ok;
   }

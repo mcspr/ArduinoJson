@@ -25,7 +25,8 @@ class StringBuilder {
       node_ = resources_->createString(initialCapacity);
   }
 
-  StringNode* save() {
+  void save(VariantData* variant) {
+    ARDUINOJSON_ASSERT(variant != nullptr);
     ARDUINOJSON_ASSERT(node_ != nullptr);
     node_->data[size_] = 0;
     StringNode* node = resources_->getString(adaptString(node_->data, size_));
@@ -37,7 +38,7 @@ class StringBuilder {
     } else {
       node->references++;
     }
-    return node;
+    variant->setOwnedString(node);
   }
 
   void append(const char* s) {
