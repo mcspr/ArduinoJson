@@ -32,7 +32,22 @@ class StringBuffer {
     return node_->data;
   }
 
-  StringNode* save() {
+  JsonString str() const {
+    ARDUINOJSON_ASSERT(node_ != nullptr);
+
+    return JsonString(node_->data, node_->length);
+  }
+
+  void save(VariantData* data) {
+    data->setOwnedString(commitStringNode());
+  }
+
+  void saveRaw(VariantData* data) {
+    data->setRawString(commitStringNode());
+  }
+
+ private:
+  StringNode* commitStringNode() {
     ARDUINOJSON_ASSERT(node_ != nullptr);
     node_->data[size_] = 0;
     auto node = resources_->getString(adaptString(node_->data, size_));
@@ -52,13 +67,6 @@ class StringBuffer {
     return node;
   }
 
-  JsonString str() const {
-    ARDUINOJSON_ASSERT(node_ != nullptr);
-
-    return JsonString(node_->data, node_->length);
-  }
-
- private:
   ResourceManager* resources_;
   StringNode* node_ = nullptr;
   size_t size_ = 0;

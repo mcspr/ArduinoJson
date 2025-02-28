@@ -305,7 +305,7 @@ class MsgPackDeserializer {
     if (err)
       return err;
 
-    variant->setOwnedString(stringBuffer_.save());
+    stringBuffer_.save(variant);
     return DeserializationError::Ok;
   }
 
@@ -334,7 +334,7 @@ class MsgPackDeserializer {
     if (err)
       return err;
 
-    variant->setRawString(stringBuffer_.save());
+    stringBuffer_.saveRaw(variant);
     return DeserializationError::Ok;
   }
 
@@ -412,7 +412,7 @@ class MsgPackDeserializer {
         if (!keyVariant)
           return DeserializationError::NoMemory;
 
-        keyVariant->setOwnedString(stringBuffer_.save());
+        stringBuffer_.save(keyVariant);
       } else {
         member = 0;
       }
