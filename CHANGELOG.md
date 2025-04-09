@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v7.4.0 (2025-04-09)
+------
 
 * Optimize storage of tiny strings (up to 3 characters)
 * Fix support for `const char[]` (issue #2166)
