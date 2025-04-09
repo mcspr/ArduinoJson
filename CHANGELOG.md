@@ -1,6 +1,11 @@
 ArduinoJson: change log
 =======================
 
+HEAD
+----
+
+* Optimize storage of tiny strings (up to 3 characters)
+
 v7.3.1 (2025-02-27)
 ------
 
