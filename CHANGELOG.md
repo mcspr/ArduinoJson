@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v7.4.1 (2025-04-11)
+------
 
 * Fix crash with tiny Flash strings (issue #2170)
 
