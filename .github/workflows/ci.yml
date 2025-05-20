@@ -93,18 +93,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - clang: "3.9"
-            runner: ubuntu-22.04
-            archive: bionic
-          - clang: "4.0"
-            runner: ubuntu-22.04
-            archive: bionic
-          - clang: "5.0"
-            runner: ubuntu-22.04
-            archive: bionic
-          - clang: "6.0"
-            runner: ubuntu-22.04
-            archive: bionic
           - clang: "7"
             runner: ubuntu-22.04
             archive: focal
@@ -126,11 +114,13 @@ jobs:
             runner: ubuntu-22.04
           - clang: "13"
             runner: ubuntu-22.04
-          - clang: "14"
-            runner: ubuntu-22.04
-          - clang: "15"
-            runner: ubuntu-22.04
-    runs-on: ${{ matrix.runner }}
+          - clang: 14
+          - clang: 15
+          - clang: 16
+          - clang: 17
+          - clang: 18
+          - clang: 19
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     steps:
       - name: Add archive repositories
         if: matrix.archive
@@ -144,7 +134,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-${{ matrix.clang }}
       - name: Install libc++ ${{ matrix.clang }}
-        if: matrix.clang >= 11
         run: sudo apt-get install -y libc++-${{ matrix.clang }}-dev libc++abi-${{ matrix.clang }}-dev
       - name: Install libunwind ${{ matrix.clang }}
         if: matrix.clang == 12 # dependency is missing in Ubuntu 22.04
