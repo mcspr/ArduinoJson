@@ -480,17 +480,17 @@ jobs:
   clang-tidy:
     needs: clang
     name: Clang-Tidy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Install
-        run: sudo apt-get install -y clang-tidy cmake ninja-build
+        run: sudo apt-get install -y clang-tidy libc++-dev libc++abi-dev
       - name: Checkout
         uses: actions/checkout@v4
       - name: Configure
-        run: cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy-10;--warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug .
+        run: cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy;--warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug .
         env:
-          CC: clang-10
-          CXX: clang++-10
+          CC: clang
+          CXX: clang++
       - name: Check
         run: cmake --build . -- -k 0
 
