@@ -53,8 +53,8 @@ class VariantData {
   template <typename TVisitor>
   typename TVisitor::result_type accept(
       TVisitor& visit, const ResourceManager* resources) const {
-#if ARDUINOJSON_USE_EXTENSIONS
-    auto extension = getExtension(resources);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    auto eightByteValue = getEightByte(resources);
 #else
     (void)resources;  // silence warning
 #endif
@@ -64,7 +64,7 @@ class VariantData {
 
 #if ARDUINOJSON_USE_DOUBLE
       case VariantType::Double:
-        return visit.visit(extension->asDouble);
+        return visit.visit(eightByteValue->asDouble);
 #endif
 
       case VariantType::Array:
@@ -95,10 +95,10 @@ class VariantData {
 
 #if ARDUINOJSON_USE_LONG_LONG
       case VariantType::Int64:
-        return visit.visit(extension->asInt64);
+        return visit.visit(eightByteValue->asInt64);
 
       case VariantType::Uint64:
-        return visit.visit(extension->asUint64);
+        return visit.visit(eightByteValue->asUint64);
 #endif
 
       case VariantType::Boolean:
@@ -145,8 +145,8 @@ class VariantData {
   }
 
   bool asBoolean(const ResourceManager* resources) const {
-#if ARDUINOJSON_USE_EXTENSIONS
-    auto extension = getExtension(resources);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    auto eightByteValue = getEightByte(resources);
 #else
     (void)resources;  // silence warning
 #endif
@@ -160,14 +160,14 @@ class VariantData {
         return content_.asFloat != 0;
 #if ARDUINOJSON_USE_DOUBLE
       case VariantType::Double:
-        return extension->asDouble != 0;
+        return eightByteValue->asDouble != 0;
 #endif
       case VariantType::Null:
         return false;
 #if ARDUINOJSON_USE_LONG_LONG
       case VariantType::Uint64:
       case VariantType::Int64:
-        return extension->asUint64 != 0;
+        return eightByteValue->asUint64 != 0;
 #endif
       default:
         return true;
@@ -193,8 +193,8 @@ class VariantData {
   template <typename T>
   T asFloat(const ResourceManager* resources) const {
     static_assert(is_floating_point<T>::value, "T must be a floating point");
-#if ARDUINOJSON_USE_EXTENSIONS
-    auto extension = getExtension(resources);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    auto eightByteValue = getEightByte(resources);
 #else
     (void)resources;  // silence warning
 #endif
@@ -208,9 +208,9 @@ class VariantData {
         return static_cast<T>(content_.asInt32);
 #if ARDUINOJSON_USE_LONG_LONG
       case VariantType::Uint64:
-        return static_cast<T>(extension->asUint64);
+        return static_cast<T>(eightByteValue->asUint64);
       case VariantType::Int64:
-        return static_cast<T>(extension->asInt64);
+        return static_cast<T>(eightByteValue->asInt64);
 #endif
       case VariantType::TinyString:
         str = content_.asTinyString;
@@ -225,7 +225,7 @@ class VariantData {
         return static_cast<T>(content_.asFloat);
 #if ARDUINOJSON_USE_DOUBLE
       case VariantType::Double:
-        return static_cast<T>(extension->asDouble);
+        return static_cast<T>(eightByteValue->asDouble);
 #endif
       default:
         return 0.0;
@@ -238,8 +238,8 @@ class VariantData {
   template <typename T>
   T asIntegral(const ResourceManager* resources) const {
     static_assert(is_integral<T>::value, "T must be an integral type");
-#if ARDUINOJSON_USE_EXTENSIONS
-    auto extension = getExtension(resources);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    auto eightByteValue = getEightByte(resources);
 #else
     (void)resources;  // silence warning
 #endif
@@ -253,9 +253,9 @@ class VariantData {
         return convertNumber<T>(content_.asInt32);
 #if ARDUINOJSON_USE_LONG_LONG
       case VariantType::Uint64:
-        return convertNumber<T>(extension->asUint64);
+        return convertNumber<T>(eightByteValue->asUint64);
       case VariantType::Int64:
-        return convertNumber<T>(extension->asInt64);
+        return convertNumber<T>(eightByteValue->asInt64);
 #endif
       case VariantType::TinyString:
         str = content_.asTinyString;
@@ -270,7 +270,7 @@ class VariantData {
         return convertNumber<T>(content_.asFloat);
 #if ARDUINOJSON_USE_DOUBLE
       case VariantType::Double:
-        return convertNumber<T>(extension->asDouble);
+        return convertNumber<T>(eightByteValue->asDouble);
 #endif
       default:
         return 0;
@@ -314,8 +314,8 @@ class VariantData {
     }
   }
 
-#if ARDUINOJSON_USE_EXTENSIONS
-  const VariantExtension* getExtension(const ResourceManager* resources) const;
+#if ARDUINOJSON_USE_8_BYTE_POOL
+  const EightByteValue* getEightByte(const ResourceManager* resources) const;
 #endif
 
   VariantData* getElement(size_t index,
@@ -378,7 +378,7 @@ class VariantData {
   template <typename T>
   bool isInteger(const ResourceManager* resources) const {
 #if ARDUINOJSON_USE_LONG_LONG
-    auto extension = getExtension(resources);
+    auto eightByteValue = getEightByte(resources);
 #else
     (void)resources;  // silence warning
 #endif
@@ -391,10 +391,10 @@ class VariantData {
 
 #if ARDUINOJSON_USE_LONG_LONG
       case VariantType::Uint64:
-        return canConvertNumber<T>(extension->asUint64);
+        return canConvertNumber<T>(eightByteValue->asUint64);
 
       case VariantType::Int64:
-        return canConvertNumber<T>(extension->asInt64);
+        return canConvertNumber<T>(eightByteValue->asInt64);
 #endif
 
       default:

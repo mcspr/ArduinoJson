@@ -61,9 +61,9 @@ inline void VariantData::clear(ResourceManager* resources) {
   if (type_ & VariantTypeBits::OwnedStringBit)
     resources->dereferenceString(content_.asOwnedString->data);
 
-#if ARDUINOJSON_USE_EXTENSIONS
-  if (type_ & VariantTypeBits::ExtensionBit)
-    resources->freeExtension(content_.asSlotId);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+  if (type_ & VariantTypeBits::EightByteBit)
+    resources->freeEightByte(content_.asSlotId);
 #endif
 
   auto collection = asCollection();
@@ -73,12 +73,12 @@ inline void VariantData::clear(ResourceManager* resources) {
   type_ = VariantType::Null;
 }
 
-#if ARDUINOJSON_USE_EXTENSIONS
-inline const VariantExtension* VariantData::getExtension(
+#if ARDUINOJSON_USE_8_BYTE_POOL
+inline const EightByteValue* VariantData::getEightByte(
     const ResourceManager* resources) const {
-  return type_ & VariantTypeBits::ExtensionBit
-             ? resources->getExtension(content_.asSlotId)
-             : nullptr;
+  return type_ & VariantTypeBits::EightByteBit
+             ? resources->getEightByte(content_.asSlotId)
+             : 0;
 }
 #endif
 
@@ -101,12 +101,12 @@ enable_if_t<sizeof(T) == 8, bool> VariantData::setFloat(
     type_ = VariantType::Float;
     content_.asFloat = valueAsFloat;
   } else {
-    auto extension = resources->allocExtension();
-    if (!extension)
+    auto slot = resources->allocEightByte();
+    if (!slot)
       return false;
     type_ = VariantType::Double;
-    content_.asSlotId = extension.id();
-    extension->asDouble = value;
+    content_.asSlotId = slot.id();
+    slot->asDouble = value;
   }
 #else
   type_ = VariantType::Float;
@@ -127,12 +127,12 @@ enable_if_t<is_signed<T>::value, bool> VariantData::setInteger(
   }
 #if ARDUINOJSON_USE_LONG_LONG
   else {
-    auto extension = resources->allocExtension();
-    if (!extension)
+    auto slot = resources->allocEightByte();
+    if (!slot)
       return false;
     type_ = VariantType::Int64;
-    content_.asSlotId = extension.id();
-    extension->asInt64 = value;
+    content_.asSlotId = slot.id();
+    slot->asInt64 = value;
   }
 #endif
   return true;
@@ -150,12 +150,12 @@ enable_if_t<is_unsigned<T>::value, bool> VariantData::setInteger(
   }
 #if ARDUINOJSON_USE_LONG_LONG
   else {
-    auto extension = resources->allocExtension();
-    if (!extension)
+    auto slot = resources->allocEightByte();
+    if (!slot)
       return false;
     type_ = VariantType::Uint64;
-    content_.asSlotId = extension.id();
-    extension->asUint64 = value;
+    content_.asSlotId = slot.id();
+    slot->asUint64 = value;
   }
 #endif
   return true;

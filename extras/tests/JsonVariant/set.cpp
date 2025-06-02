@@ -8,7 +8,7 @@
 #include "Allocators.hpp"
 #include "Literals.hpp"
 
-using ArduinoJson::detail::sizeofObject;
+using namespace ArduinoJson::detail;
 
 enum ErrorCode { ERROR_01 = 1, ERROR_10 = 10 };
 
@@ -197,11 +197,11 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     REQUIRE(result == true);
     REQUIRE(variant.is<double>() == true);
     REQUIRE(variant.as<double>() == 1.2);
-    REQUIRE(spy.log() ==
-            AllocatorLog{
-                Allocate(sizeofPool()),
-                Reallocate(sizeofPool(), sizeofPool(1)),  // one extension slot
-            });
+    REQUIRE(spy.log() == AllocatorLog{
+                             Allocate(sizeofPool<EightByteValue>()),
+                             Reallocate(sizeofPool<EightByteValue>(),
+                                        sizeofPool<EightByteValue>(1)),
+                         });
   }
 
   SECTION("int32_t") {
@@ -220,11 +220,11 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     REQUIRE(result == true);
     REQUIRE(variant.is<int64_t>() == true);
     REQUIRE(variant.as<int64_t>() == -2147483649LL);
-    REQUIRE(spy.log() ==
-            AllocatorLog{
-                Allocate(sizeofPool()),
-                Reallocate(sizeofPool(), sizeofPool(1)),  // one extension slot
-            });
+    REQUIRE(spy.log() == AllocatorLog{
+                             Allocate(sizeofPool<EightByteValue>()),
+                             Reallocate(sizeofPool<EightByteValue>(),
+                                        sizeofPool<EightByteValue>(1)),
+                         });
   }
 
   SECTION("uint32_t") {
@@ -243,11 +243,11 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     REQUIRE(result == true);
     REQUIRE(variant.is<uint64_t>() == true);
     REQUIRE(variant.as<uint64_t>() == 4294967296);
-    REQUIRE(spy.log() ==
-            AllocatorLog{
-                Allocate(sizeofPool()),
-                Reallocate(sizeofPool(), sizeofPool(1)),  // one extension slot
-            });
+    REQUIRE(spy.log() == AllocatorLog{
+                             Allocate(sizeofPool<EightByteValue>()),
+                             Reallocate(sizeofPool<EightByteValue>(),
+                                        sizeofPool<EightByteValue>(1)),
+                         });
   }
 
   SECTION("JsonDocument") {
@@ -378,7 +378,7 @@ TEST_CASE("JsonVariant::set() releases the previous value") {
   }
 
   SECTION("float") {
-    v.set(1.2);
+    v.set(1.2f);
     REQUIRE(spy.log() == AllocatorLog{
                              Deallocate(sizeofString("world")),
                          });
@@ -393,7 +393,7 @@ TEST_CASE("JsonVariant::set() releases the previous value") {
   }
 }
 
-TEST_CASE("JsonVariant::set() reuses extension slot") {
+TEST_CASE("JsonVariant::set() reuses 8-bit slot") {
   SpyingAllocator spy;
   JsonDocument doc(&spy);
   JsonVariant variant = doc.to<JsonVariant>();

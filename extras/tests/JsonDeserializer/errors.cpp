@@ -121,7 +121,7 @@ TEST_CASE("deserializeJson() returns NoMemory if string length overflows") {
   }
 }
 
-TEST_CASE("deserializeJson() returns NoMemory if extension allocation fails") {
+TEST_CASE("deserializeJson() returns NoMemory if 8-bit slot allocation fails") {
   JsonDocument doc(FailingAllocator::instance());
 
   SECTION("uint32_t should pass") {

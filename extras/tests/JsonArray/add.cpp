@@ -8,7 +8,7 @@
 #include "Allocators.hpp"
 #include "Literals.hpp"
 
-using ArduinoJson::detail::sizeofArray;
+using namespace ArduinoJson::detail;
 
 TEST_CASE("JsonArray::add(T)") {
   SpyingAllocator spy;
@@ -33,7 +33,8 @@ TEST_CASE("JsonArray::add(T)") {
     REQUIRE(array[0].is<double>());
     REQUIRE_FALSE(array[0].is<bool>());
     REQUIRE(spy.log() == AllocatorLog{
-                             Allocate(sizeofPool()),
+                             Allocate(sizeofPool<VariantData>()),
+                             Allocate(sizeofPool<EightByteValue>()),
                          });
   }
 

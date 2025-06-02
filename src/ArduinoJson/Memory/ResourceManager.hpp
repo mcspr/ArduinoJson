@@ -18,16 +18,7 @@ class VariantData;
 class VariantWithId;
 
 class ResourceManager {
-  union SlotData {
-    VariantData variant;
-#if ARDUINOJSON_USE_EXTENSIONS
-    VariantExtension extension;
-#endif
-  };
-
  public:
-  constexpr static size_t slotSize = sizeof(SlotData);
-
   ResourceManager(Allocator* allocator = DefaultAllocator::instance())
       : allocator_(allocator), overflowed_(false) {}
 
@@ -35,6 +26,9 @@ class ResourceManager {
     stringPool_.clear(allocator_);
     variantPools_.clear(allocator_);
     staticStringsPools_.clear(allocator_);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    eightBytePools_.clear(allocator_);
+#endif
   }
 
   ResourceManager(const ResourceManager&) = delete;
@@ -44,6 +38,9 @@ class ResourceManager {
     swap(a.stringPool_, b.stringPool_);
     swap(a.variantPools_, b.variantPools_);
     swap(a.staticStringsPools_, b.staticStringsPools_);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    swap(a.eightBytePools_, b.eightBytePools_);
+#endif
     swap_(a.allocator_, b.allocator_);
     swap_(a.overflowed_, b.overflowed_);
   }
@@ -64,10 +61,10 @@ class ResourceManager {
   void freeVariant(Slot<VariantData> slot);
   VariantData* getVariant(SlotId id) const;
 
-#if ARDUINOJSON_USE_EXTENSIONS
-  Slot<VariantExtension> allocExtension();
-  void freeExtension(SlotId slot);
-  VariantExtension* getExtension(SlotId id) const;
+#if ARDUINOJSON_USE_8_BYTE_POOL
+  Slot<EightByteValue> allocEightByte();
+  void freeEightByte(SlotId slot);
+  EightByteValue* getEightByte(SlotId id) const;
 #endif
 
   template <typename TAdaptedString>
@@ -136,19 +133,28 @@ class ResourceManager {
     variantPools_.clear(allocator_);
     stringPool_.clear(allocator_);
     staticStringsPools_.clear(allocator_);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    eightBytePools_.clear(allocator_);
+#endif
   }
 
   void shrinkToFit() {
     variantPools_.shrinkToFit(allocator_);
     staticStringsPools_.shrinkToFit(allocator_);
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    eightBytePools_.shrinkToFit(allocator_);
+#endif
   }
 
  private:
   Allocator* allocator_;
   bool overflowed_;
   StringPool stringPool_;
-  MemoryPoolList<SlotData> variantPools_;
+  MemoryPoolList<VariantData> variantPools_;
   MemoryPoolList<const char*> staticStringsPools_;
+#if ARDUINOJSON_USE_8_BYTE_POOL
+  MemoryPoolList<EightByteValue> eightBytePools_;
+#endif
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
