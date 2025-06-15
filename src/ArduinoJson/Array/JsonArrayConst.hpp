@@ -24,9 +24,10 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/begin/
   iterator begin() const {
-    if (!data_)
+    auto array = detail::VariantData::asArray(data_);
+    if (!array)
       return iterator();
-    return iterator(data_->createIterator(resources_), resources_);
+    return iterator(array->createIterator(resources_), resources_);
   }
 
   // Returns an iterator to the element following the last element of the array.
@@ -39,7 +40,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   JsonArrayConst() : data_(0), resources_(0) {}
 
   // INTERNAL USE ONLY
-  JsonArrayConst(const detail::ArrayData* data,
+  JsonArrayConst(const detail::VariantData* data,
                  const detail::ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
@@ -49,7 +50,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   JsonVariantConst operator[](T index) const {
     return JsonVariantConst(
-        detail::ArrayData::getElement(data_, size_t(index), resources_),
+        detail::VariantData::getElement(data_, size_t(index), resources_),
         resources_);
   }
 
@@ -71,13 +72,13 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   // Returns true if the reference is unbound.
   // https://arduinojson.org/v7/api/jsonarrayconst/isnull/
   bool isNull() const {
-    return data_ == 0;
+    return !data_ || !data_->isArray();
   }
 
   // Returns true if the reference is bound.
   // https://arduinojson.org/v7/api/jsonarrayconst/isnull/
   operator bool() const {
-    return data_ != 0;
+    return !isNull();
   }
 
   // Returns the depth (nesting level) of the array.
@@ -100,10 +101,10 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
 
  private:
   const detail::VariantData* getData() const {
-    return collectionToVariant(data_);
+    return data_;
   }
 
-  const detail::ArrayData* data_;
+  const detail::VariantData* data_;
   const detail::ResourceManager* resources_;
 };
 

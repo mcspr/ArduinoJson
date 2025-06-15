@@ -329,9 +329,7 @@ struct Converter<JsonArrayConst> : private detail::VariantAttorney {
   }
 
   static JsonArrayConst fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    auto array = data ? data->asArray() : nullptr;
-    return JsonArrayConst(array, getResourceManager(src));
+    return JsonArrayConst(getData(src), getResourceManager(src));
   }
 
   static bool checkJson(JsonVariantConst src) {

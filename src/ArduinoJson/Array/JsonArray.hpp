@@ -37,7 +37,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Returns a read-only reference to the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/
   operator JsonArrayConst() const {
-    return JsonArrayConst(data_, resources_);
+    return JsonArrayConst(getData(), resources_);
   }
 
   // Appends a new (empty) element to the array.
