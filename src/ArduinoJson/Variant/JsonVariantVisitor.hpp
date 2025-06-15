@@ -30,7 +30,8 @@ class VisitorAdapter {
       : visitor_(&visitor), resources_(resources) {}
 
   result_type visit(const ArrayData& value) {
-    return visitor_->visit(JsonArrayConst(&value, resources_));
+    return visitor_->visit(
+        JsonArrayConst(collectionToVariant(&value), resources_));
   }
 
   result_type visit(const ObjectData& value) {

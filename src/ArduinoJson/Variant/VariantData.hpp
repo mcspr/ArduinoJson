@@ -179,6 +179,10 @@ class VariantData {
     return const_cast<VariantData*>(this)->asArray();
   }
 
+  static const ArrayData* asArray(const VariantData* var) {
+    return var ? var->asArray() : 0;
+  }
+
   CollectionData* asCollection() {
     return isCollection() ? &content_.asCollection : 0;
   }
