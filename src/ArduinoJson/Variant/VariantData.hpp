@@ -292,6 +292,10 @@ class VariantData {
     return const_cast<VariantData*>(this)->asObject();
   }
 
+  static const ObjectData* asObject(const VariantData* var) {
+    return var ? var->asObject() : 0;
+  }
+
   JsonString asRawString() const {
     switch (type_) {
       case VariantType::RawString:
