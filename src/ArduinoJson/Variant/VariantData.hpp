@@ -296,6 +296,10 @@ class VariantData {
     return const_cast<VariantData*>(this)->asObject();
   }
 
+  static ObjectData* asObject(VariantData* var) {
+    return var ? var->asObject() : 0;
+  }
+
   static const ObjectData* asObject(const VariantData* var) {
     return var ? var->asObject() : 0;
   }
@@ -595,11 +599,12 @@ class VariantData {
     return content_.asObject;
   }
 
-  static ObjectData* toObject(VariantData* var, ResourceManager* resources) {
+  static VariantData* toObject(VariantData* var, ResourceManager* resources) {
     if (!var)
       return 0;
     var->clear(resources);
-    return &var->toObject();
+    var->toObject();
+    return var;
   }
 
   VariantType type() const {
