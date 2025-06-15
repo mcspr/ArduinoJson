@@ -35,7 +35,8 @@ class VisitorAdapter {
   }
 
   result_type visit(const ObjectData& value) {
-    return visitor_->visit(JsonObjectConst(&value, resources_));
+    return visitor_->visit(
+        JsonObjectConst(collectionToVariant(&value), resources_));
   }
 
   template <typename T>

@@ -22,7 +22,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   JsonObjectConst() : data_(0), resources_(0) {}
 
   // INTERNAL USE ONLY
-  JsonObjectConst(const detail::ObjectData* data,
+  JsonObjectConst(const detail::VariantData* data,
                   const detail::ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
@@ -33,13 +33,13 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   // Returns true if the reference is unbound.
   // https://arduinojson.org/v7/api/jsonobjectconst/isnull/
   bool isNull() const {
-    return data_ == 0;
+    return !data_ || !data_->isObject();
   }
 
   // Returns true if the reference is bound.
   // https://arduinojson.org/v7/api/jsonobjectconst/isnull/
   operator bool() const {
-    return data_ != 0;
+    return !isNull();
   }
 
   // Returns the depth (nesting level) of the object.
@@ -57,9 +57,10 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   // Returns an iterator to the first key-value pair of the object.
   // https://arduinojson.org/v7/api/jsonobjectconst/begin/
   iterator begin() const {
-    if (!data_)
+    auto obj = detail::VariantData::asObject(data_);
+    if (!obj)
       return iterator();
-    return iterator(data_->createIterator(resources_), resources_);
+    return iterator(obj->createIterator(resources_), resources_);
   }
 
   // Returns an iterator following the last key-value pair of the object.
@@ -74,8 +75,8 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   ARDUINOJSON_DEPRECATED("use obj[key].is<T>() instead")
   bool containsKey(const TString& key) const {
-    return detail::ObjectData::getMember(data_, detail::adaptString(key),
-                                         resources_) != 0;
+    return detail::VariantData::getMember(data_, detail::adaptString(key),
+                                          resources_) != 0;
   }
 
   // DEPRECATED: use obj["key"].is<T>() instead
@@ -83,8 +84,8 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   template <typename TChar>
   ARDUINOJSON_DEPRECATED("use obj[\"key\"].is<T>() instead")
   bool containsKey(TChar* key) const {
-    return detail::ObjectData::getMember(data_, detail::adaptString(key),
-                                         resources_) != 0;
+    return detail::VariantData::getMember(data_, detail::adaptString(key),
+                                          resources_) != 0;
   }
 
   // DEPRECATED: use obj[key].is<T>() instead
@@ -101,7 +102,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   template <typename TString,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   JsonVariantConst operator[](const TString& key) const {
-    return JsonVariantConst(detail::ObjectData::getMember(
+    return JsonVariantConst(detail::VariantData::getMember(
                                 data_, detail::adaptString(key), resources_),
                             resources_);
   }
@@ -113,7 +114,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
                                     !detail::is_const<TChar>::value,
                                 int> = 0>
   JsonVariantConst operator[](TChar* key) const {
-    return JsonVariantConst(detail::ObjectData::getMember(
+    return JsonVariantConst(detail::VariantData::getMember(
                                 data_, detail::adaptString(key), resources_),
                             resources_);
   }
@@ -137,10 +138,10 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
 
  private:
   const detail::VariantData* getData() const {
-    return collectionToVariant(data_);
+    return data_;
   }
 
-  const detail::ObjectData* data_;
+  const detail::VariantData* data_;
   const detail::ResourceManager* resources_;
 };
 

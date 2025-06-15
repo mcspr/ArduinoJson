@@ -33,7 +33,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   }
 
   operator JsonObjectConst() const {
-    return JsonObjectConst(data_, resources_);
+    return JsonObjectConst(collectionToVariant(data_), resources_);
   }
 
   operator JsonVariantConst() const {
