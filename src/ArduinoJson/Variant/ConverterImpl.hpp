@@ -348,9 +348,7 @@ struct Converter<JsonArray> : private detail::VariantAttorney {
   }
 
   static JsonArray fromJson(JsonVariant src) {
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return JsonArray(data != 0 ? data->asArray() : 0, resources);
+    return JsonArray(getData(src), getResourceManager(src));
   }
 
   static bool checkJson(JsonVariant src) {

@@ -23,7 +23,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   JsonArray() : data_(0), resources_(0) {}
 
   // INTERNAL USE ONLY
-  JsonArray(detail::ArrayData* data, detail::ResourceManager* resources)
+  JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
   // Returns a JsonVariant pointing to the array.
@@ -55,7 +55,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T, detail::enable_if_t<
                             detail::is_same<T, JsonVariant>::value, int> = 0>
   JsonVariant add() const {
-    return JsonVariant(detail::ArrayData::addElement(data_, resources_),
+    return JsonVariant(detail::VariantData::addElement(data_, resources_),
                        resources_);
   }
 
@@ -63,7 +63,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // https://arduinojson.org/v7/api/jsonarray/add/
   template <typename T>
   bool add(const T& value) const {
-    return detail::ArrayData::addValue(data_, value, resources_);
+    return detail::VariantData::addValue(data_, value, resources_);
   }
 
   // Appends a value to the array.
@@ -71,15 +71,16 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T,
             detail::enable_if_t<!detail::is_const<T>::value, int> = 0>
   bool add(T* value) const {
-    return detail::ArrayData::addValue(data_, value, resources_);
+    return detail::VariantData::addValue(data_, value, resources_);
   }
 
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarray/begin/
   iterator begin() const {
-    if (!data_)
+    auto array = detail::VariantData::asArray(data_);
+    if (!array)
       return iterator();
-    return iterator(data_->createIterator(resources_), resources_);
+    return iterator(array->createIterator(resources_), resources_);
   }
 
   // Returns an iterator following the last element of the array.
@@ -106,13 +107,14 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Removes the element at the specified iterator.
   // https://arduinojson.org/v7/api/jsonarray/remove/
   void remove(iterator it) const {
-    detail::ArrayData::remove(data_, it.iterator_, resources_);
+    detail::ArrayData::remove(detail::VariantData::asArray(data_), it.iterator_,
+                              resources_);
   }
 
   // Removes the element at the specified index.
   // https://arduinojson.org/v7/api/jsonarray/remove/
   void remove(size_t index) const {
-    detail::ArrayData::removeElement(data_, index, resources_);
+    detail::VariantData::removeElement(data_, index, resources_);
   }
 
   // Removes the element at the specified index.
@@ -127,7 +129,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Removes all the elements of the array.
   // https://arduinojson.org/v7/api/jsonarray/clear/
   void clear() const {
-    detail::ArrayData::clear(data_, resources_);
+    detail::ArrayData::clear(detail::VariantData::asArray(data_), resources_);
   }
 
   // Gets or sets the element at the specified index.
@@ -150,25 +152,25 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(collectionToVariant(data_), resources_);
+    return JsonVariantConst(data_, resources_);
   }
 
   // Returns true if the reference is unbound.
   // https://arduinojson.org/v7/api/jsonarray/isnull/
   bool isNull() const {
-    return data_ == 0;
+    return !data_ || !data_->isArray();
   }
 
   // Returns true if the reference is bound.
   // https://arduinojson.org/v7/api/jsonarray/isnull/
   operator bool() const {
-    return data_ != 0;
+    return !isNull();
   }
 
   // Returns the depth (nesting level) of the array.
   // https://arduinojson.org/v7/api/jsonarray/nesting/
   size_t nesting() const {
-    return detail::VariantData::nesting(collectionToVariant(data_), resources_);
+    return detail::VariantData::nesting(data_, resources_);
   }
 
   // Returns the number of elements in the array.
@@ -205,14 +207,14 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   }
 
   detail::VariantData* getData() const {
-    return collectionToVariant(data_);
+    return data_;
   }
 
   detail::VariantData* getOrCreateData() const {
-    return collectionToVariant(data_);
+    return data_;
   }
 
-  detail::ArrayData* data_;
+  detail::VariantData* data_;
   detail::ResourceManager* resources_;
 };
 

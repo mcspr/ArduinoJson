@@ -182,6 +182,10 @@ class VariantData {
     return const_cast<VariantData*>(this)->asArray();
   }
 
+  static ArrayData* asArray(VariantData* var) {
+    return var ? var->asArray() : 0;
+  }
+
   static const ArrayData* asArray(const VariantData* var) {
     return var ? var->asArray() : 0;
   }
@@ -576,11 +580,12 @@ class VariantData {
     return content_.asArray;
   }
 
-  static ArrayData* toArray(VariantData* var, ResourceManager* resources) {
+  static VariantData* toArray(VariantData* var, ResourceManager* resources) {
     if (!var)
       return 0;
     var->clear(resources);
-    return &var->toArray();
+    var->toArray();
+    return var;
   }
 
   ObjectData& toObject() {
