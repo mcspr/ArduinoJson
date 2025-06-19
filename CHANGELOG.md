@@ -1,6 +1,11 @@
 ArduinoJson: change log
 =======================
 
+HEAD
+----
+
+* Fix truncated strings on Arduino Due (issue #2181)
+
 v7.4.1 (2025-04-11)
 ------
 
