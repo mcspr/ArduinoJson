@@ -140,11 +140,6 @@ See the [tutorial on arduinojson.org](https://arduinojson.org/v7/doc/serializati
 ArduinoJson is thankful to its sponsors. Please give them a visit; they deserve it!
 
 <p>
-  <a href="https://www.programmingelectronics.com/" rel="sponsored">
-    <img src="https://arduinojson.org/images/2021/10/programmingeleactronicsacademy.png" alt="Programming Electronics Academy" width="200">
-  </a>
-</p>
-<p>
   <a href="https://github.com/1technophile" rel="sponsored">
     <img alt="1technophile" src="https://avatars.githubusercontent.com/u/12672732?s=40&v=4">
   </a>
