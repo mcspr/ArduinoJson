@@ -24,10 +24,10 @@ class MsgPackDeserializer {
         foundSomething_(false) {}
 
   template <typename TFilter>
-  DeserializationError parse(VariantData& variant, TFilter filter,
+  DeserializationError parse(VariantData* variant, TFilter filter,
                              DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
-    err = parseVariant(&variant, filter, nestingLimit);
+    err = parseVariant(variant, filter, nestingLimit);
     return foundSomething_ ? err : DeserializationError::EmptyInput;
   }
 
@@ -91,7 +91,7 @@ class MsgPackDeserializer {
 
     if (code <= 0x7f || code >= 0xe0) {  // fixint
       if (allowValue)
-        variant->setInteger(static_cast<int8_t>(code), resources_);
+        VariantImpl(variant, resources_).setInteger(static_cast<int8_t>(code));
       return DeserializationError::Ok;
     }
 
@@ -231,14 +231,14 @@ class MsgPackDeserializer {
     if (isSigned) {
       auto truncatedValue = static_cast<JsonInteger>(signedValue);
       if (truncatedValue == signedValue) {
-        if (!variant->setInteger(truncatedValue, resources_))
+        if (!VariantImpl(variant, resources_).setInteger(truncatedValue))
           return DeserializationError::NoMemory;
       }
       // else set null on overflow
     } else {
       auto truncatedValue = static_cast<JsonUInt>(unsignedValue);
       if (truncatedValue == unsignedValue)
-        if (!variant->setInteger(truncatedValue, resources_))
+        if (!VariantImpl(variant, resources_).setInteger(truncatedValue))
           return DeserializationError::NoMemory;
       // else set null on overflow
     }
@@ -257,7 +257,7 @@ class MsgPackDeserializer {
       return err;
 
     fixEndianness(value);
-    variant->setFloat(value, resources_);
+    VariantImpl(variant, resources_).setFloat(value);
 
     return DeserializationError::Ok;
   }
@@ -273,7 +273,7 @@ class MsgPackDeserializer {
       return err;
 
     fixEndianness(value);
-    if (variant->setFloat(value, resources_))
+    if (VariantImpl(variant, resources_).setFloat(value))
       return DeserializationError::Ok;
     else
       return DeserializationError::NoMemory;
@@ -293,7 +293,7 @@ class MsgPackDeserializer {
 
     doubleToFloat(i, o);
     fixEndianness(value);
-    variant->setFloat(value, resources_);
+    VariantImpl(variant, resources_).setFloat(value);
 
     return DeserializationError::Ok;
   }
@@ -352,7 +352,7 @@ class MsgPackDeserializer {
     ArrayImpl array;
     if (allowArray) {
       ARDUINOJSON_ASSERT(variant != 0);
-      array = variant->toArray(resources_);
+      array = VariantImpl(variant, resources_).toArray();
     }
 
     TFilter elementFilter = filter[0U];
@@ -388,7 +388,7 @@ class MsgPackDeserializer {
     ObjectImpl object;
     if (filter.allowObject()) {
       ARDUINOJSON_ASSERT(variant != 0);
-      object = variant->toObject(resources_);
+      object = VariantImpl(variant, resources_).toObject();
     }
 
     for (; n; --n) {

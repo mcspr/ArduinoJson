@@ -13,7 +13,7 @@ size_t doSerialize(ArduinoJson::JsonVariantConst source, TWriter writer) {
   auto data = VariantAttorney::getData(source);
   auto resources = VariantAttorney::getResourceManager(source);
   TSerializer<TWriter> serializer(writer, resources);
-  return VariantData::accept(data, resources, serializer);
+  return VariantImpl(data, resources).accept(serializer);
 }
 
 template <template <typename> class TSerializer, typename TDestination>

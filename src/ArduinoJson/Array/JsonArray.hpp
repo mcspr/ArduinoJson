@@ -24,7 +24,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
 
   // INTERNAL USE ONLY
   JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
-      : impl_(detail::VariantData::asArray(data, resources)) {}
+      : impl_(detail::VariantImpl(data, resources).asArray()) {}
 
   // INTERNAL USE ONLY
   JsonArray(const detail::ArrayImpl& impl) : impl_(impl) {}

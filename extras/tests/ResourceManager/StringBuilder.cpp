@@ -26,7 +26,7 @@ TEST_CASE("StringBuilder") {
     REQUIRE(spyingAllocator.log() == AllocatorLog{
                                          Allocate(sizeofStringBuffer()),
                                      });
-    REQUIRE(data.type() == VariantType::TinyString);
+    REQUIRE(data.type == VariantType::TinyString);
   }
 
   SECTION("Tiny string") {
@@ -45,8 +45,8 @@ TEST_CASE("StringBuilder") {
     str.save(&data);
 
     REQUIRE(resources.overflowed() == false);
-    REQUIRE(data.type() == VariantType::TinyString);
-    REQUIRE(data.asString(&resources) == "url");
+    REQUIRE(data.type == VariantType::TinyString);
+    REQUIRE(VariantImpl(&data, &resources).asString() == "url");
   }
 
   SECTION("Short string fits in first allocation") {
@@ -134,10 +134,10 @@ TEST_CASE("StringBuilder::save() deduplicates strings") {
     auto s2 = saveString(builder, "world");
     auto s3 = saveString(builder, "hello");
 
-    REQUIRE(s1.asString(&resources) == "hello");
-    REQUIRE(s2.asString(&resources) == "world");
-    REQUIRE(+s1.asString(&resources).c_str() ==
-            +s3.asString(&resources).c_str());  // same address
+    REQUIRE(VariantImpl(&s1, &resources).asString() == "hello");
+    REQUIRE(VariantImpl(&s2, &resources).asString() == "world");
+    REQUIRE(+VariantImpl(&s1, &resources).asString().c_str() ==
+            +VariantImpl(&s3, &resources).asString().c_str());  // same address
 
     REQUIRE(spy.log() ==
             AllocatorLog{
@@ -153,10 +153,11 @@ TEST_CASE("StringBuilder::save() deduplicates strings") {
     auto s1 = saveString(builder, "hello world");
     auto s2 = saveString(builder, "hello");
 
-    REQUIRE(s1.asString(&resources) == "hello world");
-    REQUIRE(s2.asString(&resources) == "hello");
-    REQUIRE(+s2.asString(&resources).c_str() !=
-            +s1.asString(&resources).c_str());  // different address
+    REQUIRE(VariantImpl(&s1, &resources).asString() == "hello world");
+    REQUIRE(VariantImpl(&s2, &resources).asString() == "hello");
+    REQUIRE(
+        +VariantImpl(&s1, &resources).asString().c_str() !=
+        +VariantImpl(&s2, &resources).asString().c_str());  // different address
 
     REQUIRE(spy.log() ==
             AllocatorLog{
@@ -171,10 +172,11 @@ TEST_CASE("StringBuilder::save() deduplicates strings") {
     auto s1 = saveString(builder, "hello world");
     auto s2 = saveString(builder, "worl");
 
-    REQUIRE(s1.asString(&resources) == "hello world");
-    REQUIRE(s2.asString(&resources) == "worl");
-    REQUIRE(s2.asString(&resources).c_str() !=
-            s1.asString(&resources).c_str());  // different address
+    REQUIRE(VariantImpl(&s1, &resources).asString() == "hello world");
+    REQUIRE(VariantImpl(&s2, &resources).asString() == "worl");
+    REQUIRE(
+        VariantImpl(&s1, &resources).asString().c_str() !=
+        VariantImpl(&s2, &resources).asString().c_str());  // different address
 
     REQUIRE(spy.log() ==
             AllocatorLog{

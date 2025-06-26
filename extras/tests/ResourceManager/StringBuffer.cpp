@@ -21,8 +21,8 @@ TEST_CASE("StringBuffer") {
     strcpy(ptr, "hi!");
     sb.save(&variant);
 
-    REQUIRE(variant.type() == VariantType::TinyString);
-    REQUIRE(variant.asString(&resources) == "hi!");
+    REQUIRE(variant.type == VariantType::TinyString);
+    REQUIRE(VariantImpl(&variant, &resources).asString() == "hi!");
   }
 
   SECTION("Tiny string can't contain NUL") {
@@ -30,9 +30,9 @@ TEST_CASE("StringBuffer") {
     memcpy(ptr, "a\0b", 3);
     sb.save(&variant);
 
-    REQUIRE(variant.type() == VariantType::OwnedString);
+    REQUIRE(variant.type == VariantType::OwnedString);
 
-    auto str = variant.asString(&resources);
+    auto str = VariantImpl(&variant, &resources).asString();
     REQUIRE(str.size() == 3);
     REQUIRE(str.c_str()[0] == 'a');
     REQUIRE(str.c_str()[1] == 0);
@@ -44,7 +44,7 @@ TEST_CASE("StringBuffer") {
     strcpy(ptr, "alfa");
     sb.save(&variant);
 
-    REQUIRE(variant.type() == VariantType::OwnedString);
-    REQUIRE(variant.asString(&resources) == "alfa");
+    REQUIRE(variant.type == VariantType::OwnedString);
+    REQUIRE(VariantImpl(&variant, &resources).asString() == "alfa");
   }
 }

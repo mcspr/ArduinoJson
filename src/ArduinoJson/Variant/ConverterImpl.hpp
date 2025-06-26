@@ -60,25 +60,18 @@ struct Converter<T, detail::enable_if_t<detail::is_integral<T>::value &&
     : private detail::VariantAttorney {
   static bool toJson(T src, JsonVariant dst) {
     ARDUINOJSON_ASSERT_INTEGER_TYPE_IS_SUPPORTED(T);
-    auto data = getData(dst);
-    if (!data)
-      return false;
-    auto resources = getResourceManager(dst);
-    data->clear(resources);
-    return data->setInteger(src, resources);
+    auto variant = getVariantImpl(dst);
+    variant.clear();
+    return variant.setInteger(src);
   }
 
   static T fromJson(JsonVariantConst src) {
     ARDUINOJSON_ASSERT_INTEGER_TYPE_IS_SUPPORTED(T);
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return data ? data->template asIntegral<T>(resources) : T();
+    return getVariantImpl(src).template asIntegral<T>();
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return data && data->template isInteger<T>(resources);
+    return getVariantImpl(src).template isInteger<T>();
   }
 };
 
@@ -90,40 +83,29 @@ struct Converter<T, detail::enable_if_t<detail::is_enum<T>::value>>
   }
 
   static T fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return data ? static_cast<T>(data->template asIntegral<int>(resources))
-                : T();
+    return static_cast<T>(getVariantImpl(src).template asIntegral<int>());
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return data && data->template isInteger<int>(resources);
+    return getVariantImpl(src).template isInteger<int>();
   }
 };
 
 template <>
 struct Converter<bool> : private detail::VariantAttorney {
   static bool toJson(bool src, JsonVariant dst) {
-    auto data = getData(dst);
-    if (!data)
-      return false;
-    auto resources = getResourceManager(dst);
-    data->clear(resources);
-    data->setBoolean(src);
-    return true;
+    auto variant = getVariantImpl(dst);
+    variant.clear();
+    return variant.setBoolean(src);
   }
 
   static bool fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return data ? data->asBoolean(resources) : false;
+    return getVariantImpl(src).asBoolean();
   }
 
   static bool checkJson(JsonVariantConst src) {
     auto data = getData(src);
-    return data && data->isBoolean();
+    return data && data->type == detail::VariantType::Boolean;
   }
 };
 
@@ -131,18 +113,13 @@ template <typename T>
 struct Converter<T, detail::enable_if_t<detail::is_floating_point<T>::value>>
     : private detail::VariantAttorney {
   static bool toJson(T src, JsonVariant dst) {
-    auto data = getData(dst);
-    if (!data)
-      return false;
-    auto resources = getResourceManager(dst);
-    data->clear(resources);
-    return data->setFloat(src, resources);
+    auto variant = getVariantImpl(dst);
+    variant.clear();
+    return variant.setFloat(src);
   }
 
   static T fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    auto resources = getResourceManager(src);
-    return data ? data->template asFloat<T>(resources) : 0;
+    return getVariantImpl(src).template asFloat<T>();
   }
 
   static bool checkJson(JsonVariantConst src) {
@@ -154,13 +131,13 @@ struct Converter<T, detail::enable_if_t<detail::is_floating_point<T>::value>>
 template <>
 struct Converter<const char*> : private detail::VariantAttorney {
   static void toJson(const char* src, JsonVariant dst) {
-    detail::VariantData::setString(getData(dst), detail::adaptString(src),
-                                   getResourceManager(dst));
+    auto variant = getVariantImpl(dst);
+    variant.clear();
+    variant.setString(detail::adaptString(src));
   }
 
   static const char* fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data ? data->asString(getResourceManager(src)).c_str() : 0;
+    return getVariantImpl(src).asString().c_str();
   }
 
   static bool checkJson(JsonVariantConst src) {
@@ -172,13 +149,13 @@ struct Converter<const char*> : private detail::VariantAttorney {
 template <>
 struct Converter<JsonString> : private detail::VariantAttorney {
   static void toJson(JsonString src, JsonVariant dst) {
-    detail::VariantData::setString(getData(dst), detail::adaptString(src),
-                                   getResourceManager(dst));
+    auto variant = getVariantImpl(dst);
+    variant.clear();
+    variant.setString(detail::adaptString(src));
   }
 
   static JsonString fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data ? data->asString(getResourceManager(src)) : JsonString();
+    return getVariantImpl(src).asString();
   }
 
   static bool checkJson(JsonVariantConst src) {
@@ -190,10 +167,9 @@ struct Converter<JsonString> : private detail::VariantAttorney {
 template <typename T>
 inline detail::enable_if_t<detail::IsString<T>::value> convertToJson(
     const T& src, JsonVariant dst) {
-  using namespace detail;
-  auto data = VariantAttorney::getData(dst);
-  auto resources = VariantAttorney::getResourceManager(dst);
-  detail::VariantData::setString(data, adaptString(src), resources);
+  auto variant = detail::VariantAttorney::getVariantImpl(dst);
+  variant.clear();
+  variant.setString(detail::adaptString(src));
 }
 
 // SerializedValue<std::string>
@@ -202,22 +178,23 @@ inline detail::enable_if_t<detail::IsString<T>::value> convertToJson(
 template <typename T>
 struct Converter<SerializedValue<T>> : private detail::VariantAttorney {
   static void toJson(SerializedValue<T> src, JsonVariant dst) {
-    detail::VariantData::setRawString(getData(dst), src,
-                                      getResourceManager(dst));
+    auto variant = getVariantImpl(dst);
+    variant.clear();
+    variant.setRawString(src);
   }
 };
 
 template <>
 struct Converter<detail::nullptr_t> : private detail::VariantAttorney {
   static void toJson(detail::nullptr_t, JsonVariant dst) {
-    detail::VariantData::clear(getData(dst), getResourceManager(dst));
+    getVariantImpl(dst).clear();
   }
   static detail::nullptr_t fromJson(JsonVariantConst) {
     return nullptr;
   }
   static bool checkJson(JsonVariantConst src) {
     auto data = getData(src);
-    return data == 0 || data->isNull();
+    return data == 0 || data->type == detail::VariantType::Null;
   }
 };
 
@@ -263,7 +240,7 @@ inline void convertToJson(const ::Printable& src, JsonVariant dst) {
   auto data = detail::VariantAttorney::getData(dst);
   if (!resources || !data)
     return;
-  data->clear(resources);
+  detail::VariantImpl(data, resources).clear();
   detail::StringBuilderPrint print(resources);
   src.printTo(print);
   if (print.overflowed())
@@ -334,7 +311,7 @@ struct Converter<JsonArrayConst> : private detail::VariantAttorney {
 
   static bool checkJson(JsonVariantConst src) {
     auto data = getData(src);
-    return data && data->isArray();
+    return data && data->type == detail::VariantType::Array;
   }
 };
 
@@ -353,7 +330,7 @@ struct Converter<JsonArray> : private detail::VariantAttorney {
 
   static bool checkJson(JsonVariant src) {
     auto data = getData(src);
-    return data && data->isArray();
+    return data && data->type == detail::VariantType::Array;
   }
 };
 
@@ -372,7 +349,7 @@ struct Converter<JsonObjectConst> : private detail::VariantAttorney {
 
   static bool checkJson(JsonVariantConst src) {
     auto data = getData(src);
-    return data && data->isObject();
+    return data && data->type == detail::VariantType::Object;
   }
 };
 
@@ -391,7 +368,7 @@ struct Converter<JsonObject> : private detail::VariantAttorney {
 
   static bool checkJson(JsonVariant src) {
     auto data = getData(src);
-    return data && data->isObject();
+    return data && data->type == detail::VariantType::Object;
   }
 };
 

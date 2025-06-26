@@ -8,6 +8,8 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
+class VariantImpl;
+
 class ObjectImpl : public CollectionImpl {
  public:
   ObjectImpl() {}

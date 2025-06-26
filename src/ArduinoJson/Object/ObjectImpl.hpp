@@ -33,7 +33,8 @@ inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key) const {
     return iterator();
   bool isKey = true;
   for (auto it = createIterator(); !it.done(); it.next(resources_)) {
-    if (isKey && stringEquals(key, adaptString(it->asString(resources_))))
+    VariantImpl variant(it.data(), resources_);
+    if (isKey && stringEquals(key, adaptString(variant.asString())))
       return it;
     isKey = !isKey;
   }
@@ -59,7 +60,8 @@ inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
   if (!valueSlot)
     return nullptr;
 
-  if (!keySlot->setString(key, resources_))
+  VariantImpl keyImpl(keySlot.ptr(), resources_);
+  if (!keyImpl.setString(key))
     return nullptr;
 
   CollectionImpl::appendPair(keySlot, valueSlot);

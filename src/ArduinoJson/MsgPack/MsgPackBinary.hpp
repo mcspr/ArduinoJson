@@ -29,7 +29,7 @@ struct Converter<MsgPackBinary> : private detail::VariantAttorney {
     if (!data)
       return;
     auto resources = getResourceManager(dst);
-    data->clear(resources);
+    detail::VariantImpl(data, resources).clear();
     if (src.data()) {
       size_t headerSize = src.size() >= 0x10000 ? 5
                           : src.size() >= 0x100 ? 3
@@ -66,10 +66,8 @@ struct Converter<MsgPackBinary> : private detail::VariantAttorney {
   }
 
   static MsgPackBinary fromJson(JsonVariantConst src) {
-    auto data = getData(src);
-    if (!data)
-      return {};
-    auto rawstr = data->asRawString();
+    auto variant = VariantAttorney::getVariantImpl(src);
+    auto rawstr = variant.asRawString();
     auto p = reinterpret_cast<const uint8_t*>(rawstr.c_str());
     auto n = rawstr.size();
     if (n >= 2 && p[0] == 0xc4) {  // bin 8

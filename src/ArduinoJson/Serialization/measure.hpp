@@ -14,7 +14,7 @@ size_t measure(ArduinoJson::JsonVariantConst source) {
   auto data = VariantAttorney::getData(source);
   auto resources = VariantAttorney::getResourceManager(source);
   TSerializer<DummyWriter> serializer(dp, resources);
-  return VariantData::accept(data, resources, serializer);
+  return VariantImpl(data, resources).accept(serializer);
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

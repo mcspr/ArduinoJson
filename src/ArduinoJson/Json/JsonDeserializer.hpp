@@ -28,13 +28,13 @@ class JsonDeserializer {
         resources_(resources) {}
 
   template <typename TFilter>
-  DeserializationError parse(VariantData& variant, TFilter filter,
+  DeserializationError parse(VariantData* variant, TFilter filter,
                              DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
     err = parseVariant(variant, filter, nestingLimit);
 
-    if (!err && latch_.last() != 0 && variant.isFloat()) {
+    if (!err && latch_.last() != 0 && variant->isFloat()) {
       // We don't detect trailing characters earlier, so we need to check now
       return DeserializationError::InvalidInput;
     }
@@ -60,7 +60,7 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseVariant(
-      VariantData& variant, TFilter filter,
+      VariantData* variant, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
@@ -71,14 +71,15 @@ class JsonDeserializer {
     switch (current()) {
       case '[':
         if (filter.allowArray())
-          return parseArray(variant.toArray(resources_), filter, nestingLimit);
+          return parseArray(VariantImpl(variant, resources_).toArray(), filter,
+                            nestingLimit);
         else
           return skipArray(nestingLimit);
 
       case '{':
         if (filter.allowObject())
-          return parseObject(variant.toObject(resources_), filter,
-                             nestingLimit);
+          return parseObject(VariantImpl(variant, resources_).toObject(),
+                             filter, nestingLimit);
         else
           return skipObject(nestingLimit);
 
@@ -91,12 +92,12 @@ class JsonDeserializer {
 
       case 't':
         if (filter.allowValue())
-          variant.setBoolean(true);
+          variant->setBoolean(true);
         return skipKeyword("true");
 
       case 'f':
         if (filter.allowValue())
-          variant.setBoolean(false);
+          variant->setBoolean(false);
         return skipKeyword("false");
 
       case 'n':
@@ -178,7 +179,7 @@ class JsonDeserializer {
           return DeserializationError::NoMemory;
 
         // 1 - Parse value
-        err = parseVariant(*value, elementFilter, nestingLimit.decrement());
+        err = parseVariant(value, elementFilter, nestingLimit.decrement());
         if (err)
           return err;
       } else {
@@ -282,11 +283,11 @@ class JsonDeserializer {
 
           stringBuilder_.save(keyVariant);
         } else {
-          member->clear(resources_);
+          VariantImpl(member, resources_).clear();
         }
 
         // Parse value
-        err = parseVariant(*member, memberFilter, nestingLimit.decrement());
+        err = parseVariant(member, memberFilter, nestingLimit.decrement());
         if (err)
           return err;
       } else {
@@ -380,7 +381,7 @@ class JsonDeserializer {
     }
   }
 
-  DeserializationError::Code parseStringValue(VariantData& variant) {
+  DeserializationError::Code parseStringValue(VariantData* variant) {
     DeserializationError::Code err;
 
     stringBuilder_.startString();
@@ -389,7 +390,7 @@ class JsonDeserializer {
     if (err)
       return err;
 
-    stringBuilder_.save(&variant);
+    stringBuilder_.save(variant);
 
     return DeserializationError::Ok;
   }
@@ -505,7 +506,7 @@ class JsonDeserializer {
     return DeserializationError::Ok;
   }
 
-  DeserializationError::Code parseNumericValue(VariantData& result) {
+  DeserializationError::Code parseNumericValue(VariantData* result) {
     uint8_t n = 0;
 
     char c = current();
@@ -519,26 +520,28 @@ class JsonDeserializer {
     auto number = parseNumber(buffer_);
     switch (number.type()) {
       case NumberType::UnsignedInteger:
-        if (result.setInteger(number.asUnsignedInteger(), resources_))
+        if (VariantImpl(result, resources_)
+                .setInteger(number.asUnsignedInteger()))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;
 
       case NumberType::SignedInteger:
-        if (result.setInteger(number.asSignedInteger(), resources_))
+        if (VariantImpl(result, resources_)
+                .setInteger(number.asSignedInteger()))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;
 
       case NumberType::Float:
-        if (result.setFloat(number.asFloat(), resources_))
+        if (VariantImpl(result, resources_).setFloat(number.asFloat()))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;
 
 #if ARDUINOJSON_USE_DOUBLE
       case NumberType::Double:
-        if (result.setFloat(number.asDouble(), resources_))
+        if (VariantImpl(result, resources_).setFloat(number.asDouble()))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;

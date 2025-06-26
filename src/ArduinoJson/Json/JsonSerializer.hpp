@@ -27,9 +27,9 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
     while (slotId != NULL_SLOT) {
       auto slot = resources_->getVariant(slotId);
 
-      slot->accept(*this, resources_);
+      VariantImpl(slot, resources_).accept(*this);
 
-      slotId = slot->next();
+      slotId = slot->next;
 
       if (slotId != NULL_SLOT)
         write(',');
@@ -48,9 +48,9 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
 
     while (slotId != NULL_SLOT) {
       auto slot = resources_->getVariant(slotId);
-      slot->accept(*this, resources_);
+      VariantImpl(slot, resources_).accept(*this);
 
-      slotId = slot->next();
+      slotId = slot->next;
 
       if (slotId != NULL_SLOT)
         write(isKey ? ':' : ',');

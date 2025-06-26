@@ -35,34 +35,34 @@ class JsonVariantConst : public detail::VariantTag,
 
  public:
   // Creates an unbound reference.
-  JsonVariantConst() : data_(nullptr), resources_(nullptr) {}
+  JsonVariantConst() {}
 
   // INTERNAL USE ONLY
   explicit JsonVariantConst(detail::VariantData* data,
                             detail::ResourceManager* resources)
-      : data_(data), resources_(resources) {}
+      : impl_(data, resources) {}
 
   // Returns true if the value is null or the reference is unbound.
   // https://arduinojson.org/v7/api/jsonvariantconst/isnull/
   bool isNull() const {
-    return detail::VariantData::isNull(data_);
+    return impl_.isNull();
   }
 
   // Returns true if the reference is unbound.
   bool isUnbound() const {
-    return !data_;
+    return impl_.getData() == nullptr;
   }
 
   // Returns the depth (nesting level) of the value.
   // https://arduinojson.org/v7/api/jsonvariantconst/nesting/
   size_t nesting() const {
-    return detail::VariantData::nesting(data_, resources_);
+    return impl_.nesting();
   }
 
   // Returns the size of the array or object.
   // https://arduinojson.org/v7/api/jsonvariantconst/size/
   size_t size() const {
-    return detail::VariantData::size(data_, resources_);
+    return impl_.size();
   }
 
   // Casts the value to the specified type.
@@ -104,9 +104,8 @@ class JsonVariantConst : public detail::VariantTag,
   template <typename T,
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   JsonVariantConst operator[](T index) const {
-    return JsonVariantConst(
-        detail::VariantData::getElement(data_, size_t(index), resources_),
-        resources_);
+    return JsonVariantConst(impl_.getElement(size_t(index)),
+                            impl_.getResourceManager());
   }
 
   // Gets object's member with specified key.
@@ -114,9 +113,8 @@ class JsonVariantConst : public detail::VariantTag,
   template <typename TString,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   JsonVariantConst operator[](const TString& key) const {
-    return JsonVariantConst(detail::VariantData::getMember(
-                                data_, detail::adaptString(key), resources_),
-                            resources_);
+    return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
+                            impl_.getResourceManager());
   }
 
   // Gets object's member with specified key.
@@ -126,9 +124,8 @@ class JsonVariantConst : public detail::VariantTag,
                                     !detail::is_const<TChar>::value,
                                 int> = 0>
   JsonVariantConst operator[](TChar* key) const {
-    return JsonVariantConst(detail::VariantData::getMember(
-                                data_, detail::adaptString(key), resources_),
-                            resources_);
+    return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
+                            impl_.getResourceManager());
   }
 
   // Gets object's member with specified key or the array's element at the
@@ -149,8 +146,7 @@ class JsonVariantConst : public detail::VariantTag,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   ARDUINOJSON_DEPRECATED("use var[key].is<T>() instead")
   bool containsKey(const TString& key) const {
-    return detail::VariantData::getMember(getData(), detail::adaptString(key),
-                                          resources_) != 0;
+    return impl_.getMember(detail::adaptString(key)) != 0;
   }
 
   // DEPRECATED: use obj["key"].is<T>() instead
@@ -161,8 +157,7 @@ class JsonVariantConst : public detail::VariantTag,
                                 int> = 0>
   ARDUINOJSON_DEPRECATED("use obj[\"key\"].is<T>() instead")
   bool containsKey(TChar* key) const {
-    return detail::VariantData::getMember(getData(), detail::adaptString(key),
-                                          resources_) != 0;
+    return impl_.getMember(detail::adaptString(key)) != 0;
   }
 
   // DEPRECATED: use obj[key].is<T>() instead
@@ -182,16 +177,15 @@ class JsonVariantConst : public detail::VariantTag,
 
  protected:
   detail::VariantData* getData() const {
-    return data_;
+    return impl_.getData();
   }
 
   detail::ResourceManager* getResourceManager() const {
-    return resources_;
+    return impl_.getResourceManager();
   }
 
  private:
-  mutable detail::VariantData* data_;
-  mutable detail::ResourceManager* resources_;
+  mutable detail::VariantImpl impl_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE
