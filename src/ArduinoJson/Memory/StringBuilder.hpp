@@ -5,6 +5,7 @@
 #pragma once
 
 #include <ArduinoJson/Memory/ResourceManager.hpp>
+#include <ArduinoJson/Strings/JsonString.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
