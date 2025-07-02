@@ -6,10 +6,8 @@
 
 #include <stddef.h>  // size_t
 
-#include <ArduinoJson/Array/ArrayData.hpp>
 #include <ArduinoJson/Numbers/JsonFloat.hpp>
 #include <ArduinoJson/Numbers/JsonInteger.hpp>
-#include <ArduinoJson/Object/ObjectData.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
@@ -46,6 +44,18 @@ enum class VariantType : uint8_t {
 inline bool operator&(VariantType type, VariantTypeBits bit) {
   return (uint8_t(type) & uint8_t(bit)) != 0;
 }
+
+struct CollectionData {
+  SlotId head = NULL_SLOT;
+  SlotId tail = NULL_SLOT;
+
+  // Placement new
+  static void* operator new(size_t, void* p) noexcept {
+    return p;
+  }
+
+  static void operator delete(void*, void*) noexcept {}
+};
 
 const size_t tinyStringMaxLength = 3;
 

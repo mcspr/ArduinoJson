@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <ArduinoJson/Array/ArrayData.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
+#include <ArduinoJson/Object/ObjectData.hpp>
 #include <ArduinoJson/Strings/JsonString.hpp>
 #include <ArduinoJson/Strings/StringAdapters.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>

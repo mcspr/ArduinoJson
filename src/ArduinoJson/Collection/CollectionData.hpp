@@ -66,18 +66,6 @@ class CollectionIterator {
   SlotId currentId_;
 };
 
-struct CollectionData {
-  SlotId head = NULL_SLOT;
-  SlotId tail = NULL_SLOT;
-
-  // Placement new
-  static void* operator new(size_t, void* p) noexcept {
-    return p;
-  }
-
-  static void operator delete(void*, void*) noexcept {}
-};
-
 class CollectionImpl {
  protected:
   CollectionData* data_;
