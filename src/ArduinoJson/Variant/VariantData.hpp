@@ -71,6 +71,19 @@ struct VariantData {
     content.asOwnedString = s;
   }
 
+  CollectionData* asCollection() {
+    return type & VariantTypeBits::CollectionMask ? &content.asCollection
+                                                  : nullptr;
+  }
+
+  CollectionData* asArray() {
+    return type == VariantType::Array ? &content.asCollection : nullptr;
+  }
+
+  CollectionData* asObject() {
+    return type == VariantType::Object ? &content.asCollection : nullptr;
+  }
+
   bool isFloat() const {
     return type & VariantTypeBits::NumberBit;
   }
@@ -78,6 +91,40 @@ struct VariantData {
   bool isString() const {
     return type == VariantType::LinkedString ||
            type == VariantType::OwnedString || type == VariantType::TinyString;
+  }
+
+  CollectionData* toArray() {
+    ARDUINOJSON_ASSERT(type == VariantType::Null);
+    type = VariantType::Array;
+    return new (&content.asCollection) CollectionData();
+  }
+
+  CollectionData* toObject() {
+    ARDUINOJSON_ASSERT(type == VariantType::Null);
+    type = VariantType::Object;
+    return new (&content.asCollection) CollectionData();
+  }
+
+  CollectionData* getOrCreateArray() {
+    switch (type) {
+      case VariantType::Null:
+        return toArray();
+      case VariantType::Array:
+        return &content.asCollection;
+      default:
+        return nullptr;
+    }
+  }
+
+  CollectionData* getOrCreateObject() {
+    switch (type) {
+      case VariantType::Null:
+        return toObject();
+      case VariantType::Object:
+        return &content.asCollection;
+      default:
+        return nullptr;
+    }
   }
 };
 

@@ -352,7 +352,7 @@ class MsgPackDeserializer {
     ArrayImpl array;
     if (allowArray) {
       ARDUINOJSON_ASSERT(variant != 0);
-      array = VariantImpl(variant, resources_).toArray();
+      array = ArrayImpl(variant->toArray(), resources_);
     }
 
     TFilter elementFilter = filter[0U];
@@ -388,7 +388,7 @@ class MsgPackDeserializer {
     ObjectImpl object;
     if (filter.allowObject()) {
       ARDUINOJSON_ASSERT(variant != 0);
-      object = VariantImpl(variant, resources_).toObject();
+      object = ObjectImpl(variant->toObject(), resources_);
     }
 
     for (; n; --n) {

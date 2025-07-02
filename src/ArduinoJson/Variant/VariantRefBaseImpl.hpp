@@ -147,17 +147,23 @@ inline bool VariantRefBase<TDerived>::doSet(const T& value, true_type) const {
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonArray>::value, int>>
 inline JsonArray VariantRefBase<TDerived>::to() const {
-  auto variant = getOrCreateVariantImpl();
-  variant.clear();
-  return JsonArray(variant.toArray());
+  auto data = getOrCreateData();
+  if (!data)
+    return JsonArray();
+  auto resources = getResourceManager();
+  VariantImpl(data, resources).clear();
+  return JsonArray(data->toArray(), resources);
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonObject>::value, int>>
 JsonObject VariantRefBase<TDerived>::to() const {
-  auto variant = getOrCreateVariantImpl();
-  variant.clear();
-  return JsonObject(variant.toObject());
+  auto data = getOrCreateData();
+  if (!data)
+    return JsonObject();
+  auto resources = getResourceManager();
+  VariantImpl(data, resources).clear();
+  return JsonObject(data->toObject(), resources);
 }
 
 template <typename TDerived>

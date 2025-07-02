@@ -64,6 +64,8 @@ class JsonDeserializer {
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
+    ARDUINOJSON_ASSERT(variant != nullptr);
+
     err = skipSpacesAndComments();
     if (err)
       return err;
@@ -71,15 +73,13 @@ class JsonDeserializer {
     switch (current()) {
       case '[':
         if (filter.allowArray())
-          return parseArray(VariantImpl(variant, resources_).toArray(), filter,
-                            nestingLimit);
+          return parseArray(variant->toArray(), filter, nestingLimit);
         else
           return skipArray(nestingLimit);
 
       case '{':
         if (filter.allowObject())
-          return parseObject(VariantImpl(variant, resources_).toObject(),
-                             filter, nestingLimit);
+          return parseObject(variant->toObject(), filter, nestingLimit);
         else
           return skipObject(nestingLimit);
 
@@ -148,7 +148,7 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseArray(
-      ArrayImpl array, TFilter filter,
+      CollectionData* arrayData, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
@@ -173,6 +173,8 @@ class JsonDeserializer {
     // Read each value
     for (;;) {
       if (elementFilter.allow()) {
+        ArrayImpl array(arrayData, resources_);
+
         // Allocate slot in array
         VariantData* value = array.addElement();
         if (!value)
@@ -234,7 +236,7 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseObject(
-      ObjectImpl object, TFilter filter,
+      CollectionData* objectData, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
@@ -275,6 +277,7 @@ class JsonDeserializer {
       TFilter memberFilter = filter[key];
 
       if (memberFilter.allow()) {
+        ObjectImpl object(objectData, resources_);
         auto member = object.getMember(adaptString(key));
         if (!member) {
           auto keyVariant = object.addPair(&member);
