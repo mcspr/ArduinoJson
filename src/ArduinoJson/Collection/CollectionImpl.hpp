@@ -22,44 +22,50 @@ inline void CollectionIterator::next(const ResourceManager* resources) {
 inline CollectionImpl::iterator CollectionImpl::createIterator() const {
   if (!data_)
     return iterator();
-  return iterator(resources_->getVariant(data_->head), data_->head);
+  auto coll = getCollectionData();
+  return iterator(resources_->getVariant(coll->head), coll->head);
 }
 
 inline void CollectionImpl::appendOne(Slot<VariantData> slot) {
-  ARDUINOJSON_ASSERT(data_ != nullptr);
   ARDUINOJSON_ASSERT(resources_ != nullptr);
 
-  if (data_->tail != NULL_SLOT) {
-    auto tail = resources_->getVariant(data_->tail);
+  auto coll = getCollectionData();
+
+  if (coll->tail != NULL_SLOT) {
+    auto tail = resources_->getVariant(coll->tail);
     tail->next = slot.id();
-    data_->tail = slot.id();
+    coll->tail = slot.id();
   } else {
-    data_->head = slot.id();
-    data_->tail = slot.id();
+    coll->head = slot.id();
+    coll->tail = slot.id();
   }
 }
 
 inline void CollectionImpl::appendPair(Slot<VariantData> key,
                                        Slot<VariantData> value) {
-  ARDUINOJSON_ASSERT(data_ != nullptr);
   ARDUINOJSON_ASSERT(resources_ != nullptr);
+
+  auto coll = getCollectionData();
 
   key->next = value.id();
 
-  if (data_->tail != NULL_SLOT) {
-    auto tail = resources_->getVariant(data_->tail);
+  if (coll->tail != NULL_SLOT) {
+    auto tail = resources_->getVariant(coll->tail);
     tail->next = key.id();
-    data_->tail = value.id();
+    coll->tail = value.id();
   } else {
-    data_->head = key.id();
-    data_->tail = value.id();
+    coll->head = key.id();
+    coll->tail = value.id();
   }
 }
 
 inline void CollectionImpl::clear() {
   if (!data_)
     return;
-  auto next = data_->head;
+
+  auto coll = getCollectionData();
+
+  auto next = coll->head;
   while (next != NULL_SLOT) {
     auto currId = next;
     auto slot = resources_->getVariant(next);
@@ -67,14 +73,15 @@ inline void CollectionImpl::clear() {
     resources_->freeVariant({slot, currId});
   }
 
-  data_->head = NULL_SLOT;
-  data_->tail = NULL_SLOT;
+  coll->head = NULL_SLOT;
+  coll->tail = NULL_SLOT;
 }
 
 inline Slot<VariantData> CollectionImpl::getPreviousSlot(
     VariantData* target) const {
+  auto coll = getCollectionData();
   auto prev = Slot<VariantData>();
-  auto currentId = data_->head;
+  auto currentId = coll->head;
   while (currentId != NULL_SLOT) {
     auto currentSlot = resources_->getVariant(currentId);
     if (currentSlot == target)
@@ -88,15 +95,16 @@ inline Slot<VariantData> CollectionImpl::getPreviousSlot(
 inline void CollectionImpl::removeOne(iterator it) {
   if (it.done())
     return;
+  auto coll = getCollectionData();
   auto curr = it.slot_;
   auto prev = getPreviousSlot(curr);
   auto next = curr->next;
   if (prev)
     prev->next = next;
   else
-    data_->head = next;
+    coll->head = next;
   if (next == NULL_SLOT)
-    data_->tail = prev.id();
+    coll->tail = prev.id();
   resources_->freeVariant({it.slot_, it.currentId_});
 }
 

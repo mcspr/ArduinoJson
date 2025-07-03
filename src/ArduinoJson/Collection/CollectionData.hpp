@@ -104,7 +104,7 @@ class CollectionImpl {
   void clear();
 
   SlotId head() const {
-    return data_->head;
+    return getCollectionData()->head;
   }
 
  protected:
@@ -116,6 +116,11 @@ class CollectionImpl {
 
  private:
   Slot<VariantData> getPreviousSlot(VariantData*) const;
+
+  CollectionData* getCollectionData() const {
+    ARDUINOJSON_ASSERT(data_ != nullptr);
+    return data_;
+  }
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
