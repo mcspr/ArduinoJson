@@ -22,8 +22,7 @@ inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
 inline VariantData* ArrayImpl::addElement() {
   if (!data_)
     return nullptr;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-  auto slot = resources_->allocVariant();
+  auto slot = allocVariant();
   if (!slot)
     return nullptr;
   CollectionImpl::appendOne(slot);
@@ -60,13 +59,12 @@ template <typename T>
 inline bool ArrayImpl::addValue(const T& value) {
   if (!data_)
     return false;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-  auto slot = resources_->allocVariant();
+  auto slot = allocVariant();
   if (!slot)
     return false;
   JsonVariant variant(slot.ptr(), resources_);
   if (!variant.set(value)) {
-    resources_->freeVariant(slot);
+    freeVariant(slot);
     return false;
   }
   CollectionImpl::appendOne(slot);

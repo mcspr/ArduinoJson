@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <ArduinoJson/Memory/MemoryPool.hpp>
 #include <ArduinoJson/Namespace.hpp>
 #include <ArduinoJson/Polyfills/assert.hpp>
 
@@ -113,6 +112,21 @@ class CollectionImpl {
 
   void removeOne(iterator it);
   void removePair(iterator it);
+
+  VariantData* getVariant(SlotId id) const {
+    ARDUINOJSON_ASSERT(resources_ != nullptr);
+    return resources_->getVariant(id);
+  }
+
+  void freeVariant(Slot<VariantData> slot) {
+    ARDUINOJSON_ASSERT(resources_ != nullptr);
+    resources_->freeVariant(slot);
+  }
+
+  Slot<VariantData> allocVariant() {
+    ARDUINOJSON_ASSERT(resources_ != nullptr);
+    return resources_->allocVariant();
+  }
 
  private:
   Slot<VariantData> getPreviousSlot(VariantData*) const;

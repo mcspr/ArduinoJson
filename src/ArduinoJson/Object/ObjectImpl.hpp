@@ -50,13 +50,12 @@ template <typename TAdaptedString>
 inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
   if (!data_)
     return nullptr;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
 
-  auto keySlot = resources_->allocVariant();
+  auto keySlot = allocVariant();
   if (!keySlot)
     return nullptr;
 
-  auto valueSlot = resources_->allocVariant();
+  auto valueSlot = allocVariant();
   if (!valueSlot)
     return nullptr;
 
@@ -72,13 +71,12 @@ inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
 inline VariantData* ObjectImpl::addPair(VariantData** value) {
   if (!data_)
     return nullptr;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
 
-  auto keySlot = resources_->allocVariant();
+  auto keySlot = allocVariant();
   if (!keySlot)
     return nullptr;
 
-  auto valueSlot = resources_->allocVariant();
+  auto valueSlot = allocVariant();
   if (!valueSlot)
     return nullptr;
   *value = valueSlot.ptr();

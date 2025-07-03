@@ -23,16 +23,14 @@ inline CollectionImpl::iterator CollectionImpl::createIterator() const {
   if (!data_)
     return iterator();
   auto coll = getCollectionData();
-  return iterator(resources_->getVariant(coll->head), coll->head);
+  return iterator(getVariant(coll->head), coll->head);
 }
 
 inline void CollectionImpl::appendOne(Slot<VariantData> slot) {
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-
   auto coll = getCollectionData();
 
   if (coll->tail != NULL_SLOT) {
-    auto tail = resources_->getVariant(coll->tail);
+    auto tail = getVariant(coll->tail);
     tail->next = slot.id();
     coll->tail = slot.id();
   } else {
@@ -43,14 +41,12 @@ inline void CollectionImpl::appendOne(Slot<VariantData> slot) {
 
 inline void CollectionImpl::appendPair(Slot<VariantData> key,
                                        Slot<VariantData> value) {
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-
   auto coll = getCollectionData();
 
   key->next = value.id();
 
   if (coll->tail != NULL_SLOT) {
-    auto tail = resources_->getVariant(coll->tail);
+    auto tail = getVariant(coll->tail);
     tail->next = key.id();
     coll->tail = value.id();
   } else {
@@ -68,9 +64,9 @@ inline void CollectionImpl::clear() {
   auto next = coll->head;
   while (next != NULL_SLOT) {
     auto currId = next;
-    auto slot = resources_->getVariant(next);
+    auto slot = getVariant(next);
     next = slot->next;
-    resources_->freeVariant({slot, currId});
+    freeVariant({slot, currId});
   }
 
   coll->head = NULL_SLOT;
@@ -83,7 +79,7 @@ inline Slot<VariantData> CollectionImpl::getPreviousSlot(
   auto prev = Slot<VariantData>();
   auto currentId = coll->head;
   while (currentId != NULL_SLOT) {
-    auto currentSlot = resources_->getVariant(currentId);
+    auto currentSlot = getVariant(currentId);
     if (currentSlot == target)
       break;
     prev = Slot<VariantData>(currentSlot, currentId);
@@ -105,7 +101,7 @@ inline void CollectionImpl::removeOne(iterator it) {
     coll->head = next;
   if (next == NULL_SLOT)
     coll->tail = prev.id();
-  resources_->freeVariant({it.slot_, it.currentId_});
+  freeVariant({it.slot_, it.currentId_});
 }
 
 inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
@@ -115,11 +111,11 @@ inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
   auto keySlot = it.slot_;
 
   auto valueId = keySlot->next;
-  auto valueSlot = resources_->getVariant(valueId);
+  auto valueSlot = getVariant(valueId);
 
   // remove value slot
   keySlot->next = valueSlot->next;
-  resources_->freeVariant({valueSlot, valueId});
+  freeVariant({valueSlot, valueId});
 
   // remove key slot
   removeOne(it);
