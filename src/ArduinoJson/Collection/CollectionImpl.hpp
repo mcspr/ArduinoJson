@@ -20,7 +20,7 @@ inline void CollectionIterator::next(const ResourceManager* resources) {
 }
 
 inline CollectionImpl::iterator CollectionImpl::createIterator() const {
-  if (!data_)
+  if (!data_ || !data_->isCollection())
     return iterator();
   auto coll = getCollectionData();
   return iterator(getVariant(coll->head), coll->head);
@@ -56,7 +56,7 @@ inline void CollectionImpl::appendPair(Slot<VariantData> key,
 }
 
 inline void CollectionImpl::clear() {
-  if (!data_)
+  if (!data_ || !data_->isCollection())
     return;
 
   auto coll = getCollectionData();
@@ -122,7 +122,7 @@ inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
 }
 
 inline size_t CollectionImpl::nesting() const {
-  if (!data_)
+  if (!data_ || !data_->isCollection())
     return 0;
   size_t maxChildNesting = 0;
   for (auto it = createIterator(); !it.done(); it.next(resources_)) {

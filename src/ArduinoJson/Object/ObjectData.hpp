@@ -14,8 +14,12 @@ class ObjectImpl : public CollectionImpl {
  public:
   ObjectImpl() {}
 
-  ObjectImpl(CollectionData* data, ResourceManager* resources)
+  ObjectImpl(VariantData* data, ResourceManager* resources)
       : CollectionImpl(data, resources) {}
+
+  bool isNull() const {
+    return !data_ || data_->type != VariantType::Object;
+  }
 
   template <typename TAdaptedString>
   VariantData* addMember(TAdaptedString key);

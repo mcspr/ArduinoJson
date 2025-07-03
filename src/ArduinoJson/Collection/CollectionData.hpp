@@ -67,7 +67,7 @@ class CollectionIterator {
 
 class CollectionImpl {
  protected:
-  CollectionData* data_;
+  VariantData* data_;
   ResourceManager* resources_;
 
  public:
@@ -75,20 +75,19 @@ class CollectionImpl {
 
   CollectionImpl() : data_(nullptr), resources_(nullptr) {}
 
-  CollectionImpl(CollectionData* data, ResourceManager* resources)
+  CollectionImpl(VariantData* data, ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
   explicit operator bool() const {
-    return data_ != nullptr;
+    return data_ && data_->isCollection();
   }
 
   bool isNull() const {
-    return data_ == nullptr;
+    return !operator bool();
   }
 
   VariantData* getData() const {
-    void* data = data_;  // prevent warning cast-align
-    return reinterpret_cast<VariantData*>(data);
+    return data_;
   }
 
   ResourceManager* getResourceManager() const {
@@ -133,7 +132,8 @@ class CollectionImpl {
 
   CollectionData* getCollectionData() const {
     ARDUINOJSON_ASSERT(data_ != nullptr);
-    return data_;
+    ARDUINOJSON_ASSERT(data_->isCollection());
+    return &data_->content.asCollection;
   }
 };
 

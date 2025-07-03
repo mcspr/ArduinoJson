@@ -11,6 +11,9 @@
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
+  if (isNull())
+    return iterator();
+
   auto it = createIterator();
   while (!it.done() && index) {
     it.next(resources_);
@@ -20,7 +23,7 @@ inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
 }
 
 inline VariantData* ArrayImpl::addElement() {
-  if (!data_)
+  if (isNull())
     return nullptr;
   auto slot = allocVariant();
   if (!slot)
@@ -57,7 +60,7 @@ inline void ArrayImpl::removeElement(size_t index) {
 
 template <typename T>
 inline bool ArrayImpl::addValue(const T& value) {
-  if (!data_)
+  if (isNull())
     return false;
   auto slot = allocVariant();
   if (!slot)

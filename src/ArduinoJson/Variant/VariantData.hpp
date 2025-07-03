@@ -71,17 +71,8 @@ struct VariantData {
     content.asOwnedString = s;
   }
 
-  CollectionData* asCollection() {
-    return type & VariantTypeBits::CollectionMask ? &content.asCollection
-                                                  : nullptr;
-  }
-
-  CollectionData* asArray() {
-    return type == VariantType::Array ? &content.asCollection : nullptr;
-  }
-
-  CollectionData* asObject() {
-    return type == VariantType::Object ? &content.asCollection : nullptr;
+  bool isCollection() const {
+    return type & VariantTypeBits::CollectionMask;
   }
 
   bool isFloat() const {
@@ -93,35 +84,37 @@ struct VariantData {
            type == VariantType::OwnedString || type == VariantType::TinyString;
   }
 
-  CollectionData* toArray() {
+  VariantData* toArray() {
     ARDUINOJSON_ASSERT(type == VariantType::Null);
     type = VariantType::Array;
-    return new (&content.asCollection) CollectionData();
+    new (&content.asCollection) CollectionData();
+    return this;
   }
 
-  CollectionData* toObject() {
+  VariantData* toObject() {
     ARDUINOJSON_ASSERT(type == VariantType::Null);
     type = VariantType::Object;
-    return new (&content.asCollection) CollectionData();
+    new (&content.asCollection) CollectionData();
+    return this;
   }
 
-  CollectionData* getOrCreateArray() {
+  VariantData* getOrCreateArray() {
     switch (type) {
       case VariantType::Null:
         return toArray();
       case VariantType::Array:
-        return &content.asCollection;
+        return this;
       default:
         return nullptr;
     }
   }
 
-  CollectionData* getOrCreateObject() {
+  VariantData* getOrCreateObject() {
     switch (type) {
       case VariantType::Null:
         return toObject();
       case VariantType::Object:
-        return &content.asCollection;
+        return this;
       default:
         return nullptr;
     }

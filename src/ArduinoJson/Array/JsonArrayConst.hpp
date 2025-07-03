@@ -38,7 +38,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
 
   // INTERNAL USE ONLY
   JsonArrayConst(detail::VariantData* data, detail::ResourceManager* resources)
-      : impl_(data ? data->asArray() : nullptr, resources) {}
+      : impl_(data, resources) {}
 
   // INTERNAL USE ONLY
   JsonArrayConst(const detail::ArrayImpl& impl) : impl_(impl) {}

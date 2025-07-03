@@ -23,12 +23,8 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   JsonObject() {}
 
   // INTERNAL USE ONLY
-  JsonObject(detail::CollectionData* data, detail::ResourceManager* resource)
-      : impl_(data, resource) {}
-
-  // INTERNAL USE ONLY
   JsonObject(detail::VariantData* data, detail::ResourceManager* resource)
-      : impl_(data ? data->asObject() : nullptr, resource) {}
+      : impl_(data, resource) {}
 
   operator JsonVariant() const {
     return JsonVariant(getData(), getResourceManager());

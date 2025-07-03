@@ -29,6 +29,8 @@ VariantData* ObjectImpl::getOrAddMember(TAdaptedString key) {
 
 template <typename TAdaptedString>
 inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key) const {
+  if (isNull())
+    return iterator();
   if (key.isNull())
     return iterator();
   bool isKey = true;
@@ -48,7 +50,7 @@ inline void ObjectImpl::removeMember(TAdaptedString key) {
 
 template <typename TAdaptedString>
 inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
-  if (!data_)
+  if (isNull())
     return nullptr;
 
   auto keySlot = allocVariant();
@@ -69,8 +71,7 @@ inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
 }
 
 inline VariantData* ObjectImpl::addPair(VariantData** value) {
-  if (!data_)
-    return nullptr;
+  ARDUINOJSON_ASSERT(!isNull());
 
   auto keySlot = allocVariant();
   if (!keySlot)

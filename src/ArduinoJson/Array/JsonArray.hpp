@@ -24,10 +24,6 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
 
   // INTERNAL USE ONLY
   JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
-      : impl_(data ? data->asArray() : nullptr, resources) {}
-
-  // INTERNAL USE ONLY
-  JsonArray(detail::CollectionData* data, detail::ResourceManager* resources)
       : impl_(data, resources) {}
 
   // Returns a JsonVariant pointing to the array.

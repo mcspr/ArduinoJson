@@ -48,11 +48,10 @@ class VariantImpl {
 #endif
 
       case VariantType::Array:
-        return visit.visit(ArrayImpl(&data_->content.asCollection, resources_));
+        return visit.visit(ArrayImpl(data_, resources_));
 
       case VariantType::Object:
-        return visit.visit(
-            ObjectImpl(&data_->content.asCollection, resources_));
+        return visit.visit(ObjectImpl(data_, resources_));
 
       case VariantType::TinyString:
         return visit.visit(JsonString(data_->content.asTinyString));
@@ -264,16 +263,12 @@ class VariantImpl {
 #endif
 
   VariantData* getElement(size_t index) {
-    if (!data_)
-      return nullptr;
-    return ArrayImpl(data_->asArray(), resources_).getElement(index);
+    return ArrayImpl(data_, resources_).getElement(index);
   }
 
   template <typename TAdaptedString>
   VariantData* getMember(TAdaptedString key) {
-    if (!data_)
-      return nullptr;
-    return ObjectImpl(data_->asObject(), resources_).getMember(key);
+    return ObjectImpl(data_, resources_).getMember(key);
   }
 
   VariantData* getOrAddElement(size_t index) {
@@ -299,10 +294,6 @@ class VariantImpl {
 
   bool isBoolean() const {
     return type() == VariantType::Boolean;
-  }
-
-  bool isCollection() const {
-    return type() & VariantTypeBits::CollectionMask;
   }
 
   bool isFloat() const {
@@ -350,22 +341,16 @@ class VariantImpl {
   }
 
   size_t nesting() {
-    if (!data_)
-      return 0;
-    return CollectionImpl(data_->asCollection(), resources_).nesting();
+    return CollectionImpl(data_, resources_).nesting();
   }
 
   void removeElement(size_t index) {
-    if (!data_)
-      return;
-    ArrayImpl(data_->asArray(), resources_).removeElement(index);
+    ArrayImpl(data_, resources_).removeElement(index);
   }
 
   template <typename TAdaptedString>
   void removeMember(TAdaptedString key) {
-    if (!data_)
-      return;
-    ObjectImpl(data_->asObject(), resources_).removeMember(key);
+    ObjectImpl(data_, resources_).removeMember(key);
   }
 
   bool setBoolean(bool value) {
@@ -470,12 +455,9 @@ class VariantImpl {
   bool setLinkedString(const char* s);
 
   size_t size() {
-    if (!data_)
-      return 0;
+    auto size = CollectionImpl(data_, resources_).size();
 
-    auto size = CollectionImpl(data_->asCollection(), resources_).size();
-
-    if (data_->type == VariantType::Object)
+    if (data_ && data_->type == VariantType::Object)
       size /= 2;
 
     return size;
@@ -554,7 +536,7 @@ inline void VariantImpl::clear() {
     resources_->freeEightByte(data_->content.asSlotId);
 #endif
 
-  CollectionImpl(data_->asCollection(), resources_).clear();
+  CollectionImpl(data_, resources_).clear();
 
   data_->type = VariantType::Null;
 }

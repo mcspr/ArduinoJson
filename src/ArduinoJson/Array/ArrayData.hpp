@@ -12,8 +12,12 @@ class ArrayImpl : public CollectionImpl {
  public:
   ArrayImpl() {}
 
-  ArrayImpl(CollectionData* data, ResourceManager* resources)
+  ArrayImpl(VariantData* data, ResourceManager* resources)
       : CollectionImpl(data, resources) {}
+
+  bool isNull() const {
+    return !data_ || data_->type != VariantType::Array;
+  }
 
   VariantData* addElement();
 
