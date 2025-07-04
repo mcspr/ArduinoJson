@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include <ArduinoJson/Array/ArrayData.hpp>
+#include <ArduinoJson/Collection/CollectionData.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
-#include <ArduinoJson/Object/ObjectData.hpp>
 #include <ArduinoJson/Strings/JsonString.hpp>
 #include <ArduinoJson/Strings/StringAdapters.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>
@@ -16,7 +15,12 @@
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 class VariantImpl {
+  VariantData* data_;
+  ResourceManager* resources_;
+
  public:
+  using iterator = CollectionIterator;
+
   VariantImpl() : data_(nullptr), resources_(nullptr) {}
 
   VariantImpl(VariantData* data, ResourceManager* resources)
@@ -48,10 +52,10 @@ class VariantImpl {
 #endif
 
       case VariantType::Array:
-        return visit.visit(ArrayImpl(data_, resources_));
+        return visit.visitArray(VariantImpl(data_, resources_));
 
       case VariantType::Object:
-        return visit.visit(ObjectImpl(data_, resources_));
+        return visit.visitObject(VariantImpl(data_, resources_));
 
       case VariantType::TinyString:
         return visit.visit(JsonString(data_->content.asTinyString));
@@ -89,18 +93,10 @@ class VariantImpl {
     }
   }
 
-  VariantData* addElement() {
-    if (!data_)
-      return nullptr;
-    return ArrayImpl(data_->getOrCreateArray(), resources_).addElement();
-  }
+  VariantData* addElement();
 
   template <typename T>
-  bool addValue(const T& value) {
-    if (!data_)
-      return false;
-    return ArrayImpl(data_->getOrCreateArray(), resources_).addValue(value);
-  }
+  bool addValue(const T& value);
 
   bool asBoolean() const {
     if (!data_)
@@ -262,31 +258,26 @@ class VariantImpl {
   }
 #endif
 
-  VariantData* getElement(size_t index) {
-    return ArrayImpl(data_, resources_).getElement(index);
+  SlotId head() const {
+    return getCollectionData()->head;
   }
+
+  iterator createIterator() const;
+
+  VariantData* getElement(size_t index) const;
+
+  VariantData* getOrAddElement(size_t index);
+
+  VariantData* addPair(VariantData** value);
 
   template <typename TAdaptedString>
-  VariantData* getMember(TAdaptedString key) {
-    return ObjectImpl(data_, resources_).getMember(key);
-  }
-
-  VariantData* getOrAddElement(size_t index) {
-    if (!data_)
-      return nullptr;
-    return ArrayImpl(data_->getOrCreateArray(), resources_)
-        .getOrAddElement(index);
-  }
+  VariantData* addMember(TAdaptedString key);
 
   template <typename TAdaptedString>
-  VariantData* getOrAddMember(TAdaptedString key) {
-    if (key.isNull())
-      return nullptr;
-    if (!data_)
-      return nullptr;
-    return ObjectImpl(data_->getOrCreateObject(), resources_)
-        .getOrAddMember(key);
-  }
+  VariantData* getMember(TAdaptedString key) const;
+
+  template <typename TAdaptedString>
+  VariantData* getOrAddMember(TAdaptedString key);
 
   bool isArray() const {
     return type() == VariantType::Array;
@@ -340,17 +331,21 @@ class VariantImpl {
     return data_ && data_->isString();
   }
 
-  size_t nesting() {
-    return CollectionImpl(data_, resources_).nesting();
+  size_t nesting() const;
+
+  void removeElement(iterator it) {
+    if (!isArray())
+      return;
+    removeOne(it);
   }
 
-  void removeElement(size_t index) {
-    ArrayImpl(data_, resources_).removeElement(index);
-  }
+  void removeElement(size_t index);
 
   template <typename TAdaptedString>
-  void removeMember(TAdaptedString key) {
-    ObjectImpl(data_, resources_).removeMember(key);
+  void removeMember(TAdaptedString key);
+
+  void removeMember(iterator it) {
+    removePair(it);
   }
 
   bool setBoolean(bool value) {
@@ -454,13 +449,21 @@ class VariantImpl {
 
   bool setLinkedString(const char* s);
 
-  size_t size() {
-    auto size = CollectionImpl(data_, resources_).size();
+  void empty();
 
-    if (data_ && data_->type == VariantType::Object)
-      size /= 2;
+  size_t size() const {
+    if (!data_)
+      return 0;
 
-    return size;
+    size_t count = 0;
+
+    for (auto it = createIterator(); !it.done(); it.next(resources_))
+      count++;
+
+    if (data_->type == VariantType::Object)
+      count /= 2;  // TODO: do this in JsonObject?
+
+    return count;
   }
 
   VariantType type() const {
@@ -471,8 +474,39 @@ class VariantImpl {
   void clear();
 
  private:
-  VariantData* data_;
-  ResourceManager* resources_;
+  template <typename TAdaptedString>
+  iterator findKey(TAdaptedString key) const;
+
+  iterator at(size_t index) const;
+
+  void appendOne(Slot<VariantData> slot);
+  void appendPair(Slot<VariantData> key, Slot<VariantData> value);
+
+  void removeOne(iterator it);
+  void removePair(iterator it);
+
+  VariantData* getVariant(SlotId id) const {
+    ARDUINOJSON_ASSERT(resources_ != nullptr);
+    return resources_->getVariant(id);
+  }
+
+  void freeVariant(Slot<VariantData> slot) {
+    ARDUINOJSON_ASSERT(resources_ != nullptr);
+    resources_->freeVariant(slot);
+  }
+
+  Slot<VariantData> allocVariant() {
+    ARDUINOJSON_ASSERT(resources_ != nullptr);
+    return resources_->allocVariant();
+  }
+
+  Slot<VariantData> getPreviousSlot(VariantData*) const;
+
+  CollectionData* getCollectionData() const {
+    ARDUINOJSON_ASSERT(data_ != nullptr);
+    ARDUINOJSON_ASSERT(data_->isCollection());
+    return &data_->content.asCollection;
+  }
 };
 
 template <typename T>
@@ -536,9 +570,25 @@ inline void VariantImpl::clear() {
     resources_->freeEightByte(data_->content.asSlotId);
 #endif
 
-  CollectionImpl(data_, resources_).clear();
+  if (data_->type & VariantTypeBits::CollectionMask)
+    empty();
 
   data_->type = VariantType::Null;
+}
+
+inline void VariantImpl::empty() {
+  auto coll = getCollectionData();
+
+  auto next = coll->head;
+  while (next != NULL_SLOT) {
+    auto currId = next;
+    auto slot = getVariant(next);
+    next = slot->next;
+    freeVariant({slot, currId});
+  }
+
+  coll->head = NULL_SLOT;
+  coll->tail = NULL_SLOT;
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

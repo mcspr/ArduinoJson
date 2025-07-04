@@ -120,14 +120,14 @@ class VariantRefBase : public VariantTag {
   // https://arduinojson.org/v7/api/jsonvariant/add/
   template <typename T>
   bool add(const T& value) const {
-    return getOrCreateVariantImpl().addValue(value);
+    return getOrCreateOrCreateArray().addValue(value);
   }
 
   // Appends a value to the array.
   // https://arduinojson.org/v7/api/jsonvariant/add/
   template <typename T, enable_if_t<!is_const<T>::value, int> = 0>
   bool add(T* value) const {
-    return getOrCreateVariantImpl().addValue(value);
+    return getOrCreateOrCreateArray().addValue(value);
   }
 
   // Removes an element of the array.
@@ -277,6 +277,18 @@ class VariantRefBase : public VariantTag {
 
   VariantImpl getOrCreateVariantImpl() const {
     return VariantImpl(getOrCreateData(), getResourceManager());
+  }
+
+  VariantImpl getOrCreateOrCreateArray() const {
+    auto data = getOrCreateData();
+    return VariantImpl(data ? data->getOrCreateArray() : nullptr,
+                       getResourceManager());
+  }
+
+  VariantImpl getOrCreateOrCreateObject() const {
+    auto data = getOrCreateData();
+    return VariantImpl(data ? data->getOrCreateObject() : nullptr,
+                       getResourceManager());
   }
 
   FORCE_INLINE ArduinoJson::JsonVariant getVariant() const;

@@ -41,7 +41,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
       : impl_(data, resources) {}
 
   // INTERNAL USE ONLY
-  JsonArrayConst(const detail::ArrayImpl& impl) : impl_(impl) {}
+  JsonArrayConst(const detail::VariantImpl& impl) : impl_(impl) {}
 
   // Returns the element at the specified index.
   // https://arduinojson.org/v7/api/jsonarrayconst/subscript/
@@ -64,7 +64,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(impl_.getData(), impl_.getResourceManager());
+    return JsonVariantConst(impl_);
   }
 
   // Returns true if the reference is unbound.
@@ -102,7 +102,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
     return impl_.getData();
   }
 
-  detail::ArrayImpl impl_;
+  detail::VariantImpl impl_;
 };
 
 // Compares the content of two arrays.

@@ -32,11 +32,6 @@ class VariantAttorney {
   }
 
   template <typename TClient>
-  static VariantImpl getOrCreateVariantImpl(TClient& client) {
-    return VariantImpl(client.getOrCreateData(), client.getResourceManager());
-  }
-
-  template <typename TClient>
   static VariantData* getOrCreateData(TClient& client) {
     return client.getOrCreateData();
   }

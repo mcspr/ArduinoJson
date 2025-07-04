@@ -19,7 +19,7 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
   PrettyJsonSerializer(TWriter writer, ResourceManager* resources)
       : base(writer, resources), nesting_(0) {}
 
-  size_t visit(const ArrayImpl& array) {
+  size_t visitArray(const VariantImpl& array) {
     auto it = array.createIterator();
     if (!it.done()) {
       base::write("[\r\n");
@@ -40,7 +40,7 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
     return this->bytesWritten();
   }
 
-  size_t visit(const ObjectImpl& object) {
+  size_t visitObject(const VariantImpl& object) {
     auto it = object.createIterator();
     if (!it.done()) {
       base::write("{\r\n");

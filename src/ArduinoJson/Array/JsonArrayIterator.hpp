@@ -30,7 +30,7 @@ class JsonArrayIterator {
 
  public:
   JsonArrayIterator() {}
-  explicit JsonArrayIterator(detail::ArrayImpl::iterator iterator,
+  explicit JsonArrayIterator(detail::VariantImpl::iterator iterator,
                              detail::ResourceManager* resources)
       : iterator_(iterator), resources_(resources) {}
 
@@ -55,7 +55,7 @@ class JsonArrayIterator {
   }
 
  private:
-  detail::ArrayImpl::iterator iterator_;
+  detail::VariantImpl::iterator iterator_;
   detail::ResourceManager* resources_;
 };
 
@@ -64,7 +64,7 @@ class JsonArrayConstIterator {
 
  public:
   JsonArrayConstIterator() {}
-  explicit JsonArrayConstIterator(detail::ArrayImpl::iterator iterator,
+  explicit JsonArrayConstIterator(detail::VariantImpl::iterator iterator,
                                   detail::ResourceManager* resources)
       : iterator_(iterator), resources_(resources) {}
 
@@ -89,7 +89,7 @@ class JsonArrayConstIterator {
   }
 
  private:
-  mutable detail::ArrayImpl::iterator iterator_;
+  mutable detail::VariantImpl::iterator iterator_;
   mutable detail::ResourceManager* resources_;
 };
 

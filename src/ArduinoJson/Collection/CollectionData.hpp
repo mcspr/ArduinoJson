@@ -15,7 +15,7 @@ struct VariantData;
 class ResourceManager;
 
 class CollectionIterator {
-  friend class CollectionImpl;
+  friend class VariantImpl;
 
  public:
   CollectionIterator() : slot_(nullptr), currentId_(NULL_SLOT) {}
@@ -63,78 +63,6 @@ class CollectionIterator {
 
   VariantData* slot_;
   SlotId currentId_;
-};
-
-class CollectionImpl {
- protected:
-  VariantData* data_;
-  ResourceManager* resources_;
-
- public:
-  using iterator = CollectionIterator;
-
-  CollectionImpl() : data_(nullptr), resources_(nullptr) {}
-
-  CollectionImpl(VariantData* data, ResourceManager* resources)
-      : data_(data), resources_(resources) {}
-
-  explicit operator bool() const {
-    return data_ && data_->isCollection();
-  }
-
-  bool isNull() const {
-    return !operator bool();
-  }
-
-  VariantData* getData() const {
-    return data_;
-  }
-
-  ResourceManager* getResourceManager() const {
-    return resources_;
-  }
-
-  iterator createIterator() const;
-
-  size_t size() const;
-  size_t nesting() const;
-
-  void clear();
-
-  SlotId head() const {
-    return getCollectionData()->head;
-  }
-
- protected:
-  void appendOne(Slot<VariantData> slot);
-  void appendPair(Slot<VariantData> key, Slot<VariantData> value);
-
-  void removeOne(iterator it);
-  void removePair(iterator it);
-
-  VariantData* getVariant(SlotId id) const {
-    ARDUINOJSON_ASSERT(resources_ != nullptr);
-    return resources_->getVariant(id);
-  }
-
-  void freeVariant(Slot<VariantData> slot) {
-    ARDUINOJSON_ASSERT(resources_ != nullptr);
-    resources_->freeVariant(slot);
-  }
-
-  Slot<VariantData> allocVariant() {
-    ARDUINOJSON_ASSERT(resources_ != nullptr);
-    return resources_->allocVariant();
-  }
-
- private:
-  Slot<VariantData> getPreviousSlot(VariantData*) const;
-
-  CollectionData* getCollectionData() const {
-    ARDUINOJSON_ASSERT(data_ != nullptr);
-    ARDUINOJSON_ASSERT(data_->isCollection());
-    return &data_->content.asCollection;
-  }
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

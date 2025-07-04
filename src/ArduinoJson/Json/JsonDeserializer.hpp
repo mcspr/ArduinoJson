@@ -173,7 +173,7 @@ class JsonDeserializer {
     // Read each value
     for (;;) {
       if (elementFilter.allow()) {
-        ArrayImpl array(arrayData, resources_);
+        VariantImpl array(arrayData, resources_);
 
         // Allocate slot in array
         VariantData* value = array.addElement();
@@ -277,7 +277,7 @@ class JsonDeserializer {
       TFilter memberFilter = filter[key];
 
       if (memberFilter.allow()) {
-        ObjectImpl object(objectData, resources_);
+        VariantImpl object(objectData, resources_);
         auto member = object.getMember(adaptString(key));
         if (!member) {
           auto keyVariant = object.addPair(&member);

@@ -47,7 +47,7 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ArrayImpl& array) {
+  size_t visitArray(const VariantImpl& array) {
     size_t n = array.size();
     if (n < 0x10) {
       writeByte(uint8_t(0x90 + n));
@@ -69,7 +69,7 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ObjectImpl& object) {
+  size_t visitObject(const VariantImpl& object) {
     size_t n = object.size();
     if (n < 0x10) {
       writeByte(uint8_t(0x80 + n));

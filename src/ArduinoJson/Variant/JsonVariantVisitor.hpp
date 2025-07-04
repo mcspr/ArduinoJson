@@ -28,11 +28,11 @@ class VisitorAdapter {
 
   VisitorAdapter(TVisitor& visitor) : visitor_(&visitor) {}
 
-  result_type visit(const ArrayImpl& array) {
+  result_type visitArray(const VariantImpl& array) {
     return visitor_->visit(JsonArrayConst(array));
   }
 
-  result_type visit(const ObjectImpl& object) {
+  result_type visitObject(const VariantImpl& object) {
     return visitor_->visit(JsonObjectConst(object));
   }
 

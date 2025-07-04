@@ -19,7 +19,7 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
   JsonSerializer(TWriter writer, ResourceManager* resources)
       : formatter_(writer), resources_(resources) {}
 
-  size_t visit(const ArrayImpl& array) {
+  size_t visitArray(const VariantImpl& array) {
     write('[');
 
     auto slotId = array.head();
@@ -39,7 +39,7 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ObjectImpl& object) {
+  size_t visitObject(const VariantImpl& object) {
     write('{');
 
     auto slotId = object.head();

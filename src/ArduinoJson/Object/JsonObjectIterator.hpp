@@ -14,7 +14,7 @@ class JsonObjectIterator {
  public:
   JsonObjectIterator() {}
 
-  explicit JsonObjectIterator(detail::ObjectImpl::iterator iterator,
+  explicit JsonObjectIterator(detail::VariantImpl::iterator iterator,
                               detail::ResourceManager* resources)
       : iterator_(iterator), resources_(resources) {}
 
@@ -40,7 +40,7 @@ class JsonObjectIterator {
   }
 
  private:
-  detail::ObjectImpl::iterator iterator_;
+  detail::VariantImpl::iterator iterator_;
   detail::ResourceManager* resources_;
 };
 
@@ -50,7 +50,7 @@ class JsonObjectConstIterator {
  public:
   JsonObjectConstIterator() {}
 
-  explicit JsonObjectConstIterator(detail::ObjectImpl::iterator iterator,
+  explicit JsonObjectConstIterator(detail::VariantImpl::iterator iterator,
                                    detail::ResourceManager* resources)
       : iterator_(iterator), resources_(resources) {}
 
@@ -76,7 +76,7 @@ class JsonObjectConstIterator {
   }
 
  private:
-  detail::ObjectImpl::iterator iterator_;
+  detail::VariantImpl::iterator iterator_;
   detail::ResourceManager* resources_;
 };
 

@@ -4,14 +4,13 @@
 
 #pragma once
 
-#include <ArduinoJson/Array/ArrayData.hpp>
 #include <ArduinoJson/Variant/VariantCompare.hpp>
-#include <ArduinoJson/Variant/VariantData.hpp>
+#include <ArduinoJson/Variant/VariantImpl.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
-  if (isNull())
+inline VariantImpl::iterator VariantImpl::at(size_t index) const {
+  if (!isArray())
     return iterator();
 
   auto it = createIterator();
@@ -22,17 +21,17 @@ inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
   return it;
 }
 
-inline VariantData* ArrayImpl::addElement() {
-  if (isNull())
+inline VariantData* VariantImpl::addElement() {
+  if (!isArray())
     return nullptr;
   auto slot = allocVariant();
   if (!slot)
     return nullptr;
-  CollectionImpl::appendOne(slot);
+  VariantImpl::appendOne(slot);
   return slot.ptr();
 }
 
-inline VariantData* ArrayImpl::getOrAddElement(size_t index) {
+inline VariantData* VariantImpl::getOrAddElement(size_t index) {
   auto it = createIterator();
   while (!it.done() && index > 0) {
     it.next(resources_);
@@ -50,17 +49,17 @@ inline VariantData* ArrayImpl::getOrAddElement(size_t index) {
   return element;
 }
 
-inline VariantData* ArrayImpl::getElement(size_t index) const {
+inline VariantData* VariantImpl::getElement(size_t index) const {
   return at(index).data();
 }
 
-inline void ArrayImpl::removeElement(size_t index) {
-  remove(at(index));
+inline void VariantImpl::removeElement(size_t index) {
+  removeElement(at(index));
 }
 
 template <typename T>
-inline bool ArrayImpl::addValue(const T& value) {
-  if (isNull())
+inline bool VariantImpl::addValue(const T& value) {
+  if (!isArray())
     return false;
   auto slot = allocVariant();
   if (!slot)
@@ -70,7 +69,7 @@ inline bool ArrayImpl::addValue(const T& value) {
     freeVariant(slot);
     return false;
   }
-  CollectionImpl::appendOne(slot);
+  appendOne(slot);
   return true;
 }
 

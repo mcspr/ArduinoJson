@@ -26,16 +26,19 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
       : impl_(data, resources) {}
 
+  // INTERNAL USE ONLY
+  JsonArray(detail::VariantImpl impl) : impl_(impl) {}
+
   // Returns a JsonVariant pointing to the array.
   // https://arduinojson.org/v7/api/jsonvariant/
   operator JsonVariant() {
-    return JsonVariant(getData(), getResourceManager());
+    return JsonVariant(impl_);
   }
 
   // Returns a read-only reference to the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/
   operator JsonArrayConst() const {
-    return JsonArrayConst(getData(), getResourceManager());
+    return JsonArrayConst(impl_);
   }
 
   // Appends a new (empty) element to the array.
@@ -101,7 +104,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Removes the element at the specified iterator.
   // https://arduinojson.org/v7/api/jsonarray/remove/
   void remove(iterator it) const {
-    impl_.remove(it.iterator_);
+    impl_.removeElement(it.iterator_);
   }
 
   // Removes the element at the specified index.
@@ -122,7 +125,8 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Removes all the elements of the array.
   // https://arduinojson.org/v7/api/jsonarray/clear/
   void clear() const {
-    impl_.clear();
+    if (impl_.isArray())
+      impl_.empty();
   }
 
   // Gets or sets the element at the specified index.
@@ -145,7 +149,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(getData(), getResourceManager());
+    return JsonVariantConst(impl_);
   }
 
   // Returns true if the reference is unbound.
@@ -207,7 +211,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
     return impl_.getData();
   }
 
-  mutable detail::ArrayImpl impl_;
+  mutable detail::VariantImpl impl_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

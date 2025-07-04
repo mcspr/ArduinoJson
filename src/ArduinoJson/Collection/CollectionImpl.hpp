@@ -19,14 +19,14 @@ inline void CollectionIterator::next(const ResourceManager* resources) {
   currentId_ = nextId;
 }
 
-inline CollectionImpl::iterator CollectionImpl::createIterator() const {
+inline VariantImpl::iterator VariantImpl::createIterator() const {
   if (!data_ || !data_->isCollection())
     return iterator();
   auto coll = getCollectionData();
   return iterator(getVariant(coll->head), coll->head);
 }
 
-inline void CollectionImpl::appendOne(Slot<VariantData> slot) {
+inline void VariantImpl::appendOne(Slot<VariantData> slot) {
   auto coll = getCollectionData();
 
   if (coll->tail != NULL_SLOT) {
@@ -39,8 +39,8 @@ inline void CollectionImpl::appendOne(Slot<VariantData> slot) {
   }
 }
 
-inline void CollectionImpl::appendPair(Slot<VariantData> key,
-                                       Slot<VariantData> value) {
+inline void VariantImpl::appendPair(Slot<VariantData> key,
+                                    Slot<VariantData> value) {
   auto coll = getCollectionData();
 
   key->next = value.id();
@@ -54,26 +54,7 @@ inline void CollectionImpl::appendPair(Slot<VariantData> key,
     coll->tail = value.id();
   }
 }
-
-inline void CollectionImpl::clear() {
-  if (!data_ || !data_->isCollection())
-    return;
-
-  auto coll = getCollectionData();
-
-  auto next = coll->head;
-  while (next != NULL_SLOT) {
-    auto currId = next;
-    auto slot = getVariant(next);
-    next = slot->next;
-    freeVariant({slot, currId});
-  }
-
-  coll->head = NULL_SLOT;
-  coll->tail = NULL_SLOT;
-}
-
-inline Slot<VariantData> CollectionImpl::getPreviousSlot(
+inline Slot<VariantData> VariantImpl::getPreviousSlot(
     VariantData* target) const {
   auto coll = getCollectionData();
   auto prev = Slot<VariantData>();
@@ -88,7 +69,7 @@ inline Slot<VariantData> CollectionImpl::getPreviousSlot(
   return prev;
 }
 
-inline void CollectionImpl::removeOne(iterator it) {
+inline void VariantImpl::removeOne(iterator it) {
   if (it.done())
     return;
   auto coll = getCollectionData();
@@ -104,7 +85,7 @@ inline void CollectionImpl::removeOne(iterator it) {
   freeVariant({it.slot_, it.currentId_});
 }
 
-inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
+inline void VariantImpl::removePair(VariantImpl::iterator it) {
   if (it.done())
     return;
 
@@ -121,7 +102,7 @@ inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
   removeOne(it);
 }
 
-inline size_t CollectionImpl::nesting() const {
+inline size_t VariantImpl::nesting() const {
   if (!data_ || !data_->isCollection())
     return 0;
   size_t maxChildNesting = 0;
@@ -132,13 +113,6 @@ inline size_t CollectionImpl::nesting() const {
       maxChildNesting = childNesting;
   }
   return maxChildNesting + 1;
-}
-
-inline size_t CollectionImpl::size() const {
-  size_t count = 0;
-  for (auto it = createIterator(); !it.done(); it.next(resources_))
-    count++;
-  return count;
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

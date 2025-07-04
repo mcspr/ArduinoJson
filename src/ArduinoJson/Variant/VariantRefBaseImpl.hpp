@@ -69,7 +69,7 @@ inline void convertToJson(const VariantRefBase<TDerived>& src,
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 inline T VariantRefBase<TDerived>::add() const {
-  return JsonVariant(getOrCreateVariantImpl().addElement(),
+  return JsonVariant(getOrCreateOrCreateArray().addElement(),
                      getResourceManager());
 }
 

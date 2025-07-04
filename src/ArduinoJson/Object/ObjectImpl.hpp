@@ -4,14 +4,13 @@
 
 #pragma once
 
-#include <ArduinoJson/Object/ObjectData.hpp>
 #include <ArduinoJson/Variant/VariantCompare.hpp>
-#include <ArduinoJson/Variant/VariantData.hpp>
+#include <ArduinoJson/Variant/VariantImpl.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename TAdaptedString>
-inline VariantData* ObjectImpl::getMember(TAdaptedString key) const {
+inline VariantData* VariantImpl::getMember(TAdaptedString key) const {
   auto it = findKey(key);
   if (it.done())
     return nullptr;
@@ -20,7 +19,7 @@ inline VariantData* ObjectImpl::getMember(TAdaptedString key) const {
 }
 
 template <typename TAdaptedString>
-VariantData* ObjectImpl::getOrAddMember(TAdaptedString key) {
+VariantData* VariantImpl::getOrAddMember(TAdaptedString key) {
   auto data = getMember(key);
   if (data)
     return data;
@@ -28,8 +27,8 @@ VariantData* ObjectImpl::getOrAddMember(TAdaptedString key) {
 }
 
 template <typename TAdaptedString>
-inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key) const {
-  if (isNull())
+inline VariantImpl::iterator VariantImpl::findKey(TAdaptedString key) const {
+  if (!isObject())
     return iterator();
   if (key.isNull())
     return iterator();
@@ -44,13 +43,13 @@ inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key) const {
 }
 
 template <typename TAdaptedString>
-inline void ObjectImpl::removeMember(TAdaptedString key) {
-  remove(findKey(key));
+inline void VariantImpl::removeMember(TAdaptedString key) {
+  removeMember(findKey(key));
 }
 
 template <typename TAdaptedString>
-inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
-  if (isNull())
+inline VariantData* VariantImpl::addMember(TAdaptedString key) {
+  if (!isObject())
     return nullptr;
 
   auto keySlot = allocVariant();
@@ -65,13 +64,13 @@ inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
   if (!keyImpl.setString(key))
     return nullptr;
 
-  CollectionImpl::appendPair(keySlot, valueSlot);
+  VariantImpl::appendPair(keySlot, valueSlot);
 
   return valueSlot.ptr();
 }
 
-inline VariantData* ObjectImpl::addPair(VariantData** value) {
-  ARDUINOJSON_ASSERT(!isNull());
+inline VariantData* VariantImpl::addPair(VariantData** value) {
+  ARDUINOJSON_ASSERT(isObject());
 
   auto keySlot = allocVariant();
   if (!keySlot)
@@ -82,7 +81,7 @@ inline VariantData* ObjectImpl::addPair(VariantData** value) {
     return nullptr;
   *value = valueSlot.ptr();
 
-  CollectionImpl::appendPair(keySlot, valueSlot);
+  VariantImpl::appendPair(keySlot, valueSlot);
 
   return keySlot.ptr();
 }

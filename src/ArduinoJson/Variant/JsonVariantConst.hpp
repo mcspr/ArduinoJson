@@ -42,6 +42,9 @@ class JsonVariantConst : public detail::VariantTag,
                             detail::ResourceManager* resources)
       : impl_(data, resources) {}
 
+  // INTERNAL USE ONLY
+  explicit JsonVariantConst(detail::VariantImpl impl) : impl_(impl) {}
+
   // Returns true if the value is null or the reference is unbound.
   // https://arduinojson.org/v7/api/jsonvariantconst/isnull/
   bool isNull() const {
