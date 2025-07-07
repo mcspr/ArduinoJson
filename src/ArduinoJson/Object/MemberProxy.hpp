@@ -51,21 +51,17 @@ class MemberProxy
       : upstream_(src.upstream_), key_(src.key_) {}
   // clang-format on
 
-  ResourceManager* getResourceManager() const {
-    return VariantAttorney::getResourceManager(upstream_);
+  VariantImpl getImpl() const {
+    auto impl = VariantAttorney::getImpl(upstream_);
+    return VariantImpl(impl.getMember(key_), impl.getResourceManager());
   }
 
-  VariantData* getData() const {
-    return VariantAttorney::getVariantImpl(upstream_).getMember(key_);
-  }
-
-  VariantData* getOrCreateData() const {
-    auto data = VariantAttorney::getOrCreateData(upstream_);
-    auto resources = VariantAttorney::getResourceManager(upstream_);
-    if (!data)
-      return nullptr;
-    data->getOrCreateObject();
-    return VariantImpl(data, resources).getOrAddMember(key_);
+  VariantImpl getOrCreateImpl() const {
+    auto impl = VariantAttorney::getOrCreateImpl(upstream_);
+    auto data = impl.getData();
+    if (data)
+      data->getOrCreateObject();
+    return VariantImpl(impl.getOrAddMember(key_), impl.getResourceManager());
   }
 
  private:

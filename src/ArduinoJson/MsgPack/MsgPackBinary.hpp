@@ -25,11 +25,12 @@ class MsgPackBinary {
 template <>
 struct Converter<MsgPackBinary> : private detail::VariantAttorney {
   static void toJson(MsgPackBinary src, JsonVariant dst) {
-    auto data = VariantAttorney::getData(dst);
+    auto impl = getImpl(dst);
+    auto data = impl.getData();
     if (!data)
       return;
-    auto resources = getResourceManager(dst);
-    detail::VariantImpl(data, resources).clear();
+    auto resources = impl.getResourceManager();
+    impl.clear();
     if (src.data()) {
       size_t headerSize = src.size() >= 0x10000 ? 5
                           : src.size() >= 0x100 ? 3
@@ -66,7 +67,7 @@ struct Converter<MsgPackBinary> : private detail::VariantAttorney {
   }
 
   static MsgPackBinary fromJson(JsonVariantConst src) {
-    auto variant = VariantAttorney::getVariantImpl(src);
+    auto variant = getImpl(src);
     auto rawstr = variant.asRawString();
     auto p = reinterpret_cast<const uint8_t*>(rawstr.c_str());
     auto n = rawstr.size();

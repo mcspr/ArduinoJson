@@ -44,13 +44,13 @@ template <template <typename> class TDeserializer, typename TDestination,
           typename TReader, typename TOptions>
 DeserializationError doDeserialize(TDestination&& dst, TReader reader,
                                    TOptions options) {
-  auto data = VariantAttorney::getOrCreateData(dst);
-  if (!data)
+  auto impl = VariantAttorney::getOrCreateImpl(dst);
+  if (impl.getData() == nullptr)
     return DeserializationError::NoMemory;
-  auto resources = VariantAttorney::getResourceManager(dst);
+  auto resources = impl.getResourceManager();
   dst.clear();
   auto err = TDeserializer<TReader>(resources, reader)
-                 .parse(data, options.filter, options.nestingLimit);
+                 .parse(impl.getData(), options.filter, options.nestingLimit);
   shrinkJsonDocument(dst);
   return err;
 }

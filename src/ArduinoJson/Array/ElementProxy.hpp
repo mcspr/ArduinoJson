@@ -50,21 +50,17 @@ class ElementProxy : public VariantRefBase<ElementProxy<TUpstream>>,
       : upstream_(src.upstream_), index_(src.index_) {}
   // clang-format on
 
-  ResourceManager* getResourceManager() const {
-    return VariantAttorney::getResourceManager(upstream_);
+  VariantImpl getImpl() const {
+    auto impl = VariantAttorney::getImpl(upstream_);
+    return VariantImpl(impl.getElement(index_), impl.getResourceManager());
   }
 
-  FORCE_INLINE VariantData* getData() const {
-    return VariantAttorney::getVariantImpl(upstream_).getElement(index_);
-  }
-
-  VariantData* getOrCreateData() const {
-    auto data = VariantAttorney::getOrCreateData(upstream_);
-    auto resources = VariantAttorney::getResourceManager(upstream_);
-    if (!data)
-      return nullptr;
-    data->getOrCreateArray();
-    return VariantImpl(data, resources).getOrAddElement(index_);
+  VariantImpl getOrCreateImpl() const {
+    auto impl = VariantAttorney::getOrCreateImpl(upstream_);
+    auto data = impl.getData();
+    if (data)
+      data->getOrCreateArray();
+    return VariantImpl(impl.getOrAddElement(index_), impl.getResourceManager());
   }
 
   TUpstream upstream_;

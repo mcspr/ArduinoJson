@@ -60,18 +60,18 @@ struct Converter<T, detail::enable_if_t<detail::is_integral<T>::value &&
     : private detail::VariantAttorney {
   static bool toJson(T src, JsonVariant dst) {
     ARDUINOJSON_ASSERT_INTEGER_TYPE_IS_SUPPORTED(T);
-    auto variant = getVariantImpl(dst);
+    auto variant = getImpl(dst);
     variant.clear();
     return variant.setInteger(src);
   }
 
   static T fromJson(JsonVariantConst src) {
     ARDUINOJSON_ASSERT_INTEGER_TYPE_IS_SUPPORTED(T);
-    return getVariantImpl(src).template asIntegral<T>();
+    return getImpl(src).template asIntegral<T>();
   }
 
   static bool checkJson(JsonVariantConst src) {
-    return getVariantImpl(src).template isInteger<T>();
+    return getImpl(src).template isInteger<T>();
   }
 };
 
@@ -83,29 +83,28 @@ struct Converter<T, detail::enable_if_t<detail::is_enum<T>::value>>
   }
 
   static T fromJson(JsonVariantConst src) {
-    return static_cast<T>(getVariantImpl(src).template asIntegral<int>());
+    return static_cast<T>(getImpl(src).template asIntegral<int>());
   }
 
   static bool checkJson(JsonVariantConst src) {
-    return getVariantImpl(src).template isInteger<int>();
+    return getImpl(src).template isInteger<int>();
   }
 };
 
 template <>
 struct Converter<bool> : private detail::VariantAttorney {
   static bool toJson(bool src, JsonVariant dst) {
-    auto variant = getVariantImpl(dst);
-    variant.clear();
-    return variant.setBoolean(src);
+    auto impl = getImpl(dst);
+    impl.clear();
+    return impl.setBoolean(src);
   }
 
   static bool fromJson(JsonVariantConst src) {
-    return getVariantImpl(src).asBoolean();
+    return getImpl(src).asBoolean();
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data && data->type == detail::VariantType::Boolean;
+    return getImpl(src).type() == detail::VariantType::Boolean;
   }
 };
 
@@ -113,61 +112,58 @@ template <typename T>
 struct Converter<T, detail::enable_if_t<detail::is_floating_point<T>::value>>
     : private detail::VariantAttorney {
   static bool toJson(T src, JsonVariant dst) {
-    auto variant = getVariantImpl(dst);
-    variant.clear();
-    return variant.setFloat(src);
+    auto impl = getImpl(dst);
+    impl.clear();
+    return impl.setFloat(src);
   }
 
   static T fromJson(JsonVariantConst src) {
-    return getVariantImpl(src).template asFloat<T>();
+    return getImpl(src).template asFloat<T>();
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data && data->isFloat();
+    return getImpl(src).isFloat();
   }
 };
 
 template <>
 struct Converter<const char*> : private detail::VariantAttorney {
   static void toJson(const char* src, JsonVariant dst) {
-    auto variant = getVariantImpl(dst);
-    variant.clear();
-    variant.setString(detail::adaptString(src));
+    auto impl = getImpl(dst);
+    impl.clear();
+    impl.setString(detail::adaptString(src));
   }
 
   static const char* fromJson(JsonVariantConst src) {
-    return getVariantImpl(src).asString().c_str();
+    return getImpl(src).asString().c_str();
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data && data->isString();
+    return getImpl(src).isString();
   }
 };
 
 template <>
 struct Converter<JsonString> : private detail::VariantAttorney {
   static void toJson(JsonString src, JsonVariant dst) {
-    auto variant = getVariantImpl(dst);
-    variant.clear();
-    variant.setString(detail::adaptString(src));
+    auto impl = getImpl(dst);
+    impl.clear();
+    impl.setString(detail::adaptString(src));
   }
 
   static JsonString fromJson(JsonVariantConst src) {
-    return getVariantImpl(src).asString();
+    return getImpl(src).asString();
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data && data->isString();
+    return getImpl(src).isString();
   }
 };
 
 template <typename T>
 inline detail::enable_if_t<detail::IsString<T>::value> convertToJson(
     const T& src, JsonVariant dst) {
-  auto variant = detail::VariantAttorney::getVariantImpl(dst);
+  auto variant = detail::VariantAttorney::getImpl(dst);
   variant.clear();
   variant.setString(detail::adaptString(src));
 }
@@ -178,7 +174,7 @@ inline detail::enable_if_t<detail::IsString<T>::value> convertToJson(
 template <typename T>
 struct Converter<SerializedValue<T>> : private detail::VariantAttorney {
   static void toJson(SerializedValue<T> src, JsonVariant dst) {
-    auto variant = getVariantImpl(dst);
+    auto variant = getImpl(dst);
     variant.clear();
     variant.setRawString(src);
   }
@@ -187,14 +183,13 @@ struct Converter<SerializedValue<T>> : private detail::VariantAttorney {
 template <>
 struct Converter<detail::nullptr_t> : private detail::VariantAttorney {
   static void toJson(detail::nullptr_t, JsonVariant dst) {
-    getVariantImpl(dst).clear();
+    getImpl(dst).clear();
   }
   static detail::nullptr_t fromJson(JsonVariantConst) {
     return nullptr;
   }
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data == 0 || data->type == detail::VariantType::Null;
+    return getImpl(src).isNull();
   }
 };
 
@@ -236,16 +231,15 @@ class StringBuilderPrint : public Print {
 }  // namespace detail
 
 inline void convertToJson(const ::Printable& src, JsonVariant dst) {
-  auto resources = detail::VariantAttorney::getResourceManager(dst);
-  auto data = detail::VariantAttorney::getData(dst);
-  if (!resources || !data)
+  auto impl = detail::VariantAttorney::getImpl(dst);
+  if (!impl.getData())
     return;
-  detail::VariantImpl(data, resources).clear();
-  detail::StringBuilderPrint print(resources);
+  impl.clear();
+  detail::StringBuilderPrint print(impl.getResourceManager());
   src.printTo(print);
   if (print.overflowed())
     return;
-  print.save(data);
+  print.save(impl.getData());
 }
 
 #endif
@@ -306,12 +300,11 @@ struct Converter<JsonArrayConst> : private detail::VariantAttorney {
   }
 
   static JsonArrayConst fromJson(JsonVariantConst src) {
-    return JsonArrayConst(getData(src), getResourceManager(src));
+    return JsonArrayConst(getImpl(src));
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data && data->type == detail::VariantType::Array;
+    return getImpl(src).type() == detail::VariantType::Array;
   }
 };
 
@@ -325,12 +318,11 @@ struct Converter<JsonArray> : private detail::VariantAttorney {
   }
 
   static JsonArray fromJson(JsonVariant src) {
-    return JsonArray(getData(src), getResourceManager(src));
+    return JsonArray(getImpl(src));
   }
 
   static bool checkJson(JsonVariant src) {
-    auto data = getData(src);
-    return data && data->type == detail::VariantType::Array;
+    return getImpl(src).type() == detail::VariantType::Array;
   }
 };
 
@@ -344,12 +336,11 @@ struct Converter<JsonObjectConst> : private detail::VariantAttorney {
   }
 
   static JsonObjectConst fromJson(JsonVariantConst src) {
-    return JsonObjectConst(getData(src), getResourceManager(src));
+    return JsonObjectConst(getImpl(src));
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
-    return data && data->type == detail::VariantType::Object;
+    return getImpl(src).type() == detail::VariantType::Object;
   }
 };
 
@@ -363,12 +354,11 @@ struct Converter<JsonObject> : private detail::VariantAttorney {
   }
 
   static JsonObject fromJson(JsonVariant src) {
-    return JsonObject(getData(src), getResourceManager(src));
+    return JsonObject(getImpl(src));
   }
 
   static bool checkJson(JsonVariant src) {
-    auto data = getData(src);
-    return data && data->type == detail::VariantType::Object;
+    return getImpl(src).type() == detail::VariantType::Object;
   }
 };
 

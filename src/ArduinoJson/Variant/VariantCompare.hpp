@@ -199,7 +199,7 @@ struct Comparer<
     T, enable_if_t<is_convertible<T, ArduinoJson::JsonVariantConst>::value>>
     : VariantComparer {
   explicit Comparer(const T& value)
-      : VariantComparer(static_cast<JsonVariantConst>(value)) {}
+      : VariantComparer(JsonVariantConst(VariantAttorney::getImpl(value))) {}
 };
 
 template <typename T>

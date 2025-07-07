@@ -179,12 +179,8 @@ class JsonVariantConst : public detail::VariantTag,
   }
 
  protected:
-  detail::VariantData* getData() const {
-    return impl_.getData();
-  }
-
-  detail::ResourceManager* getResourceManager() const {
-    return impl_.getResourceManager();
+  const detail::VariantImpl& getImpl() const {
+    return impl_;
   }
 
  private:

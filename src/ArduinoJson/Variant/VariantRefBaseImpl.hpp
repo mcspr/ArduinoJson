@@ -69,20 +69,20 @@ inline void convertToJson(const VariantRefBase<TDerived>& src,
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 inline T VariantRefBase<TDerived>::add() const {
-  return JsonVariant(getOrCreateOrCreateArray().addElement(),
-                     getResourceManager());
+  auto impl = getOrCreateArray();
+  return JsonVariant(impl.addElement(), impl.getResourceManager());
 }
 
 template <typename TDerived>
 template <typename TString, enable_if_t<IsString<TString>::value, int>>
 inline bool VariantRefBase<TDerived>::containsKey(const TString& key) const {
-  return getVariantImpl().getMember(adaptString(key)) != 0;
+  return getImpl().getMember(adaptString(key)) != 0;
 }
 
 template <typename TDerived>
 template <typename TChar, enable_if_t<IsString<TChar*>::value, int>>
 inline bool VariantRefBase<TDerived>::containsKey(TChar* key) const {
-  return getVariantImpl().getMember(adaptString(key)) != 0;
+  return getImpl().getMember(adaptString(key)) != 0;
 }
 
 template <typename TDerived>
@@ -93,12 +93,7 @@ inline bool VariantRefBase<TDerived>::containsKey(const TVariant& key) const {
 
 template <typename TDerived>
 inline JsonVariant VariantRefBase<TDerived>::getVariant() const {
-  return JsonVariant(getData(), getResourceManager());
-}
-
-template <typename TDerived>
-inline JsonVariant VariantRefBase<TDerived>::getOrCreateVariant() const {
-  return JsonVariant(getOrCreateData(), getResourceManager());
+  return JsonVariant(getImpl());
 }
 
 template <typename TDerived>
@@ -133,43 +128,45 @@ VariantRefBase<TDerived>::operator[](const TString& key) const {
 template <typename TDerived>
 template <typename TConverter, typename T>
 inline bool VariantRefBase<TDerived>::doSet(const T& value, false_type) const {
-  TConverter::toJson(value, getOrCreateVariant());
-  auto resources = getResourceManager();
+  auto impl = getOrCreateImpl();
+  TConverter::toJson(value, JsonVariant(impl));
+  auto resources = impl.getResourceManager();
   return resources && !resources->overflowed();
 }
 
 template <typename TDerived>
 template <typename TConverter, typename T>
 inline bool VariantRefBase<TDerived>::doSet(const T& value, true_type) const {
-  return TConverter::toJson(value, getOrCreateVariant());
+  auto impl = getOrCreateImpl();
+  return TConverter::toJson(value, JsonVariant(impl));
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonArray>::value, int>>
 inline JsonArray VariantRefBase<TDerived>::to() const {
-  auto data = getOrCreateData();
-  if (!data)
+  auto impl = getOrCreateImpl();
+  if (!impl.getData())
     return JsonArray();
-  auto resources = getResourceManager();
-  VariantImpl(data, resources).clear();
-  return JsonArray(data->toArray(), resources);
+  impl.clear();
+  impl.getData()->toArray();
+  return JsonArray(impl);
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonObject>::value, int>>
 JsonObject VariantRefBase<TDerived>::to() const {
-  auto data = getOrCreateData();
-  if (!data)
+  auto impl = getOrCreateImpl();
+  if (!impl.getData())
     return JsonObject();
-  auto resources = getResourceManager();
-  VariantImpl(data, resources).clear();
-  return JsonObject(data->toObject(), resources);
+  impl.clear();
+  impl.getData()->toObject();
+  return JsonObject(impl);
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 JsonVariant VariantRefBase<TDerived>::to() const {
-  detail::VariantImpl impl(getOrCreateData(), getResourceManager());
+  auto impl = getOrCreateImpl();
   impl.clear();
   return JsonVariant(impl);
 }

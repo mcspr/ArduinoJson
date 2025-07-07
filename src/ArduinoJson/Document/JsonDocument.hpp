@@ -120,13 +120,13 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   // Returns the depth (nesting level) of the array.
   // https://arduinojson.org/v7/api/jsondocument/nesting/
   size_t nesting() const {
-    return getVariantImpl().nesting();
+    return getImpl().nesting();
   }
 
   // Returns the number of elements in the root array or object.
   // https://arduinojson.org/v7/api/jsondocument/size/
   size_t size() const {
-    return getVariantImpl().size();
+    return getImpl().size();
   }
 
   // Copies the specified document.
@@ -165,7 +165,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   template <typename TChar>
   ARDUINOJSON_DEPRECATED("use doc[\"key\"].is<T>() instead")
   bool containsKey(TChar* key) const {
-    return getVariantImpl().getMember(detail::adaptString(key)) != 0;
+    return getImpl().getMember(detail::adaptString(key)) != 0;
   }
 
   // DEPRECATED: use obj[key].is<T>() instead
@@ -174,7 +174,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   ARDUINOJSON_DEPRECATED("use doc[key].is<T>() instead")
   bool containsKey(const TString& key) const {
-    return getVariantImpl().getMember(detail::adaptString(key)) != 0;
+    return getImpl().getMember(detail::adaptString(key)) != 0;
   }
 
   // DEPRECATED: use obj[key].is<T>() instead
@@ -211,8 +211,8 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   template <typename TString,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   JsonVariantConst operator[](const TString& key) const {
-    return JsonVariantConst(
-        getVariantImpl().getMember(detail::adaptString(key)), &resources_);
+    return JsonVariantConst(getImpl().getMember(detail::adaptString(key)),
+                            &resources_);
   }
 
   // Gets a root object's member.
@@ -222,8 +222,8 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
                                     !detail::is_const<TChar>::value,
                                 int> = 0>
   JsonVariantConst operator[](TChar* key) const {
-    return JsonVariantConst(
-        getVariantImpl().getMember(detail::adaptString(key)), &resources_);
+    return JsonVariantConst(getImpl().getMember(detail::adaptString(key)),
+                            &resources_);
   }
 
   // Gets or sets a root array's element.
@@ -237,7 +237,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   // Gets a root array's member.
   // https://arduinojson.org/v7/api/jsondocument/subscript/
   JsonVariantConst operator[](size_t index) const {
-    return JsonVariantConst(getVariantImpl().getElement(index), &resources_);
+    return JsonVariantConst(getImpl().getElement(index), &resources_);
   }
 
   // Gets or sets a root object's member.
@@ -290,7 +290,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   template <typename T,
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   void remove(T index) {
-    getVariantImpl().removeElement(size_t(index));
+    getImpl().removeElement(size_t(index));
   }
 
   // Removes a member of the root object.
@@ -300,7 +300,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
                                     !detail::is_const<TChar>::value,
                                 int> = 0>
   void remove(TChar* key) {
-    getVariantImpl().removeMember(detail::adaptString(key));
+    getImpl().removeMember(detail::adaptString(key));
   }
 
   // Removes a member of the root object.
@@ -308,7 +308,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   template <typename TString,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   void remove(const TString& key) {
-    getVariantImpl().removeMember(detail::adaptString(key));
+    getImpl().removeMember(detail::adaptString(key));
   }
 
   // Removes a member of the root object or an element of the root array.
@@ -388,16 +388,16 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   }
 
  private:
-  detail::VariantImpl getVariantImpl() const {
-    return detail::VariantImpl(&data_, &resources_);
+  detail::VariantImpl getImpl() const {
+    return {&data_, &resources_};
+  }
+
+  detail::VariantImpl getOrCreateImpl() {
+    return {&data_, &resources_};
   }
 
   detail::VariantImpl getOrCreateArray() {
     return detail::VariantImpl(data_.getOrCreateArray(), &resources_);
-  }
-
-  detail::VariantImpl getOrCreateObject() {
-    return detail::VariantImpl(data_.getOrCreateObject(), &resources_);
   }
 
   JsonVariant getVariant() {
@@ -406,22 +406,6 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
 
   JsonVariantConst getVariant() const {
     return JsonVariantConst(&data_, &resources_);
-  }
-
-  detail::ResourceManager* getResourceManager() {
-    return &resources_;
-  }
-
-  detail::VariantData* getData() {
-    return &data_;
-  }
-
-  const detail::VariantData* getData() const {
-    return &data_;
-  }
-
-  detail::VariantData* getOrCreateData() {
-    return &data_;
   }
 
   mutable detail::ResourceManager resources_;

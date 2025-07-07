@@ -23,10 +23,6 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   JsonObject() {}
 
   // INTERNAL USE ONLY
-  JsonObject(detail::VariantData* data, detail::ResourceManager* resource)
-      : impl_(data, resource) {}
-
-  // INTERNAL USE ONLY
   JsonObject(detail::VariantImpl impl) : impl_(impl) {}
 
   operator JsonVariant() const {
@@ -222,16 +218,12 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   }
 
  private:
-  detail::ResourceManager* getResourceManager() const {
-    return impl_.getResourceManager();
+  const detail::VariantImpl& getImpl() const {
+    return impl_;
   }
 
-  detail::VariantData* getData() const {
-    return impl_.getData();
-  }
-
-  detail::VariantData* getOrCreateData() const {
-    return impl_.getData();
+  const detail::VariantImpl& getOrCreateImpl() const {
+    return impl_;
   }
 
   mutable detail::VariantImpl impl_;

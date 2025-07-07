@@ -26,16 +26,12 @@ class JsonVariant : public detail::VariantRefBase<JsonVariant>,
   JsonVariant(detail::VariantImpl impl) : impl_(impl) {}
 
  private:
-  detail::ResourceManager* getResourceManager() const {
-    return impl_.getResourceManager();
+  const detail::VariantImpl& getImpl() const {
+    return impl_;
   }
 
-  detail::VariantData* getData() const {
-    return impl_.getData();
-  }
-
-  detail::VariantData* getOrCreateData() const {
-    return impl_.getData();
+  const detail::VariantImpl& getOrCreateImpl() const {
+    return impl_;
   }
 
   mutable detail::VariantImpl impl_;
@@ -56,7 +52,7 @@ struct Converter<JsonVariant> : private detail::VariantAttorney {
   }
 
   static bool checkJson(JsonVariant src) {
-    auto data = getData(src);
+    auto data = getImpl(src).getData();
     return !!data;
   }
 };
@@ -68,11 +64,11 @@ struct Converter<JsonVariantConst> : private detail::VariantAttorney {
   }
 
   static JsonVariantConst fromJson(JsonVariantConst src) {
-    return JsonVariantConst(getData(src), getResourceManager(src));
+    return JsonVariantConst(getImpl(src));
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getData(src);
+    auto data = getImpl(src).getData();
     return !!data;
   }
 };

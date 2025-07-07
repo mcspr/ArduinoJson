@@ -37,10 +37,6 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   JsonArrayConst() {}
 
   // INTERNAL USE ONLY
-  JsonArrayConst(detail::VariantData* data, detail::ResourceManager* resources)
-      : impl_(data, resources) {}
-
-  // INTERNAL USE ONLY
   JsonArrayConst(const detail::VariantImpl& impl) : impl_(impl) {}
 
   // Returns the element at the specified index.
@@ -98,8 +94,8 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   }
 
  private:
-  const detail::VariantData* getData() const {
-    return impl_.getData();
+  const detail::VariantImpl& getImpl() const {
+    return impl_;
   }
 
   detail::VariantImpl impl_;

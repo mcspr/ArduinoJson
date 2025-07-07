@@ -23,10 +23,6 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   JsonArray() {}
 
   // INTERNAL USE ONLY
-  JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
-      : impl_(data, resources) {}
-
-  // INTERNAL USE ONLY
   JsonArray(detail::VariantImpl impl) : impl_(impl) {}
 
   // Returns a JsonVariant pointing to the array.
@@ -199,16 +195,12 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   }
 
  private:
-  detail::ResourceManager* getResourceManager() const {
-    return impl_.getResourceManager();
+  const detail::VariantImpl& getImpl() const {
+    return impl_;
   }
 
-  detail::VariantData* getData() const {
-    return impl_.getData();
-  }
-
-  detail::VariantData* getOrCreateData() const {
-    return impl_.getData();
+  const detail::VariantImpl& getOrCreateImpl() const {
+    return impl_;
   }
 
   mutable detail::VariantImpl impl_;
