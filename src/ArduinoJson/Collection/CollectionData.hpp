@@ -59,10 +59,11 @@ class CollectionIterator {
   }
 
  private:
-  CollectionIterator(VariantData* slot, SlotId slotId);
+  CollectionIterator(VariantData* slot, SlotId slotId)
+      : slot_(slot), currentId_(slotId) {}
 
   VariantData* slot_;
-  SlotId currentId_, nextId_;
+  SlotId currentId_;
 };
 
 class CollectionData {

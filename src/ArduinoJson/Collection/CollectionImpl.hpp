@@ -12,17 +12,11 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-inline CollectionIterator::CollectionIterator(VariantData* slot, SlotId slotId)
-    : slot_(slot), currentId_(slotId) {
-  nextId_ = slot_ ? slot_->next() : NULL_SLOT;
-}
-
 inline void CollectionIterator::next(const ResourceManager* resources) {
-  ARDUINOJSON_ASSERT(currentId_ != NULL_SLOT);
-  slot_ = resources->getVariant(nextId_);
-  currentId_ = nextId_;
-  if (slot_)
-    nextId_ = slot_->next();
+  ARDUINOJSON_ASSERT(slot_);
+  auto nextId = slot_->next();
+  slot_ = resources->getVariant(nextId);
+  currentId_ = nextId;
 }
 
 inline CollectionData::iterator CollectionData::createIterator(
@@ -104,9 +98,9 @@ inline void CollectionData::removePair(ObjectData::iterator it,
   if (it.done())
     return;
 
-  auto keySlot = it.slot_;
+  auto keySlot = it.data();
 
-  auto valueId = it.nextId_;
+  auto valueId = keySlot->next();
   auto valueSlot = resources->getVariant(valueId);
 
   // remove value slot
