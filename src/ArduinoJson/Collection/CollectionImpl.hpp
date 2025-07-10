@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <ArduinoJson/Collection/CollectionData.hpp>
+#include <ArduinoJson/Collection/CollectionIterator.hpp>
 #include <ArduinoJson/Memory/Alignment.hpp>
 #include <ArduinoJson/Strings/StringAdapters.hpp>
 #include <ArduinoJson/Variant/VariantCompare.hpp>
