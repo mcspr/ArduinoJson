@@ -58,8 +58,6 @@ union VariantContent {
 #if ARDUINOJSON_USE_8_BYTE_POOL
   SlotId asSlotId;
 #endif
-  ArrayData asArray;
-  ObjectData asObject;
   CollectionData asCollection;
   struct StringNode* asStringNode;
   char asTinyString[tinyStringMaxLength + 1];

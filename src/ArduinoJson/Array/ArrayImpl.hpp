@@ -10,36 +10,37 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-inline ArrayData::iterator ArrayData::at(
-    size_t index, const ResourceManager* resources) const {
-  auto it = createIterator(resources);
+inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
+  auto it = createIterator();
   while (!it.done() && index) {
-    it.next(resources);
+    it.next(resources_);
     --index;
   }
   return it;
 }
 
-inline VariantData* ArrayData::addElement(ResourceManager* resources) {
-  auto slot = resources->allocVariant();
+inline VariantData* ArrayImpl::addElement() {
+  if (!data_)
+    return nullptr;
+  ARDUINOJSON_ASSERT(resources_ != nullptr);
+  auto slot = resources_->allocVariant();
   if (!slot)
     return nullptr;
-  CollectionData::appendOne(slot, resources);
+  CollectionImpl::appendOne(slot);
   return slot.ptr();
 }
 
-inline VariantData* ArrayData::getOrAddElement(size_t index,
-                                               ResourceManager* resources) {
-  auto it = createIterator(resources);
+inline VariantData* ArrayImpl::getOrAddElement(size_t index) {
+  auto it = createIterator();
   while (!it.done() && index > 0) {
-    it.next(resources);
+    it.next(resources_);
     index--;
   }
   if (it.done())
     index++;
   VariantData* element = it.data();
   while (index > 0) {
-    element = addElement(resources);
+    element = addElement();
     if (!element)
       return nullptr;
     index--;
@@ -47,27 +48,28 @@ inline VariantData* ArrayData::getOrAddElement(size_t index,
   return element;
 }
 
-inline VariantData* ArrayData::getElement(
-    size_t index, const ResourceManager* resources) const {
-  return at(index, resources).data();
+inline VariantData* ArrayImpl::getElement(size_t index) const {
+  return at(index).data();
 }
 
-inline void ArrayData::removeElement(size_t index, ResourceManager* resources) {
-  remove(at(index, resources), resources);
+inline void ArrayImpl::removeElement(size_t index) {
+  remove(at(index));
 }
 
 template <typename T>
-inline bool ArrayData::addValue(const T& value, ResourceManager* resources) {
-  ARDUINOJSON_ASSERT(resources != nullptr);
-  auto slot = resources->allocVariant();
+inline bool ArrayImpl::addValue(const T& value) {
+  if (!data_)
+    return false;
+  ARDUINOJSON_ASSERT(resources_ != nullptr);
+  auto slot = resources_->allocVariant();
   if (!slot)
     return false;
-  JsonVariant variant(slot.ptr(), resources);
+  JsonVariant variant(slot.ptr(), resources_);
   if (!variant.set(value)) {
-    resources->freeVariant(slot);
+    resources_->freeVariant(slot);
     return false;
   }
-  CollectionData::appendOne(slot, resources);
+  CollectionImpl::appendOne(slot);
   return true;
 }
 

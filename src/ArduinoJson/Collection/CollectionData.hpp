@@ -16,7 +16,7 @@ class VariantData;
 class ResourceManager;
 
 class CollectionIterator {
-  friend class CollectionData;
+  friend class CollectionImpl;
 
  public:
   CollectionIterator() : slot_(nullptr), currentId_(NULL_SLOT) {}
@@ -51,11 +51,11 @@ class CollectionIterator {
   }
 
   VariantData* data() {
-    return reinterpret_cast<VariantData*>(slot_);
+    return slot_;
   }
 
   const VariantData* data() const {
-    return reinterpret_cast<const VariantData*>(slot_);
+    return slot_;
   }
 
  private:
@@ -66,58 +66,68 @@ class CollectionIterator {
   SlotId currentId_;
 };
 
-class CollectionData {
-  SlotId head_ = NULL_SLOT;
-  SlotId tail_ = NULL_SLOT;
+struct CollectionData {
+  SlotId head = NULL_SLOT;
+  SlotId tail = NULL_SLOT;
 
- public:
   // Placement new
   static void* operator new(size_t, void* p) noexcept {
     return p;
   }
 
   static void operator delete(void*, void*) noexcept {}
+};
 
+class CollectionImpl {
+ protected:
+  CollectionData* data_;
+  ResourceManager* resources_;
+
+ public:
   using iterator = CollectionIterator;
 
-  iterator createIterator(const ResourceManager* resources) const;
+  CollectionImpl() : data_(nullptr), resources_(nullptr) {}
 
-  size_t size(const ResourceManager*) const;
-  size_t nesting(const ResourceManager*) const;
+  CollectionImpl(CollectionData* data, ResourceManager* resources)
+      : data_(data), resources_(resources) {}
 
-  void clear(ResourceManager* resources);
-
-  static void clear(CollectionData* collection, ResourceManager* resources) {
-    if (!collection)
-      return;
-    collection->clear(resources);
+  explicit operator bool() const {
+    return data_ != nullptr;
   }
 
+  bool isNull() const {
+    return data_ == nullptr;
+  }
+
+  VariantData* getData() const {
+    void* data = data_;  // prevent warning cast-align
+    return reinterpret_cast<VariantData*>(data);
+  }
+
+  ResourceManager* getResourceManager() const {
+    return resources_;
+  }
+
+  iterator createIterator() const;
+
+  size_t size() const;
+  size_t nesting() const;
+
+  void clear();
+
   SlotId head() const {
-    return head_;
+    return data_->head;
   }
 
  protected:
-  void appendOne(Slot<VariantData> slot, const ResourceManager* resources);
-  void appendPair(Slot<VariantData> key, Slot<VariantData> value,
-                  const ResourceManager* resources);
+  void appendOne(Slot<VariantData> slot);
+  void appendPair(Slot<VariantData> key, Slot<VariantData> value);
 
-  void removeOne(iterator it, ResourceManager* resources);
-  void removePair(iterator it, ResourceManager* resources);
+  void removeOne(iterator it);
+  void removePair(iterator it);
 
  private:
-  Slot<VariantData> getPreviousSlot(VariantData*, const ResourceManager*) const;
+  Slot<VariantData> getPreviousSlot(VariantData*) const;
 };
-
-inline const VariantData* collectionToVariant(
-    const CollectionData* collection) {
-  const void* data = collection;  // prevent warning cast-align
-  return reinterpret_cast<const VariantData*>(data);
-}
-
-inline VariantData* collectionToVariant(CollectionData* collection) {
-  void* data = collection;  // prevent warning cast-align
-  return reinterpret_cast<VariantData*>(data);
-}
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

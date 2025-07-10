@@ -415,8 +415,8 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
     return &data_;
   }
 
-  detail::ResourceManager resources_;
-  detail::VariantData data_;
+  mutable detail::ResourceManager resources_;
+  mutable detail::VariantData data_;
 };
 
 inline void convertToJson(const JsonDocument& src, JsonVariant dst) {

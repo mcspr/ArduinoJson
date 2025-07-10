@@ -20,30 +20,31 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   using iterator = JsonObjectIterator;
 
   // Creates an unbound reference.
-  JsonObject() : data_(0), resources_(0) {}
+  JsonObject() {}
+
+  // INTERNAL USE ONLY
+  JsonObject(const detail::ObjectImpl& impl) : impl_(impl) {}
 
   // INTERNAL USE ONLY
   JsonObject(detail::VariantData* data, detail::ResourceManager* resource)
-      : data_(data), resources_(resource) {}
+      : impl_(detail::VariantData::asObject(data, resource)) {}
 
   operator JsonVariant() const {
-    void* data = data_;  // prevent warning cast-align
-    return JsonVariant(reinterpret_cast<detail::VariantData*>(data),
-                       resources_);
+    return JsonVariant(getData(), getResourceManager());
   }
 
   operator JsonObjectConst() const {
-    return JsonObjectConst(data_, resources_);
+    return JsonObjectConst(getData(), getResourceManager());
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(data_, resources_);
+    return JsonVariantConst(getData(), getResourceManager());
   }
 
   // Returns true if the reference is unbound.
   // https://arduinojson.org/v7/api/jsonobject/isnull/
   bool isNull() const {
-    return !data_ || !data_->isObject();
+    return impl_.isNull();
   }
 
   // Returns true if the reference is bound.
@@ -55,22 +56,19 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Returns the depth (nesting level) of the object.
   // https://arduinojson.org/v7/api/jsonobject/nesting/
   size_t nesting() const {
-    return detail::VariantData::nesting(data_, resources_);
+    return impl_.nesting();
   }
 
   // Returns the number of members in the object.
   // https://arduinojson.org/v7/api/jsonobject/size/
   size_t size() const {
-    return data_ ? data_->size(resources_) : 0;
+    return impl_.size();
   }
 
   // Returns an iterator to the first key-value pair of the object.
   // https://arduinojson.org/v7/api/jsonobject/begin/
   iterator begin() const {
-    auto obj = detail::VariantData::asObject(data_);
-    if (!obj)
-      return iterator();
-    return iterator(obj->createIterator(resources_), resources_);
+    return iterator(impl_.createIterator(), impl_.getResourceManager());
   }
 
   // Returns an iterator following the last key-value pair of the object.
@@ -82,13 +80,13 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Removes all the members of the object.
   // https://arduinojson.org/v7/api/jsonobject/clear/
   void clear() const {
-    detail::ObjectData::clear(detail::VariantData::asObject(data_), resources_);
+    impl_.clear();
   }
 
   // Copies an object.
   // https://arduinojson.org/v7/api/jsonobject/set/
   bool set(JsonObjectConst src) {
-    if (!data_ || !src.data_)
+    if (isNull() || src.isNull())
       return false;
 
     clear();
@@ -132,8 +130,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Removes the member at the specified iterator.
   // https://arduinojson.org/v7/api/jsonobject/remove/
   FORCE_INLINE void remove(iterator it) const {
-    detail::ObjectData::remove(detail::VariantData::asObject(data_),
-                               it.iterator_, resources_);
+    impl_.remove(it.iterator_);
   }
 
   // Removes the member with the specified key.
@@ -141,8 +138,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   template <typename TString,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   void remove(const TString& key) const {
-    detail::VariantData::removeMember(data_, detail::adaptString(key),
-                                      resources_);
+    impl_.removeMember(detail::adaptString(key));
   }
 
   // Removes the member with the specified key.
@@ -158,8 +154,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // https://arduinojson.org/v7/api/jsonobject/remove/
   template <typename TChar>
   FORCE_INLINE void remove(TChar* key) const {
-    detail::VariantData::removeMember(data_, detail::adaptString(key),
-                                      resources_);
+    impl_.removeMember(detail::adaptString(key));
   }
 
   // DEPRECATED: use obj[key].is<T>() instead
@@ -168,8 +163,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   ARDUINOJSON_DEPRECATED("use obj[key].is<T>() instead")
   bool containsKey(const TString& key) const {
-    return detail::VariantData::getMember(data_, detail::adaptString(key),
-                                          resources_) != 0;
+    return impl_.getMember(detail::adaptString(key)) != 0;
   }
 
   // DEPRECATED: use obj["key"].is<T>() instead
@@ -180,8 +174,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
                                 int> = 0>
   ARDUINOJSON_DEPRECATED("use obj[\"key\"].is<T>() instead")
   bool containsKey(TChar* key) const {
-    return detail::VariantData::getMember(data_, detail::adaptString(key),
-                                          resources_) != 0;
+    return impl_.getMember(detail::adaptString(key)) != 0;
   }
 
   // DEPRECATED: use obj[key].is<T>() instead
@@ -229,19 +222,18 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
 
  private:
   detail::ResourceManager* getResourceManager() const {
-    return resources_;
+    return impl_.getResourceManager();
   }
 
   detail::VariantData* getData() const {
-    return data_;
+    return impl_.getData();
   }
 
   detail::VariantData* getOrCreateData() const {
-    return data_;
+    return impl_.getData();
   }
 
-  detail::VariantData* data_;
-  detail::ResourceManager* resources_;
+  mutable detail::ObjectImpl impl_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

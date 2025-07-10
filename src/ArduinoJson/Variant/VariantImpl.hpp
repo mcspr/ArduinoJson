@@ -49,9 +49,7 @@ inline void VariantData::clear(ResourceManager* resources) {
     resources->freeEightByte(content_.asSlotId);
 #endif
 
-  auto collection = asCollection();
-  if (collection)
-    collection->clear(resources);
+  asCollection(resources).clear();
 
   type_ = VariantType::Null;
 }

@@ -349,12 +349,10 @@ class MsgPackDeserializer {
 
     bool allowArray = filter.allowArray();
 
-    ArrayData* array;
+    ArrayImpl array;
     if (allowArray) {
       ARDUINOJSON_ASSERT(variant != 0);
-      array = &variant->toArray();
-    } else {
-      array = 0;
+      array = variant->toArray(resources_);
     }
 
     TFilter elementFilter = filter[0U];
@@ -363,8 +361,7 @@ class MsgPackDeserializer {
       VariantData* value;
 
       if (elementFilter.allow()) {
-        ARDUINOJSON_ASSERT(array != 0);
-        value = array->addElement(resources_);
+        value = array.addElement();
         if (!value)
           return DeserializationError::NoMemory;
       } else {
@@ -388,12 +385,10 @@ class MsgPackDeserializer {
     if (nestingLimit.reached())
       return DeserializationError::TooDeep;
 
-    ObjectData* object;
+    ObjectImpl object;
     if (filter.allowObject()) {
       ARDUINOJSON_ASSERT(variant != 0);
-      object = &variant->toObject();
-    } else {
-      object = 0;
+      object = variant->toObject(resources_);
     }
 
     for (; n; --n) {
@@ -406,9 +401,7 @@ class MsgPackDeserializer {
       VariantData* member = 0;
 
       if (memberFilter.allow()) {
-        ARDUINOJSON_ASSERT(object != 0);
-
-        auto keyVariant = object->addPair(&member, resources_);
+        auto keyVariant = object.addPair(&member);
         if (!keyVariant)
           return DeserializationError::NoMemory;
 

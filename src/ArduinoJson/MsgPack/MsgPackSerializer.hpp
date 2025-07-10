@@ -19,7 +19,7 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
  public:
   static const bool producesText = false;
 
-  MsgPackSerializer(TWriter writer, const ResourceManager* resources)
+  MsgPackSerializer(TWriter writer, ResourceManager* resources)
       : writer_(writer), resources_(resources) {}
 
   template <typename T>
@@ -47,8 +47,8 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ArrayData& array) {
-    size_t n = array.size(resources_);
+  size_t visit(const ArrayImpl& array) {
+    size_t n = array.size();
     if (n < 0x10) {
       writeByte(uint8_t(0x90 + n));
     } else if (n < 0x10000) {
@@ -69,8 +69,8 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ObjectData& object) {
-    size_t n = object.size(resources_);
+  size_t visit(const ObjectImpl& object) {
+    size_t n = object.size();
     if (n < 0x10) {
       writeByte(uint8_t(0x80 + n));
     } else if (n < 0x10000) {
@@ -209,7 +209,7 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
   }
 
   CountingDecorator<TWriter> writer_;
-  const ResourceManager* resources_;
+  ResourceManager* resources_;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
