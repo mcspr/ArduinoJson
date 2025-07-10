@@ -26,17 +26,14 @@ class VisitorAdapter {
  public:
   using result_type = typename TVisitor::result_type;
 
-  VisitorAdapter(TVisitor& visitor, const ResourceManager* resources)
-      : visitor_(&visitor), resources_(resources) {}
+  VisitorAdapter(TVisitor& visitor) : visitor_(&visitor) {}
 
-  result_type visit(const ArrayData& value) {
-    return visitor_->visit(
-        JsonArrayConst(collectionToVariant(&value), resources_));
+  result_type visit(const ArrayImpl& array) {
+    return visitor_->visit(JsonArrayConst(array));
   }
 
-  result_type visit(const ObjectData& value) {
-    return visitor_->visit(
-        JsonObjectConst(collectionToVariant(&value), resources_));
+  result_type visit(const ObjectImpl& object) {
+    return visitor_->visit(JsonObjectConst(object));
   }
 
   template <typename T>
@@ -46,7 +43,6 @@ class VisitorAdapter {
 
  private:
   TVisitor* visitor_;
-  const ResourceManager* resources_;
 };
 
 template <typename TVisitor>
@@ -56,7 +52,7 @@ typename TVisitor::result_type accept(JsonVariantConst variant,
   if (!data)
     return visit.visit(nullptr);
   auto resources = VariantAttorney::getResourceManager(variant);
-  VisitorAdapter<TVisitor> adapter(visit, resources);
+  VisitorAdapter<TVisitor> adapter(visit);
   return data->accept(adapter, resources);
 }
 

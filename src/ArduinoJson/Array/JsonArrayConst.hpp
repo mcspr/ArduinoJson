@@ -24,10 +24,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/begin/
   iterator begin() const {
-    auto array = detail::VariantData::asArray(data_);
-    if (!array)
-      return iterator();
-    return iterator(array->createIterator(resources_), resources_);
+    return iterator(impl_.createIterator(), impl_.getResourceManager());
   }
 
   // Returns an iterator to the element following the last element of the array.
@@ -37,21 +34,22 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   }
 
   // Creates an unbound reference.
-  JsonArrayConst() : data_(0), resources_(0) {}
+  JsonArrayConst() {}
 
   // INTERNAL USE ONLY
-  JsonArrayConst(const detail::VariantData* data,
-                 const detail::ResourceManager* resources)
-      : data_(data), resources_(resources) {}
+  JsonArrayConst(detail::VariantData* data, detail::ResourceManager* resources)
+      : impl_(detail::VariantData::asArray(data, resources)) {}
+
+  // INTERNAL USE ONLY
+  JsonArrayConst(const detail::ArrayImpl& impl) : impl_(impl) {}
 
   // Returns the element at the specified index.
   // https://arduinojson.org/v7/api/jsonarrayconst/subscript/
   template <typename T,
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   JsonVariantConst operator[](T index) const {
-    return JsonVariantConst(
-        detail::VariantData::getElement(data_, size_t(index), resources_),
-        resources_);
+    return JsonVariantConst(impl_.getElement(size_t(index)),
+                            impl_.getResourceManager());
   }
 
   // Returns the element at the specified index.
@@ -66,13 +64,13 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(getData(), resources_);
+    return JsonVariantConst(impl_.getData(), impl_.getResourceManager());
   }
 
   // Returns true if the reference is unbound.
   // https://arduinojson.org/v7/api/jsonarrayconst/isnull/
   bool isNull() const {
-    return !data_ || !data_->isArray();
+    return impl_.isNull();
   }
 
   // Returns true if the reference is bound.
@@ -84,13 +82,13 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   // Returns the depth (nesting level) of the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/nesting/
   size_t nesting() const {
-    return detail::VariantData::nesting(getData(), resources_);
+    return impl_.nesting();
   }
 
   // Returns the number of elements in the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/size/
   size_t size() const {
-    return data_ ? data_->size(resources_) : 0;
+    return impl_.size();
   }
 
   // DEPRECATED: always returns zero
@@ -101,11 +99,10 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
 
  private:
   const detail::VariantData* getData() const {
-    return data_;
+    return impl_.getData();
   }
 
-  const detail::VariantData* data_;
-  const detail::ResourceManager* resources_;
+  detail::ArrayImpl impl_;
 };
 
 // Compares the content of two arrays.

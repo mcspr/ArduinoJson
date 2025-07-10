@@ -57,8 +57,6 @@ union VariantContent {
   uint32_t asUint32;
   int32_t asInt32;
   SlotId asSlotId;
-  ArrayData asArray;
-  ObjectData asObject;
   CollectionData asCollection;
   struct StringNode* asOwnedString;
   char asTinyString[tinyStringMaxLength + 1];

@@ -11,32 +11,29 @@
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename TAdaptedString>
-inline VariantData* ObjectData::getMember(
-    TAdaptedString key, const ResourceManager* resources) const {
-  auto it = findKey(key, resources);
+inline VariantData* ObjectImpl::getMember(TAdaptedString key) const {
+  auto it = findKey(key);
   if (it.done())
     return nullptr;
-  it.next(resources);
+  it.next(resources_);
   return it.data();
 }
 
 template <typename TAdaptedString>
-VariantData* ObjectData::getOrAddMember(TAdaptedString key,
-                                        ResourceManager* resources) {
-  auto data = getMember(key, resources);
+VariantData* ObjectImpl::getOrAddMember(TAdaptedString key) {
+  auto data = getMember(key);
   if (data)
     return data;
-  return addMember(key, resources);
+  return addMember(key);
 }
 
 template <typename TAdaptedString>
-inline ObjectData::iterator ObjectData::findKey(
-    TAdaptedString key, const ResourceManager* resources) const {
+inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key) const {
   if (key.isNull())
     return iterator();
   bool isKey = true;
-  for (auto it = createIterator(resources); !it.done(); it.next(resources)) {
-    if (isKey && stringEquals(key, adaptString(it->asString(resources))))
+  for (auto it = createIterator(); !it.done(); it.next(resources_)) {
+    if (isKey && stringEquals(key, adaptString(it->asString(resources_))))
       return it;
     isKey = !isKey;
   }
@@ -44,42 +41,47 @@ inline ObjectData::iterator ObjectData::findKey(
 }
 
 template <typename TAdaptedString>
-inline void ObjectData::removeMember(TAdaptedString key,
-                                     ResourceManager* resources) {
-  remove(findKey(key, resources), resources);
+inline void ObjectImpl::removeMember(TAdaptedString key) {
+  remove(findKey(key));
 }
 
 template <typename TAdaptedString>
-inline VariantData* ObjectData::addMember(TAdaptedString key,
-                                          ResourceManager* resources) {
-  auto keySlot = resources->allocVariant();
+inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
+  if (!data_)
+    return nullptr;
+  ARDUINOJSON_ASSERT(resources_ != nullptr);
+
+  auto keySlot = resources_->allocVariant();
   if (!keySlot)
     return nullptr;
 
-  auto valueSlot = resources->allocVariant();
+  auto valueSlot = resources_->allocVariant();
   if (!valueSlot)
     return nullptr;
 
-  if (!keySlot->setString(key, resources))
+  if (!keySlot->setString(key, resources_))
     return nullptr;
 
-  CollectionData::appendPair(keySlot, valueSlot, resources);
+  CollectionImpl::appendPair(keySlot, valueSlot);
 
   return valueSlot.ptr();
 }
 
-inline VariantData* ObjectData::addPair(VariantData** value,
-                                        ResourceManager* resources) {
-  auto keySlot = resources->allocVariant();
+inline VariantData* ObjectImpl::addPair(VariantData** value) {
+  if (!data_)
+    return nullptr;
+  ARDUINOJSON_ASSERT(resources_ != nullptr);
+
+  auto keySlot = resources_->allocVariant();
   if (!keySlot)
     return nullptr;
 
-  auto valueSlot = resources->allocVariant();
+  auto valueSlot = resources_->allocVariant();
   if (!valueSlot)
     return nullptr;
   *value = valueSlot.ptr();
 
-  CollectionData::appendPair(keySlot, valueSlot, resources);
+  CollectionImpl::appendPair(keySlot, valueSlot);
 
   return keySlot.ptr();
 }

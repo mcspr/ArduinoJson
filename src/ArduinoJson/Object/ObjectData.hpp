@@ -8,63 +8,38 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-class ObjectData : public CollectionData {
+class ObjectImpl : public CollectionImpl {
  public:
-  template <typename TAdaptedString>
-  VariantData* addMember(TAdaptedString key, ResourceManager* resources);
+  ObjectImpl() {}
 
-  VariantData* addPair(VariantData** value, ResourceManager* resources);
-
-  template <typename TAdaptedString>
-  VariantData* getOrAddMember(TAdaptedString key, ResourceManager* resources);
+  ObjectImpl(CollectionData* data, ResourceManager* resources)
+      : CollectionImpl(data, resources) {}
 
   template <typename TAdaptedString>
-  VariantData* getMember(TAdaptedString key,
-                         const ResourceManager* resources) const;
+  VariantData* addMember(TAdaptedString key);
+
+  VariantData* addPair(VariantData** value);
 
   template <typename TAdaptedString>
-  static VariantData* getMember(const ObjectData* object, TAdaptedString key,
-                                const ResourceManager* resources) {
-    if (!object)
-      return nullptr;
-    return object->getMember(key, resources);
+  VariantData* getOrAddMember(TAdaptedString key);
+
+  template <typename TAdaptedString>
+  VariantData* getMember(TAdaptedString key) const;
+
+  template <typename TAdaptedString>
+  void removeMember(TAdaptedString key);
+
+  void remove(iterator it) {
+    CollectionImpl::removePair(it);
   }
 
-  template <typename TAdaptedString>
-  void removeMember(TAdaptedString key, ResourceManager* resources);
-
-  template <typename TAdaptedString>
-  static void removeMember(ObjectData* obj, TAdaptedString key,
-                           ResourceManager* resources) {
-    if (!obj)
-      return;
-    obj->removeMember(key, resources);
-  }
-
-  void remove(iterator it, ResourceManager* resources) {
-    CollectionData::removePair(it, resources);
-  }
-
-  static void remove(ObjectData* obj, ObjectData::iterator it,
-                     ResourceManager* resources) {
-    if (!obj)
-      return;
-    obj->remove(it, resources);
-  }
-
-  size_t size(const ResourceManager* resources) const {
-    return CollectionData::size(resources) / 2;
-  }
-
-  static size_t size(const ObjectData* obj, const ResourceManager* resources) {
-    if (!obj)
-      return 0;
-    return obj->size(resources);
+  size_t size() const {
+    return CollectionImpl::size() / 2;
   }
 
  private:
   template <typename TAdaptedString>
-  iterator findKey(TAdaptedString key, const ResourceManager* resources) const;
+  iterator findKey(TAdaptedString key) const;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

@@ -71,13 +71,14 @@ class JsonDeserializer {
     switch (current()) {
       case '[':
         if (filter.allowArray())
-          return parseArray(variant.toArray(), filter, nestingLimit);
+          return parseArray(variant.toArray(resources_), filter, nestingLimit);
         else
           return skipArray(nestingLimit);
 
       case '{':
         if (filter.allowObject())
-          return parseObject(variant.toObject(), filter, nestingLimit);
+          return parseObject(variant.toObject(resources_), filter,
+                             nestingLimit);
         else
           return skipObject(nestingLimit);
 
@@ -146,7 +147,7 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseArray(
-      ArrayData& array, TFilter filter,
+      ArrayImpl array, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
@@ -172,7 +173,7 @@ class JsonDeserializer {
     for (;;) {
       if (elementFilter.allow()) {
         // Allocate slot in array
-        VariantData* value = array.addElement(resources_);
+        VariantData* value = array.addElement();
         if (!value)
           return DeserializationError::NoMemory;
 
@@ -232,7 +233,7 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseObject(
-      ObjectData& object, TFilter filter,
+      ObjectImpl object, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
 
@@ -273,9 +274,9 @@ class JsonDeserializer {
       TFilter memberFilter = filter[key];
 
       if (memberFilter.allow()) {
-        auto member = object.getMember(adaptString(key), resources_);
+        auto member = object.getMember(adaptString(key));
         if (!member) {
-          auto keyVariant = object.addPair(&member, resources_);
+          auto keyVariant = object.addPair(&member);
           if (!keyVariant)
             return DeserializationError::NoMemory;
 

@@ -151,16 +151,14 @@ template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonArray>::value, int>>
 inline JsonArray VariantRefBase<TDerived>::to() const {
   return JsonArray(
-      VariantData::toArray(getOrCreateData(), getResourceManager()),
-      getResourceManager());
+      VariantData::toArray(getOrCreateData(), getResourceManager()));
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonObject>::value, int>>
 JsonObject VariantRefBase<TDerived>::to() const {
   return JsonObject(
-      VariantData::toObject(getOrCreateData(), getResourceManager()),
-      getResourceManager());
+      VariantData::toObject(getOrCreateData(), getResourceManager()));
 }
 
 template <typename TDerived>

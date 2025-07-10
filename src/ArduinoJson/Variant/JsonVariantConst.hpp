@@ -38,8 +38,8 @@ class JsonVariantConst : public detail::VariantTag,
   JsonVariantConst() : data_(nullptr), resources_(nullptr) {}
 
   // INTERNAL USE ONLY
-  explicit JsonVariantConst(const detail::VariantData* data,
-                            const detail::ResourceManager* resources)
+  explicit JsonVariantConst(detail::VariantData* data,
+                            detail::ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
   // Returns true if the value is null or the reference is unbound.
@@ -181,17 +181,17 @@ class JsonVariantConst : public detail::VariantTag,
   }
 
  protected:
-  const detail::VariantData* getData() const {
+  detail::VariantData* getData() const {
     return data_;
   }
 
-  const detail::ResourceManager* getResourceManager() const {
+  detail::ResourceManager* getResourceManager() const {
     return resources_;
   }
 
  private:
-  const detail::VariantData* data_;
-  const detail::ResourceManager* resources_;
+  mutable detail::VariantData* data_;
+  mutable detail::ResourceManager* resources_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

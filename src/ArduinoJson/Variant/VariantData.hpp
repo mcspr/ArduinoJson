@@ -51,8 +51,8 @@ class VariantData {
   }
 
   template <typename TVisitor>
-  typename TVisitor::result_type accept(
-      TVisitor& visit, const ResourceManager* resources) const {
+  typename TVisitor::result_type accept(TVisitor& visit,
+                                        ResourceManager* resources) {
 #if ARDUINOJSON_USE_8_BYTE_POOL
     auto eightByteValue = getEightByte(resources);
 #else
@@ -68,10 +68,10 @@ class VariantData {
 #endif
 
       case VariantType::Array:
-        return visit.visit(content_.asArray);
+        return visit.visit(asArray(resources));
 
       case VariantType::Object:
-        return visit.visit(content_.asObject);
+        return visit.visit(asObject(resources));
 
       case VariantType::TinyString:
         return visit.visit(JsonString(content_.asTinyString));
@@ -110,8 +110,8 @@ class VariantData {
   }
 
   template <typename TVisitor>
-  static typename TVisitor::result_type accept(const VariantData* var,
-                                               const ResourceManager* resources,
+  static typename TVisitor::result_type accept(VariantData* var,
+                                               ResourceManager* resources,
                                                TVisitor& visit) {
     if (var != 0)
       return var->accept(visit, resources);
@@ -120,8 +120,8 @@ class VariantData {
   }
 
   VariantData* addElement(ResourceManager* resources) {
-    auto array = isNull() ? &toArray() : asArray();
-    return detail::ArrayData::addElement(array, resources);
+    auto array = isNull() ? toArray(resources) : asArray(resources);
+    return array.addElement();
   }
 
   static VariantData* addElement(VariantData* var, ResourceManager* resources) {
@@ -132,8 +132,8 @@ class VariantData {
 
   template <typename T>
   bool addValue(const T& value, ResourceManager* resources) {
-    auto array = isNull() ? &toArray() : asArray();
-    return detail::ArrayData::addValue(array, value, resources);
+    auto array = isNull() ? toArray(resources) : asArray(resources);
+    return array.addValue(value);
   }
 
   template <typename T>
@@ -174,28 +174,19 @@ class VariantData {
     }
   }
 
-  ArrayData* asArray() {
-    return isArray() ? &content_.asArray : 0;
+  ArrayImpl asArray(ResourceManager* resources) {
+    return ArrayImpl(isArray() ? &content_.asCollection : nullptr, resources);
   }
 
-  const ArrayData* asArray() const {
-    return const_cast<VariantData*>(this)->asArray();
+  static ArrayImpl asArray(VariantData* var, ResourceManager* resources) {
+    return ArrayImpl(
+        var && var->isArray() ? &var->content_.asCollection : nullptr,
+        resources);
   }
 
-  static ArrayData* asArray(VariantData* var) {
-    return var ? var->asArray() : 0;
-  }
-
-  static const ArrayData* asArray(const VariantData* var) {
-    return var ? var->asArray() : 0;
-  }
-
-  CollectionData* asCollection() {
-    return isCollection() ? &content_.asCollection : 0;
-  }
-
-  const CollectionData* asCollection() const {
-    return const_cast<VariantData*>(this)->asCollection();
+  CollectionImpl asCollection(ResourceManager* resources) {
+    return CollectionImpl(isCollection() ? &content_.asCollection : nullptr,
+                          resources);
   }
 
   template <typename T>
@@ -288,20 +279,14 @@ class VariantData {
     return parseNumber<T>(str);
   }
 
-  ObjectData* asObject() {
-    return isObject() ? &content_.asObject : 0;
+  ObjectImpl asObject(ResourceManager* resources) {
+    return ObjectImpl(isObject() ? &content_.asCollection : nullptr, resources);
   }
 
-  const ObjectData* asObject() const {
-    return const_cast<VariantData*>(this)->asObject();
-  }
-
-  static ObjectData* asObject(VariantData* var) {
-    return var ? var->asObject() : 0;
-  }
-
-  static const ObjectData* asObject(const VariantData* var) {
-    return var ? var->asObject() : 0;
+  static ObjectImpl asObject(VariantData* var, ResourceManager* resources) {
+    return ObjectImpl(
+        var && var->isObject() ? &var->content_.asCollection : nullptr,
+        resources);
   }
 
   JsonString asRawString() const {
@@ -334,45 +319,41 @@ class VariantData {
   const EightByteValue* getEightByte(const ResourceManager* resources) const;
 #endif
 
-  VariantData* getElement(size_t index,
-                          const ResourceManager* resources) const {
-    return ArrayData::getElement(asArray(), index, resources);
+  VariantData* getElement(size_t index, ResourceManager* resources) {
+    return asArray(resources).getElement(index);
   }
 
-  static VariantData* getElement(const VariantData* var, size_t index,
-                                 const ResourceManager* resources) {
-    return var != 0 ? var->getElement(index, resources) : 0;
-  }
-
-  template <typename TAdaptedString>
-  VariantData* getMember(TAdaptedString key,
-                         const ResourceManager* resources) const {
-    return ObjectData::getMember(asObject(), key, resources);
+  static VariantData* getElement(VariantData* var, size_t index,
+                                 ResourceManager* resources) {
+    if (!var)
+      return nullptr;
+    return var->asArray(resources).getElement(index);
   }
 
   template <typename TAdaptedString>
-  static VariantData* getMember(const VariantData* var, TAdaptedString key,
-                                const ResourceManager* resources) {
+  VariantData* getMember(TAdaptedString key, ResourceManager* resources) {
+    return asObject(resources).getMember(key);
+  }
+
+  template <typename TAdaptedString>
+  static VariantData* getMember(VariantData* var, TAdaptedString key,
+                                ResourceManager* resources) {
     if (!var)
       return 0;
     return var->getMember(key, resources);
   }
 
   VariantData* getOrAddElement(size_t index, ResourceManager* resources) {
-    auto array = isNull() ? &toArray() : asArray();
-    if (!array)
-      return nullptr;
-    return array->getOrAddElement(index, resources);
+    auto array = isNull() ? toArray(resources) : asArray(resources);
+    return array.getOrAddElement(index);
   }
 
   template <typename TAdaptedString>
   VariantData* getOrAddMember(TAdaptedString key, ResourceManager* resources) {
     if (key.isNull())
       return nullptr;
-    auto obj = isNull() ? &toObject() : asObject();
-    if (!obj)
-      return nullptr;
-    return obj->getOrAddMember(key, resources);
+    auto obj = isNull() ? toObject(resources) : asObject(resources);
+    return obj.getOrAddMember(key);
   }
 
   bool isArray() const {
@@ -438,23 +419,18 @@ class VariantData {
            type_ == VariantType::TinyString;
   }
 
-  size_t nesting(const ResourceManager* resources) const {
-    auto collection = asCollection();
-    if (collection)
-      return collection->nesting(resources);
-    else
-      return 0;
+  size_t nesting(ResourceManager* resources) {
+    return asCollection(resources).nesting();
   }
 
-  static size_t nesting(const VariantData* var,
-                        const ResourceManager* resources) {
+  static size_t nesting(VariantData* var, ResourceManager* resources) {
     if (!var)
       return 0;
     return var->nesting(resources);
   }
 
   void removeElement(size_t index, ResourceManager* resources) {
-    ArrayData::removeElement(asArray(), index, resources);
+    asArray(resources).removeElement(index);
   }
 
   static void removeElement(VariantData* var, size_t index,
@@ -466,7 +442,7 @@ class VariantData {
 
   template <typename TAdaptedString>
   void removeMember(TAdaptedString key, ResourceManager* resources) {
-    ObjectData::removeMember(asObject(), key, resources);
+    asObject(resources).removeMember(key);
   }
 
   template <typename TAdaptedString>
@@ -563,48 +539,44 @@ class VariantData {
     content_.asOwnedString = s;
   }
 
-  size_t size(const ResourceManager* resources) const {
+  size_t size(ResourceManager* resources) {
     if (isObject())
-      return content_.asObject.size(resources);
+      return asObject(resources).size();
 
     if (isArray())
-      return content_.asArray.size(resources);
+      return asArray(resources).size();
 
     return 0;
   }
 
-  static size_t size(const VariantData* var, const ResourceManager* resources) {
+  static size_t size(VariantData* var, ResourceManager* resources) {
     return var != 0 ? var->size(resources) : 0;
   }
 
-  ArrayData& toArray() {
+  ArrayImpl toArray(ResourceManager* resources) {
     ARDUINOJSON_ASSERT(type_ == VariantType::Null);  // must call clear() first
     type_ = VariantType::Array;
-    new (&content_.asArray) ArrayData();
-    return content_.asArray;
+    return ArrayImpl(new (&content_.asCollection) CollectionData(), resources);
   }
 
-  static VariantData* toArray(VariantData* var, ResourceManager* resources) {
+  static ArrayImpl toArray(VariantData* var, ResourceManager* resources) {
     if (!var)
-      return 0;
+      return ArrayImpl(nullptr, resources);
     var->clear(resources);
-    var->toArray();
-    return var;
+    return var->toArray(resources);
   }
 
-  ObjectData& toObject() {
+  ObjectImpl toObject(ResourceManager* resources) {
     ARDUINOJSON_ASSERT(type_ == VariantType::Null);  // must call clear() first
     type_ = VariantType::Object;
-    new (&content_.asObject) ObjectData();
-    return content_.asObject;
+    return ObjectImpl(new (&content_.asCollection) CollectionData(), resources);
   }
 
-  static VariantData* toObject(VariantData* var, ResourceManager* resources) {
+  static ObjectImpl toObject(VariantData* var, ResourceManager* resources) {
     if (!var)
-      return 0;
+      return ObjectImpl();
     var->clear(resources);
-    var->toObject();
-    return var;
+    return var->toObject(resources);
   }
 
   VariantType type() const {

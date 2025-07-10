@@ -16,10 +16,10 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
  public:
   static const bool producesText = true;
 
-  JsonSerializer(TWriter writer, const ResourceManager* resources)
+  JsonSerializer(TWriter writer, ResourceManager* resources)
       : formatter_(writer), resources_(resources) {}
 
-  size_t visit(const ArrayData& array) {
+  size_t visit(const ArrayImpl& array) {
     write('[');
 
     auto slotId = array.head();
@@ -39,7 +39,7 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ObjectData& object) {
+  size_t visit(const ObjectImpl& object) {
     write('{');
 
     auto slotId = object.head();
@@ -120,7 +120,7 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
   TextFormatter<TWriter> formatter_;
 
  protected:
-  const ResourceManager* resources_;
+  ResourceManager* resources_;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
