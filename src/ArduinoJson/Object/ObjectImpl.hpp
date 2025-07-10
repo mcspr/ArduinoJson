@@ -34,8 +34,8 @@ inline VariantImpl::iterator VariantImpl::findKey(TAdaptedString key) const {
     return iterator();
   bool isKey = true;
   for (auto it = createIterator(); !it.done(); it.next(resources_)) {
-    VariantImpl variant(it.data(), resources_);
-    if (isKey && stringEquals(key, adaptString(variant.asString())))
+    if (isKey &&
+        stringEquals(key, adaptString(it.value(resources_).asString())))
       return it;
     isKey = !isKey;
   }

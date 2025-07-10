@@ -13,6 +13,7 @@ ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 struct VariantData;
 class ResourceManager;
+class VariantImpl;
 
 class CollectionIterator {
   friend class VariantImpl;
@@ -21,6 +22,8 @@ class CollectionIterator {
   CollectionIterator() : slot_(nullptr), currentId_(NULL_SLOT) {}
 
   void next(const ResourceManager* resources);
+
+  VariantImpl value(ResourceManager* resources) const;
 
   bool done() const {
     return slot_ == nullptr;
@@ -32,21 +35,6 @@ class CollectionIterator {
 
   bool operator!=(const CollectionIterator& other) const {
     return slot_ != other.slot_;
-  }
-
-  VariantData* operator->() {
-    ARDUINOJSON_ASSERT(slot_ != nullptr);
-    return data();
-  }
-
-  VariantData& operator*() {
-    ARDUINOJSON_ASSERT(slot_ != nullptr);
-    return *data();
-  }
-
-  const VariantData& operator*() const {
-    ARDUINOJSON_ASSERT(slot_ != nullptr);
-    return *data();
   }
 
   VariantData* data() {

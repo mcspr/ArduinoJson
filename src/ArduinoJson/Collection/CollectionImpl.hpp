@@ -19,6 +19,11 @@ inline void CollectionIterator::next(const ResourceManager* resources) {
   currentId_ = nextId;
 }
 
+inline VariantImpl CollectionIterator::value(ResourceManager* resources) const {
+  ARDUINOJSON_ASSERT(slot_ != nullptr);
+  return VariantImpl(slot_, resources);
+}
+
 inline VariantImpl::iterator VariantImpl::createIterator() const {
   if (!data_ || !data_->isCollection())
     return iterator();
@@ -107,8 +112,7 @@ inline size_t VariantImpl::nesting() const {
     return 0;
   size_t maxChildNesting = 0;
   for (auto it = createIterator(); !it.done(); it.next(resources_)) {
-    VariantImpl variant(it.data(), resources_);
-    size_t childNesting = variant.nesting();
+    auto childNesting = it.value(resources_).nesting();
     if (childNesting > maxChildNesting)
       maxChildNesting = childNesting;
   }

@@ -35,7 +35,7 @@ class JsonArrayIterator {
       : iterator_(iterator), resources_(resources) {}
 
   JsonVariant operator*() {
-    return JsonVariant(iterator_.data(), resources_);
+    return JsonVariant(iterator_.value(resources_));
   }
   Ptr<JsonVariant> operator->() {
     return operator*();
@@ -69,7 +69,7 @@ class JsonArrayConstIterator {
       : iterator_(iterator), resources_(resources) {}
 
   JsonVariantConst operator*() const {
-    return JsonVariantConst(iterator_.data(), resources_);
+    return JsonVariantConst(iterator_.value(resources_));
   }
   Ptr<JsonVariantConst> operator->() {
     return operator*();
