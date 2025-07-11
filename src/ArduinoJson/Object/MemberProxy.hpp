@@ -58,7 +58,7 @@ class MemberProxy
 
   VariantImpl getOrCreateImpl() const {
     auto impl = VariantAttorney::getOrCreateImpl(upstream_);
-    auto data = impl.getData();
+    auto data = impl.data();
     if (data)
       data->getOrCreateObject();
     return VariantImpl(impl.getOrAddMember(key_), impl.getResourceManager());

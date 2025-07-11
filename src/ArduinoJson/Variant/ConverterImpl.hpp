@@ -239,7 +239,7 @@ inline void convertToJson(const ::Printable& src, JsonVariant dst) {
   src.printTo(print);
   if (print.overflowed())
     return;
-  print.save(impl.getData());
+  print.save(impl.data());
 }
 
 #endif

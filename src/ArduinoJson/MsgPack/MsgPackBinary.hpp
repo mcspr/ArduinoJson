@@ -26,7 +26,7 @@ template <>
 struct Converter<MsgPackBinary> : private detail::VariantAttorney {
   static void toJson(MsgPackBinary src, JsonVariant dst) {
     auto impl = getImpl(dst);
-    auto data = impl.getData();
+    auto data = impl.data();
     if (!data)
       return;
     auto resources = impl.getResourceManager();

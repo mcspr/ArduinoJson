@@ -148,7 +148,7 @@ inline JsonArray VariantRefBase<TDerived>::to() const {
   if (impl.isUnbound())
     return JsonArray();
   impl.clear();
-  impl.getData()->toArray();
+  impl.data()->toArray();
   return JsonArray(impl);
 }
 
@@ -159,7 +159,7 @@ JsonObject VariantRefBase<TDerived>::to() const {
   if (impl.isUnbound())
     return JsonObject();
   impl.clear();
-  impl.getData()->toObject();
+  impl.data()->toObject();
   return JsonObject(impl);
 }
 

@@ -24,7 +24,7 @@ class CollectionIterator {
 
   void next() {
     ARDUINOJSON_ASSERT(!done());
-    auto nextId = value_.getData()->next;
+    auto nextId = value_.data()->next;
     auto resources = value_.getResourceManager();
     value_ = VariantImpl(resources->getVariant(nextId), resources);
     currentId_ = nextId;
@@ -51,11 +51,11 @@ class CollectionIterator {
   }
 
   VariantData* data() {
-    return value_.getData();
+    return value_.data();
   }
 
   const VariantData* data() const {
-    return value_.getData();
+    return value_.data();
   }
 
  private:

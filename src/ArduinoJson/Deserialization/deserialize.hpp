@@ -50,7 +50,7 @@ DeserializationError doDeserialize(TDestination&& dst, TReader reader,
   auto resources = impl.getResourceManager();
   dst.clear();
   auto err = TDeserializer<TReader>(resources, reader)
-                 .parse(impl.getData(), options.filter, options.nestingLimit);
+                 .parse(impl.data(), options.filter, options.nestingLimit);
   shrinkJsonDocument(dst);
   return err;
 }

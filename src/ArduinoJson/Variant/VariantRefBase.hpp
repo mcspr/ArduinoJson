@@ -269,7 +269,7 @@ class VariantRefBase : public VariantTag {
 
   VariantImpl getOrCreateArray() const {
     auto impl = getOrCreateImpl();
-    auto data = impl.getData();
+    auto data = impl.data();
     if (data)
       data->getOrCreateArray();
     return impl;
