@@ -99,7 +99,7 @@ inline size_t VariantImpl::nesting() const {
     return 0;
   size_t maxChildNesting = 0;
   for (auto it = createIterator(); !it.done(); it.next()) {
-    auto childNesting = it.value().nesting();
+    auto childNesting = it->nesting();
     if (childNesting > maxChildNesting)
       maxChildNesting = childNesting;
   }

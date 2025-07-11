@@ -17,9 +17,9 @@ class JsonPair {
   // INTERNAL USE ONLY
   JsonPair(detail::VariantImpl::iterator iterator) {
     if (!iterator.done()) {
-      key_ = iterator.value().asString();
+      key_ = iterator->asString();
       iterator.next();
-      value_ = JsonVariant(iterator.value());
+      value_ = JsonVariant(*iterator);
     }
   }
 
@@ -44,9 +44,9 @@ class JsonPairConst {
  public:
   JsonPairConst(detail::VariantImpl::iterator iterator) {
     if (!iterator.done()) {
-      key_ = iterator.value().asString();
+      key_ = iterator->asString();
       iterator.next();
-      value_ = JsonVariantConst(iterator.value());
+      value_ = JsonVariantConst(*iterator);
     }
   }
 

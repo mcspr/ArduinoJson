@@ -26,7 +26,7 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
       nesting_++;
       while (!it.done()) {
         indent();
-        it.value().accept(*this);
+        it->accept(*this);
         it.next();
         base::write(it.done() ? "\r\n" : ",\r\n");
       }
@@ -48,7 +48,7 @@ class PrettyJsonSerializer : public JsonSerializer<TWriter> {
       while (!it.done()) {
         if (isKey)
           indent();
-        it.value().accept(*this);
+        it->accept(*this);
         it.next();
         if (isKey)
           base::write(": ");

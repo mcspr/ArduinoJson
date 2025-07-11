@@ -34,7 +34,7 @@ inline VariantImpl::iterator VariantImpl::findKey(TAdaptedString key) const {
     return iterator();
   bool isKey = true;
   for (auto it = createIterator(); !it.done(); it.next()) {
-    if (isKey && stringEquals(key, adaptString(it.value().asString())))
+    if (isKey && stringEquals(key, adaptString(it->asString())))
       return it;
     isKey = !isKey;
   }

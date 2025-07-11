@@ -30,8 +30,12 @@ class CollectionIterator {
     currentId_ = nextId;
   }
 
-  const VariantImpl& value() const {
+  const VariantImpl& operator*() const {
     return value_;
+  }
+
+  const VariantImpl* operator->() const {
+    return &value_;
   }
 
   bool done() const {
