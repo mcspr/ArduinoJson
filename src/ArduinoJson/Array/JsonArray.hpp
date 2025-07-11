@@ -73,7 +73,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarray/begin/
   iterator begin() const {
-    return iterator(impl_.createIterator(), impl_.getResourceManager());
+    return iterator(impl_.createIterator());
   }
 
   // Returns an iterator following the last element of the array.

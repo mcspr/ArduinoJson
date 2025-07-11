@@ -461,7 +461,7 @@ class VariantImpl {
 
     size_t count = 0;
 
-    for (auto it = createIterator(); !it.done(); it.next(resources_))
+    for (auto it = createIterator(); !it.done(); it.next())
       count++;
 
     if (data_->type == VariantType::Object)

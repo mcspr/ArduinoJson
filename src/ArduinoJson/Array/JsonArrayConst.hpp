@@ -24,7 +24,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/begin/
   iterator begin() const {
-    return iterator(impl_.createIterator(), impl_.getResourceManager());
+    return iterator(impl_.createIterator());
   }
 
   // Returns an iterator to the element following the last element of the array.

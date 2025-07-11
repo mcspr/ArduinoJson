@@ -14,12 +14,11 @@ class JsonObjectIterator {
  public:
   JsonObjectIterator() {}
 
-  explicit JsonObjectIterator(detail::VariantImpl::iterator iterator,
-                              detail::ResourceManager* resources)
-      : iterator_(iterator), resources_(resources) {}
+  explicit JsonObjectIterator(const detail::VariantImpl::iterator& iterator)
+      : iterator_(iterator) {}
 
   JsonPair operator*() const {
-    return JsonPair(iterator_, resources_);
+    return JsonPair(iterator_);
   }
   Ptr<JsonPair> operator->() {
     return operator*();
@@ -34,14 +33,13 @@ class JsonObjectIterator {
   }
 
   JsonObjectIterator& operator++() {
-    iterator_.next(resources_);  // key
-    iterator_.next(resources_);  // value
+    iterator_.next();  // key
+    iterator_.next();  // value
     return *this;
   }
 
  private:
   detail::VariantImpl::iterator iterator_;
-  detail::ResourceManager* resources_;
 };
 
 class JsonObjectConstIterator {
@@ -50,12 +48,12 @@ class JsonObjectConstIterator {
  public:
   JsonObjectConstIterator() {}
 
-  explicit JsonObjectConstIterator(detail::VariantImpl::iterator iterator,
-                                   detail::ResourceManager* resources)
-      : iterator_(iterator), resources_(resources) {}
+  explicit JsonObjectConstIterator(
+      const detail::VariantImpl::iterator& iterator)
+      : iterator_(iterator) {}
 
   JsonPairConst operator*() const {
-    return JsonPairConst(iterator_, resources_);
+    return JsonPairConst(iterator_);
   }
   Ptr<JsonPairConst> operator->() {
     return operator*();
@@ -70,14 +68,13 @@ class JsonObjectConstIterator {
   }
 
   JsonObjectConstIterator& operator++() {
-    iterator_.next(resources_);  // key
-    iterator_.next(resources_);  // value
+    iterator_.next();  // key
+    iterator_.next();  // value
     return *this;
   }
 
  private:
   detail::VariantImpl::iterator iterator_;
-  detail::ResourceManager* resources_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

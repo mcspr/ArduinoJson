@@ -12,23 +12,23 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-inline void CollectionIterator::next(const ResourceManager* resources) {
+inline void CollectionIterator::next() {
   ARDUINOJSON_ASSERT(slot_);
   auto nextId = slot_->next;
-  slot_ = resources->getVariant(nextId);
+  slot_ = resources_->getVariant(nextId);
   currentId_ = nextId;
 }
 
-inline VariantImpl CollectionIterator::value(ResourceManager* resources) const {
+inline VariantImpl CollectionIterator::value() const {
   ARDUINOJSON_ASSERT(slot_ != nullptr);
-  return VariantImpl(slot_, resources);
+  return VariantImpl(slot_, resources_);
 }
 
 inline VariantImpl::iterator VariantImpl::createIterator() const {
   if (!data_ || !data_->isCollection())
     return iterator();
   auto coll = getCollectionData();
-  return iterator(getVariant(coll->head), coll->head);
+  return iterator(coll->head, resources_);
 }
 
 inline void VariantImpl::appendOne(Slot<VariantData> slot) {
@@ -111,8 +111,8 @@ inline size_t VariantImpl::nesting() const {
   if (!data_ || !data_->isCollection())
     return 0;
   size_t maxChildNesting = 0;
-  for (auto it = createIterator(); !it.done(); it.next(resources_)) {
-    auto childNesting = it.value(resources_).nesting();
+  for (auto it = createIterator(); !it.done(); it.next()) {
+    auto childNesting = it.value().nesting();
     if (childNesting > maxChildNesting)
       maxChildNesting = childNesting;
   }

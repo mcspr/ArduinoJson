@@ -55,7 +55,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   // Returns an iterator to the first key-value pair of the object.
   // https://arduinojson.org/v7/api/jsonobjectconst/begin/
   iterator begin() const {
-    return iterator(impl_.createIterator(), impl_.getResourceManager());
+    return iterator(impl_.createIterator());
   }
 
   // Returns an iterator following the last key-value pair of the object.

@@ -19,11 +19,11 @@ class CollectionIterator {
   friend class VariantImpl;
 
  public:
-  CollectionIterator() : slot_(nullptr), currentId_(NULL_SLOT) {}
+  CollectionIterator() {}
 
-  void next(const ResourceManager* resources);
+  void next();
 
-  VariantImpl value(ResourceManager* resources) const;
+  VariantImpl value() const;
 
   bool done() const {
     return slot_ == nullptr;
@@ -46,11 +46,14 @@ class CollectionIterator {
   }
 
  private:
-  CollectionIterator(VariantData* slot, SlotId slotId)
-      : slot_(slot), currentId_(slotId) {}
+  CollectionIterator(SlotId slotId, ResourceManager* resources)
+      : slot_(resources->getVariant(slotId)),
+        currentId_(slotId),
+        resources_(resources) {}
 
-  VariantData* slot_;
-  SlotId currentId_;
+  VariantData* slot_ = nullptr;
+  SlotId currentId_ = NULL_SLOT;
+  ResourceManager* resources_ = nullptr;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

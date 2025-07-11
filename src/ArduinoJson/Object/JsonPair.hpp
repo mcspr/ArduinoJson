@@ -15,12 +15,11 @@ ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE
 class JsonPair {
  public:
   // INTERNAL USE ONLY
-  JsonPair(detail::VariantImpl::iterator iterator,
-           detail::ResourceManager* resources) {
+  JsonPair(detail::VariantImpl::iterator iterator) {
     if (!iterator.done()) {
-      key_ = iterator.value(resources).asString();
-      iterator.next(resources);
-      value_ = JsonVariant(iterator.value(resources));
+      key_ = iterator.value().asString();
+      iterator.next();
+      value_ = JsonVariant(iterator.value());
     }
   }
 
@@ -43,12 +42,11 @@ class JsonPair {
 // https://arduinojson.org/v7/api/jsonobjectconst/begin_end/
 class JsonPairConst {
  public:
-  JsonPairConst(detail::VariantImpl::iterator iterator,
-                detail::ResourceManager* resources) {
+  JsonPairConst(detail::VariantImpl::iterator iterator) {
     if (!iterator.done()) {
-      key_ = iterator.value(resources).asString();
-      iterator.next(resources);
-      value_ = JsonVariantConst(iterator.value(resources));
+      key_ = iterator.value().asString();
+      iterator.next();
+      value_ = JsonVariantConst(iterator.value());
     }
   }
 
