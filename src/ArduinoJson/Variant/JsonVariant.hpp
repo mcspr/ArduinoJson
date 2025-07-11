@@ -52,8 +52,7 @@ struct Converter<JsonVariant> : private detail::VariantAttorney {
   }
 
   static bool checkJson(JsonVariant src) {
-    auto data = getImpl(src).getData();
-    return !!data;
+    return !getImpl(src).isUnbound();
   }
 };
 
@@ -68,8 +67,7 @@ struct Converter<JsonVariantConst> : private detail::VariantAttorney {
   }
 
   static bool checkJson(JsonVariantConst src) {
-    auto data = getImpl(src).getData();
-    return !!data;
+    return !getImpl(src).isUnbound();
   }
 };
 

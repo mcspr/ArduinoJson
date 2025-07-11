@@ -319,6 +319,10 @@ class VariantImpl {
     }
   }
 
+  bool isUnbound() const {
+    return !data_;
+  }
+
   bool isNull() const {
     return type() == VariantType::Null;
   }

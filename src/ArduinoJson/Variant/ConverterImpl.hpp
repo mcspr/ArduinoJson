@@ -232,7 +232,7 @@ class StringBuilderPrint : public Print {
 
 inline void convertToJson(const ::Printable& src, JsonVariant dst) {
   auto impl = detail::VariantAttorney::getImpl(dst);
-  if (!impl.getData())
+  if (impl.isUnbound())
     return;
   impl.clear();
   detail::StringBuilderPrint print(impl.getResourceManager());

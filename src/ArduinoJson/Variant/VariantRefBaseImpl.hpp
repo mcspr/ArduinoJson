@@ -145,7 +145,7 @@ template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonArray>::value, int>>
 inline JsonArray VariantRefBase<TDerived>::to() const {
   auto impl = getOrCreateImpl();
-  if (!impl.getData())
+  if (impl.isUnbound())
     return JsonArray();
   impl.clear();
   impl.getData()->toArray();
@@ -156,7 +156,7 @@ template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonObject>::value, int>>
 JsonObject VariantRefBase<TDerived>::to() const {
   auto impl = getOrCreateImpl();
-  if (!impl.getData())
+  if (impl.isUnbound())
     return JsonObject();
   impl.clear();
   impl.getData()->toObject();

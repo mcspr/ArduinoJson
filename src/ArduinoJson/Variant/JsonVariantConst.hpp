@@ -53,7 +53,7 @@ class JsonVariantConst : public detail::VariantTag,
 
   // Returns true if the reference is unbound.
   bool isUnbound() const {
-    return impl_.getData() == nullptr;
+    return impl_.isUnbound();
   }
 
   // Returns the depth (nesting level) of the value.

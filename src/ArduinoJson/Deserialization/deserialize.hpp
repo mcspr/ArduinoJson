@@ -45,7 +45,7 @@ template <template <typename> class TDeserializer, typename TDestination,
 DeserializationError doDeserialize(TDestination&& dst, TReader reader,
                                    TOptions options) {
   auto impl = VariantAttorney::getOrCreateImpl(dst);
-  if (impl.getData() == nullptr)
+  if (impl.isUnbound())
     return DeserializationError::NoMemory;
   auto resources = impl.getResourceManager();
   dst.clear();

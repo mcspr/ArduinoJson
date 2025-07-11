@@ -40,7 +40,7 @@ class VariantRefBase : public VariantTag {
 
   // Returns true if the reference is unbound.
   bool isUnbound() const {
-    return !getImpl().getData();
+    return getImpl().isUnbound();
   }
 
   // Casts the value to the specified type.
