@@ -8,26 +8,21 @@
 #include <ArduinoJson/Polyfills/assert.hpp>
 #include <ArduinoJson/Variant/VariantImpl.hpp>
 
-#include <stddef.h>  // size_t
-
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-struct VariantData;
-class ResourceManager;
-class VariantImpl;
-
 class CollectionIterator {
-  friend class VariantImpl;
-
  public:
   CollectionIterator() {}
+
+  CollectionIterator(SlotId slotId, ResourceManager* resources)
+      : value_(resources->getVariant(slotId), resources), slotId_(slotId) {}
 
   void next() {
     ARDUINOJSON_ASSERT(!done());
     auto nextId = value_.data()->next;
     auto resources = value_.resources();
     value_ = VariantImpl(resources->getVariant(nextId), resources);
-    currentId_ = nextId;
+    slotId_ = nextId;
   }
 
   const VariantImpl& operator*() const {
@@ -50,12 +45,13 @@ class CollectionIterator {
     return !operator==(other);
   }
 
- private:
-  CollectionIterator(SlotId slotId, ResourceManager* resources)
-      : value_(resources->getVariant(slotId), resources), currentId_(slotId) {}
+  SlotId slotId() const {
+    return slotId_;
+  }
 
+ private:
   VariantImpl value_;
-  SlotId currentId_ = NULL_SLOT;
+  SlotId slotId_ = NULL_SLOT;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

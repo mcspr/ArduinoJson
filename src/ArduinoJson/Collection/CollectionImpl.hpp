@@ -74,7 +74,7 @@ inline void VariantImpl::removeOne(iterator it) {
     coll->head = next;
   if (next == NULL_SLOT)
     coll->tail = prev.id();
-  freeVariant({it->data(), it.currentId_});
+  freeVariant({it->data(), it.slotId()});
 }
 
 inline void VariantImpl::removePair(VariantImpl::iterator it) {
