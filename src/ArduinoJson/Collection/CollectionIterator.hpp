@@ -6,6 +6,7 @@
 
 #include <ArduinoJson/Namespace.hpp>
 #include <ArduinoJson/Polyfills/assert.hpp>
+#include <ArduinoJson/Variant/VariantImpl.hpp>
 
 #include <stddef.h>  // size_t
 
@@ -21,39 +22,44 @@ class CollectionIterator {
  public:
   CollectionIterator() {}
 
-  void next();
+  void next() {
+    ARDUINOJSON_ASSERT(!done());
+    auto nextId = value_.getData()->next;
+    auto resources = value_.getResourceManager();
+    value_ = VariantImpl(resources->getVariant(nextId), resources);
+    currentId_ = nextId;
+  }
 
-  VariantImpl value() const;
+  const VariantImpl& value() const {
+    return value_;
+  }
 
   bool done() const {
-    return slot_ == nullptr;
+    return value_.isUnbound();
   }
 
   bool operator==(const CollectionIterator& other) const {
-    return slot_ == other.slot_;
+    return data() == other.data();
   }
 
   bool operator!=(const CollectionIterator& other) const {
-    return slot_ != other.slot_;
+    return !operator==(other);
   }
 
   VariantData* data() {
-    return slot_;
+    return value_.getData();
   }
 
   const VariantData* data() const {
-    return slot_;
+    return value_.getData();
   }
 
  private:
   CollectionIterator(SlotId slotId, ResourceManager* resources)
-      : slot_(resources->getVariant(slotId)),
-        currentId_(slotId),
-        resources_(resources) {}
+      : value_(resources->getVariant(slotId), resources), currentId_(slotId) {}
 
-  VariantData* slot_ = nullptr;
+  VariantImpl value_;
   SlotId currentId_ = NULL_SLOT;
-  ResourceManager* resources_ = nullptr;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

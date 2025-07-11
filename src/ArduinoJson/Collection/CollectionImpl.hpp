@@ -4,25 +4,12 @@
 
 #pragma once
 
-#include <ArduinoJson/Collection/CollectionIterator.hpp>
 #include <ArduinoJson/Memory/Alignment.hpp>
 #include <ArduinoJson/Strings/StringAdapters.hpp>
 #include <ArduinoJson/Variant/VariantCompare.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
-
-inline void CollectionIterator::next() {
-  ARDUINOJSON_ASSERT(slot_);
-  auto nextId = slot_->next;
-  slot_ = resources_->getVariant(nextId);
-  currentId_ = nextId;
-}
-
-inline VariantImpl CollectionIterator::value() const {
-  ARDUINOJSON_ASSERT(slot_ != nullptr);
-  return VariantImpl(slot_, resources_);
-}
 
 inline VariantImpl::iterator VariantImpl::createIterator() const {
   if (!data_ || !data_->isCollection())
@@ -78,7 +65,7 @@ inline void VariantImpl::removeOne(iterator it) {
   if (it.done())
     return;
   auto coll = getCollectionData();
-  auto curr = it.slot_;
+  auto curr = it.data();
   auto prev = getPreviousSlot(curr);
   auto next = curr->next;
   if (prev)
@@ -87,14 +74,14 @@ inline void VariantImpl::removeOne(iterator it) {
     coll->head = next;
   if (next == NULL_SLOT)
     coll->tail = prev.id();
-  freeVariant({it.slot_, it.currentId_});
+  freeVariant({it.data(), it.currentId_});
 }
 
 inline void VariantImpl::removePair(VariantImpl::iterator it) {
   if (it.done())
     return;
 
-  auto keySlot = it.slot_;
+  auto keySlot = it.data();
 
   auto valueId = keySlot->next;
   auto valueSlot = getVariant(valueId);
@@ -117,6 +104,21 @@ inline size_t VariantImpl::nesting() const {
       maxChildNesting = childNesting;
   }
   return maxChildNesting + 1;
+}
+
+inline size_t VariantImpl::size() const {
+  if (!data_)
+    return 0;
+
+  size_t count = 0;
+
+  for (auto it = createIterator(); !it.done(); it.next())
+    count++;
+
+  if (data_->type == VariantType::Object)
+    count /= 2;  // TODO: do this in JsonObject?
+
+  return count;
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

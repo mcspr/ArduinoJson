@@ -46,6 +46,10 @@ inline void VariantImpl::removeMember(TAdaptedString key) {
   removeMember(findKey(key));
 }
 
+inline void VariantImpl::removeMember(iterator it) {
+  removePair(it);
+}
+
 template <typename TAdaptedString>
 inline VariantData* VariantImpl::addMember(TAdaptedString key) {
   if (!isObject())

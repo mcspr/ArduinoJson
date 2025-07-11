@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <ArduinoJson/Collection/CollectionIterator.hpp>
 #include <ArduinoJson/Variant/VariantCompare.hpp>
 #include <ArduinoJson/Variant/VariantImpl.hpp>
 
@@ -51,6 +52,12 @@ inline VariantData* VariantImpl::getOrAddElement(size_t index) {
 
 inline VariantData* VariantImpl::getElement(size_t index) const {
   return at(index).data();
+}
+
+inline void VariantImpl::removeElement(iterator it) {
+  if (!isArray())
+    return;
+  removeOne(it);
 }
 
 inline void VariantImpl::removeElement(size_t index) {

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <ArduinoJson/Collection/CollectionIterator.hpp>
 #include <ArduinoJson/Variant/JsonVariant.hpp>
 
 ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE

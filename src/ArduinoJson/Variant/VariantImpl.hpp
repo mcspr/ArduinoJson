@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <ArduinoJson/Collection/CollectionIterator.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
@@ -13,6 +12,8 @@
 #include <ArduinoJson/Variant/VariantData.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
+
+class CollectionIterator;
 
 class VariantImpl {
   VariantData* data_;
@@ -35,7 +36,7 @@ class VariantImpl {
   }
 
   template <typename TVisitor>
-  typename TVisitor::result_type accept(TVisitor& visit) {
+  typename TVisitor::result_type accept(TVisitor& visit) const {
     if (!data_)
       return visit.visit(nullptr);
 
@@ -337,20 +338,14 @@ class VariantImpl {
 
   size_t nesting() const;
 
-  void removeElement(iterator it) {
-    if (!isArray())
-      return;
-    removeOne(it);
-  }
+  void removeElement(iterator it);
 
   void removeElement(size_t index);
 
   template <typename TAdaptedString>
   void removeMember(TAdaptedString key);
 
-  void removeMember(iterator it) {
-    removePair(it);
-  }
+  void removeMember(iterator it);
 
   bool setBoolean(bool value) {
     if (!data_)
@@ -455,20 +450,7 @@ class VariantImpl {
 
   void empty();
 
-  size_t size() const {
-    if (!data_)
-      return 0;
-
-    size_t count = 0;
-
-    for (auto it = createIterator(); !it.done(); it.next())
-      count++;
-
-    if (data_->type == VariantType::Object)
-      count /= 2;  // TODO: do this in JsonObject?
-
-    return count;
-  }
+  size_t size() const;
 
   VariantType type() const {
     return data_ ? data_->type : VariantType::Null;
