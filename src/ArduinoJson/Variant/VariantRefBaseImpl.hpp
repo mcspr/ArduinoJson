@@ -70,7 +70,7 @@ template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 inline T VariantRefBase<TDerived>::add() const {
   auto impl = getOrCreateArray();
-  return JsonVariant(impl.addElement(), impl.getResourceManager());
+  return JsonVariant(impl.addElement(), impl.resources());
 }
 
 template <typename TDerived>
@@ -130,7 +130,7 @@ template <typename TConverter, typename T>
 inline bool VariantRefBase<TDerived>::doSet(const T& value, false_type) const {
   auto impl = getOrCreateImpl();
   TConverter::toJson(value, JsonVariant(impl));
-  auto resources = impl.getResourceManager();
+  auto resources = impl.resources();
   return resources && !resources->overflowed();
 }
 

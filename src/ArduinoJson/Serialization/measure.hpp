@@ -12,7 +12,7 @@ template <template <typename> class TSerializer>
 size_t measure(ArduinoJson::JsonVariantConst source) {
   DummyWriter dp;
   auto impl = VariantAttorney::getImpl(source);
-  TSerializer<DummyWriter> serializer(dp, impl.getResourceManager());
+  TSerializer<DummyWriter> serializer(dp, impl.resources());
   return impl.accept(serializer);
 }
 

@@ -25,7 +25,7 @@ class CollectionIterator {
   void next() {
     ARDUINOJSON_ASSERT(!done());
     auto nextId = value_.data()->next;
-    auto resources = value_.getResourceManager();
+    auto resources = value_.resources();
     value_ = VariantImpl(resources->getVariant(nextId), resources);
     currentId_ = nextId;
   }

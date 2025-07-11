@@ -52,7 +52,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T, detail::enable_if_t<
                             detail::is_same<T, JsonVariant>::value, int> = 0>
   JsonVariant add() const {
-    return JsonVariant(impl_.addElement(), impl_.getResourceManager());
+    return JsonVariant(impl_.addElement(), impl_.resources());
   }
 
   // Appends a value to the array.

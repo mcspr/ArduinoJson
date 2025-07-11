@@ -107,8 +107,7 @@ class JsonVariantConst : public detail::VariantTag,
   template <typename T,
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   JsonVariantConst operator[](T index) const {
-    return JsonVariantConst(impl_.getElement(size_t(index)),
-                            impl_.getResourceManager());
+    return JsonVariantConst(impl_.getElement(size_t(index)), impl_.resources());
   }
 
   // Gets object's member with specified key.
@@ -117,7 +116,7 @@ class JsonVariantConst : public detail::VariantTag,
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   JsonVariantConst operator[](const TString& key) const {
     return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
-                            impl_.getResourceManager());
+                            impl_.resources());
   }
 
   // Gets object's member with specified key.
@@ -128,7 +127,7 @@ class JsonVariantConst : public detail::VariantTag,
                                 int> = 0>
   JsonVariantConst operator[](TChar* key) const {
     return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
-                            impl_.getResourceManager());
+                            impl_.resources());
   }
 
   // Gets object's member with specified key or the array's element at the

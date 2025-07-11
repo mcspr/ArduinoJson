@@ -53,7 +53,7 @@ class MemberProxy
 
   VariantImpl getImpl() const {
     auto impl = VariantAttorney::getImpl(upstream_);
-    return VariantImpl(impl.getMember(key_), impl.getResourceManager());
+    return VariantImpl(impl.getMember(key_), impl.resources());
   }
 
   VariantImpl getOrCreateImpl() const {
@@ -61,7 +61,7 @@ class MemberProxy
     auto data = impl.data();
     if (data)
       data->getOrCreateObject();
-    return VariantImpl(impl.getOrAddMember(key_), impl.getResourceManager());
+    return VariantImpl(impl.getOrAddMember(key_), impl.resources());
   }
 
  private:

@@ -235,7 +235,7 @@ inline void convertToJson(const ::Printable& src, JsonVariant dst) {
   if (impl.isUnbound())
     return;
   impl.clear();
-  detail::StringBuilderPrint print(impl.getResourceManager());
+  detail::StringBuilderPrint print(impl.resources());
   src.printTo(print);
   if (print.overflowed())
     return;

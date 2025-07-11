@@ -44,8 +44,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   template <typename T,
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   JsonVariantConst operator[](T index) const {
-    return JsonVariantConst(impl_.getElement(size_t(index)),
-                            impl_.getResourceManager());
+    return JsonVariantConst(impl_.getElement(size_t(index)), impl_.resources());
   }
 
   // Returns the element at the specified index.

@@ -47,7 +47,7 @@ DeserializationError doDeserialize(TDestination&& dst, TReader reader,
   auto impl = VariantAttorney::getOrCreateImpl(dst);
   if (impl.isUnbound())
     return DeserializationError::NoMemory;
-  auto resources = impl.getResourceManager();
+  auto resources = impl.resources();
   dst.clear();
   auto err = TDeserializer<TReader>(resources, reader)
                  .parse(impl.data(), options.filter, options.nestingLimit);

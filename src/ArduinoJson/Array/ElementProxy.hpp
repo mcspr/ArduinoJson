@@ -52,7 +52,7 @@ class ElementProxy : public VariantRefBase<ElementProxy<TUpstream>>,
 
   VariantImpl getImpl() const {
     auto impl = VariantAttorney::getImpl(upstream_);
-    return VariantImpl(impl.getElement(index_), impl.getResourceManager());
+    return VariantImpl(impl.getElement(index_), impl.resources());
   }
 
   VariantImpl getOrCreateImpl() const {
@@ -60,7 +60,7 @@ class ElementProxy : public VariantRefBase<ElementProxy<TUpstream>>,
     auto data = impl.data();
     if (data)
       data->getOrCreateArray();
-    return VariantImpl(impl.getOrAddElement(index_), impl.getResourceManager());
+    return VariantImpl(impl.getOrAddElement(index_), impl.resources());
   }
 
   TUpstream upstream_;

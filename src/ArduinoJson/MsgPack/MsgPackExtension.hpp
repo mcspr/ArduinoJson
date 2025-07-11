@@ -33,7 +33,7 @@ struct Converter<MsgPackExtension> : private detail::VariantAttorney {
   static void toJson(MsgPackExtension src, JsonVariant dst) {
     auto impl = getImpl(dst);
     auto data = impl.data();
-    auto resources = impl.getResourceManager();
+    auto resources = impl.resources();
     if (!data)
       return;
     impl.clear();

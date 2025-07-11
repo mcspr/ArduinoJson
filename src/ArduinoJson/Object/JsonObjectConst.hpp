@@ -96,7 +96,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   JsonVariantConst operator[](const TString& key) const {
     return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
-                            impl_.getResourceManager());
+                            impl_.resources());
   }
 
   // Gets the member with specified key.
@@ -107,7 +107,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
                                 int> = 0>
   JsonVariantConst operator[](TChar* key) const {
     return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
-                            impl_.getResourceManager());
+                            impl_.resources());
   }
 
   // Gets the member with specified key.

@@ -31,7 +31,7 @@ class VariantImpl {
     return data_;
   }
 
-  ResourceManager* getResourceManager() const {
+  ResourceManager* resources() const {
     return resources_;
   }
 
