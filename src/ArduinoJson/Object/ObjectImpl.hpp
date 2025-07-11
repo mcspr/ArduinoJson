@@ -15,7 +15,7 @@ inline VariantData* VariantImpl::getMember(TAdaptedString key) const {
   if (it.done())
     return nullptr;
   it.next();
-  return it.data();
+  return it->data();
 }
 
 template <typename TAdaptedString>

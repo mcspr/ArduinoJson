@@ -43,19 +43,11 @@ class CollectionIterator {
   }
 
   bool operator==(const CollectionIterator& other) const {
-    return data() == other.data();
+    return value_.data() == other->data();
   }
 
   bool operator!=(const CollectionIterator& other) const {
     return !operator==(other);
-  }
-
-  VariantData* data() {
-    return value_.data();
-  }
-
-  const VariantData* data() const {
-    return value_.data();
   }
 
  private:

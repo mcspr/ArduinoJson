@@ -65,7 +65,7 @@ inline void VariantImpl::removeOne(iterator it) {
   if (it.done())
     return;
   auto coll = getCollectionData();
-  auto curr = it.data();
+  auto curr = it->data();
   auto prev = getPreviousSlot(curr);
   auto next = curr->next;
   if (prev)
@@ -74,14 +74,14 @@ inline void VariantImpl::removeOne(iterator it) {
     coll->head = next;
   if (next == NULL_SLOT)
     coll->tail = prev.id();
-  freeVariant({it.data(), it.currentId_});
+  freeVariant({it->data(), it.currentId_});
 }
 
 inline void VariantImpl::removePair(VariantImpl::iterator it) {
   if (it.done())
     return;
 
-  auto keySlot = it.data();
+  auto keySlot = it->data();
 
   auto valueId = keySlot->next;
   auto valueSlot = getVariant(valueId);

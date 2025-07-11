@@ -40,7 +40,7 @@ inline VariantData* VariantImpl::getOrAddElement(size_t index) {
   }
   if (it.done())
     index++;
-  VariantData* element = it.data();
+  VariantData* element = it->data();
   while (index > 0) {
     element = addElement();
     if (!element)
@@ -51,7 +51,7 @@ inline VariantData* VariantImpl::getOrAddElement(size_t index) {
 }
 
 inline VariantData* VariantImpl::getElement(size_t index) const {
-  return at(index).data();
+  return at(index)->data();
 }
 
 inline void VariantImpl::removeElement(iterator it) {
