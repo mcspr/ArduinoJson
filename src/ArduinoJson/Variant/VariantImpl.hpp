@@ -441,14 +441,68 @@ class VariantImpl {
   }
 
   template <typename T>
-  void setRawString(SerializedValue<T> value);
+  void setRawString(SerializedValue<T> value) {
+    if (!data_)
+      return;
+    auto dup = resources_->saveString(adaptString(value.data(), value.size()));
+    if (dup)
+      data_->setRawString(dup);
+  }
 
   template <typename TAdaptedString>
-  bool setString(TAdaptedString value);
+  bool setString(TAdaptedString value) {
+    ARDUINOJSON_ASSERT(isNull());  // must call clear() first
 
-  bool setLinkedString(const char* s);
+    if (!data_)
+      return false;
 
-  void empty();
+    if (value.isNull())
+      return false;
+
+    if (value.isStatic())
+      return setLinkedString(value.data());
+
+    if (isTinyString(value, value.size())) {
+      data_->setTinyString(value);
+      return true;
+    }
+
+    auto dup = resources_->saveString(value);
+    if (dup) {
+      data_->setOwnedString(dup);
+      return true;
+    }
+
+    return false;
+  }
+
+  bool setLinkedString(const char* s) {
+    ARDUINOJSON_ASSERT(isNull());  // must call clear() first
+    ARDUINOJSON_ASSERT(s);
+
+    auto slotId = resources_->saveStaticString(s);
+    if (slotId == NULL_SLOT)
+      return false;
+
+    data_->type = VariantType::LinkedString;
+    data_->content.asSlotId = slotId;
+    return true;
+  }
+
+  void empty() {
+    auto coll = getCollectionData();
+
+    auto next = coll->head;
+    while (next != NULL_SLOT) {
+      auto currId = next;
+      auto slot = getVariant(next);
+      next = slot->next;
+      freeVariant({slot, currId});
+    }
+
+    coll->head = NULL_SLOT;
+    coll->tail = NULL_SLOT;
+  }
 
   size_t size() const;
 
@@ -457,7 +511,23 @@ class VariantImpl {
   }
 
   // Release the resources used by this variant and set it to null.
-  void clear();
+  void clear() {
+    if (!data_)
+      return;
+
+    if (data_->type & VariantTypeBits::OwnedStringBit)
+      resources_->dereferenceString(data_->content.asOwnedString->data);
+
+#if ARDUINOJSON_USE_8_BYTE_POOL
+    if (data_->type & VariantTypeBits::EightByteBit)
+      resources_->freeEightByte(data_->content.asSlotId);
+#endif
+
+    if (data_->type & VariantTypeBits::CollectionMask)
+      empty();
+
+    data_->type = VariantType::Null;
+  }
 
  private:
   template <typename TAdaptedString>
@@ -494,87 +564,5 @@ class VariantImpl {
     return &data_->content.asCollection;
   }
 };
-
-template <typename T>
-inline void VariantImpl::setRawString(SerializedValue<T> value) {
-  if (!data_)
-    return;
-  auto dup = resources_->saveString(adaptString(value.data(), value.size()));
-  if (dup)
-    data_->setRawString(dup);
-}
-
-inline bool VariantImpl::setLinkedString(const char* s) {
-  ARDUINOJSON_ASSERT(isNull());  // must call clear() first
-  ARDUINOJSON_ASSERT(s);
-
-  auto slotId = resources_->saveStaticString(s);
-  if (slotId == NULL_SLOT)
-    return false;
-
-  data_->type = VariantType::LinkedString;
-  data_->content.asSlotId = slotId;
-  return true;
-}
-
-template <typename TAdaptedString>
-inline bool VariantImpl::setString(TAdaptedString value) {
-  ARDUINOJSON_ASSERT(isNull());  // must call clear() first
-
-  if (!data_)
-    return false;
-
-  if (value.isNull())
-    return false;
-
-  if (value.isStatic())
-    return setLinkedString(value.data());
-
-  if (isTinyString(value, value.size())) {
-    data_->setTinyString(value);
-    return true;
-  }
-
-  auto dup = resources_->saveString(value);
-  if (dup) {
-    data_->setOwnedString(dup);
-    return true;
-  }
-
-  return false;
-}
-
-inline void VariantImpl::clear() {
-  if (!data_)
-    return;
-
-  if (data_->type & VariantTypeBits::OwnedStringBit)
-    resources_->dereferenceString(data_->content.asOwnedString->data);
-
-#if ARDUINOJSON_USE_8_BYTE_POOL
-  if (data_->type & VariantTypeBits::EightByteBit)
-    resources_->freeEightByte(data_->content.asSlotId);
-#endif
-
-  if (data_->type & VariantTypeBits::CollectionMask)
-    empty();
-
-  data_->type = VariantType::Null;
-}
-
-inline void VariantImpl::empty() {
-  auto coll = getCollectionData();
-
-  auto next = coll->head;
-  while (next != NULL_SLOT) {
-    auto currId = next;
-    auto slot = getVariant(next);
-    next = slot->next;
-    freeVariant({slot, currId});
-  }
-
-  coll->head = NULL_SLOT;
-  coll->tail = NULL_SLOT;
-}
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
