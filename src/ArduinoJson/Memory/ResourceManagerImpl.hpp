@@ -6,7 +6,6 @@
 
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Polyfills/alias_cast.hpp>
-#include <ArduinoJson/Variant/VariantImpl.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
@@ -21,7 +20,6 @@ inline Slot<VariantData> ResourceManager::allocVariant() {
 }
 
 inline void ResourceManager::freeVariant(Slot<VariantData> slot) {
-  VariantImpl(slot.ptr(), this).clear();
   variantPools_.freeSlot(slot);
 }
 

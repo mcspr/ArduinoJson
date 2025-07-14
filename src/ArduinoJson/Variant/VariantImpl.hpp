@@ -548,6 +548,7 @@ class VariantImpl {
 
   void freeVariant(Slot<VariantData> slot) {
     ARDUINOJSON_ASSERT(resources_ != nullptr);
+    VariantImpl(slot.ptr(), resources_).clear();
     resources_->freeVariant(slot);
   }
 
