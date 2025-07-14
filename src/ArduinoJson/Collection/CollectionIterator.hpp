@@ -17,7 +17,7 @@ class CollectionIterator {
   CollectionIterator(SlotId slotId, ResourceManager* resources)
       : value_(resources->getVariant(slotId), resources), slotId_(slotId) {}
 
-  void next() {
+  void move() {
     ARDUINOJSON_ASSERT(!done());
     auto nextId = value_.data()->next;
     auto resources = value_.resources();

@@ -18,7 +18,7 @@ class JsonPair {
   JsonPair(detail::VariantImpl::iterator iterator) {
     if (!iterator.done()) {
       key_ = iterator->asString();
-      iterator.next();
+      iterator.move();
       value_ = JsonVariant(*iterator);
     }
   }
@@ -45,7 +45,7 @@ class JsonPairConst {
   JsonPairConst(detail::VariantImpl::iterator iterator) {
     if (!iterator.done()) {
       key_ = iterator->asString();
-      iterator.next();
+      iterator.move();
       value_ = JsonVariantConst(*iterator);
     }
   }

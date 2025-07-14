@@ -33,8 +33,8 @@ class JsonObjectIterator {
   }
 
   JsonObjectIterator& operator++() {
-    iterator_.next();  // key
-    iterator_.next();  // value
+    iterator_.move();  // key
+    iterator_.move();  // value
     return *this;
   }
 
@@ -68,8 +68,8 @@ class JsonObjectConstIterator {
   }
 
   JsonObjectConstIterator& operator++() {
-    iterator_.next();  // key
-    iterator_.next();  // value
+    iterator_.move();  // key
+    iterator_.move();  // value
     return *this;
   }
 

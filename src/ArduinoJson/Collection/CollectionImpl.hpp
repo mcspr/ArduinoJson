@@ -98,7 +98,7 @@ inline size_t VariantImpl::nesting() const {
   if (!data_ || !data_->isCollection())
     return 0;
   size_t maxChildNesting = 0;
-  for (auto it = createIterator(); !it.done(); it.next()) {
+  for (auto it = createIterator(); !it.done(); it.move()) {
     auto childNesting = it->nesting();
     if (childNesting > maxChildNesting)
       maxChildNesting = childNesting;
@@ -112,7 +112,7 @@ inline size_t VariantImpl::size() const {
 
   size_t count = 0;
 
-  for (auto it = createIterator(); !it.done(); it.next())
+  for (auto it = createIterator(); !it.done(); it.move())
     count++;
 
   if (data_->type == VariantType::Object)
