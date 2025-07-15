@@ -4,7 +4,6 @@
 
 #include <ArduinoJson/Memory/Alignment.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
-#include <ArduinoJson/Memory/ResourceManagerImpl.hpp>
 #include <catch.hpp>
 
 #include "Allocators.hpp"
