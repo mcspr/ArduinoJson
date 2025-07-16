@@ -440,11 +440,11 @@ class VariantImpl {
     return true;
   }
 
-  template <typename T>
-  void setRawString(SerializedValue<T> value) {
+  template <typename TAdaptedString>
+  void setRawString(TAdaptedString value) {
     if (!data_)
       return;
-    auto dup = resources_->saveString(adaptString(value.data(), value.size()));
+    auto dup = resources_->saveString(value);
     if (dup)
       data_->setRawString(dup);
   }

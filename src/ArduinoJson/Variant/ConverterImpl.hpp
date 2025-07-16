@@ -176,7 +176,7 @@ struct Converter<SerializedValue<T>> : private detail::VariantAttorney {
   static void toJson(SerializedValue<T> src, JsonVariant dst) {
     auto variant = getImpl(dst);
     variant.clear();
-    variant.setRawString(src);
+    variant.setRawString(detail::adaptString(src.data(), src.size()));
   }
 };
 
