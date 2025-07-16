@@ -469,13 +469,17 @@ class VariantImpl {
       return true;
     }
 
-    auto dup = resources_->saveString(value);
-    if (dup) {
-      data_->setOwnedString(dup);
-      return true;
-    }
+    return setOwnedString(value);
+  }
 
-    return false;
+  template <typename TAdaptedString>
+  bool setOwnedString(TAdaptedString value) {
+    auto dup = resources_->saveString(value);
+    if (!dup)
+      return false;
+
+    data_->setOwnedString(dup);
+    return true;
   }
 
   bool setLinkedString(const char* s) {
