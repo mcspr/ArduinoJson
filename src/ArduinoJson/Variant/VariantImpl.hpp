@@ -531,7 +531,7 @@ class VariantImpl {
       return;
 
     if (data_->type & VariantTypeBits::OwnedStringBit)
-      resources_->dereferenceString(data_->content.asOwnedString->data);
+      resources_->dereferenceString(asOwnedString());
 
 #if ARDUINOJSON_USE_8_BYTE_POOL
     if (data_->type & VariantTypeBits::EightByteBit)

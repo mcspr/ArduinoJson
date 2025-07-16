@@ -78,20 +78,20 @@ class StringPool {
     return nullptr;
   }
 
-  void dereference(const char* s, Allocator* allocator) {
+  void dereference(StringNode* nodeToRemove, Allocator* allocator) {
     StringNode* prev = nullptr;
-    for (auto node = strings_; node; node = node->next) {
-      if (node->data == s) {
-        if (--node->references == 0) {
+    for (auto current = strings_; current; current = current->next) {
+      if (current == nodeToRemove) {
+        if (--current->references == 0) {
           if (prev)
-            prev->next = node->next;
+            prev->next = current->next;
           else
-            strings_ = node->next;
-          StringNode::destroy(node, allocator);
+            strings_ = current->next;
+          StringNode::destroy(current, allocator);
         }
         return;
       }
-      prev = node;
+      prev = current;
     }
   }
 

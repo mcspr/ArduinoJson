@@ -134,8 +134,8 @@ class ResourceManager {
     StringNode::destroy(node, allocator_);
   }
 
-  void dereferenceString(const char* s) {
-    stringPool_.dereference(s, allocator_);
+  void dereferenceString(StringNode* node) {
+    stringPool_.dereference(node, allocator_);
   }
 
   SlotId saveStaticString(const char* s) {
