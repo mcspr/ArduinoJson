@@ -64,13 +64,15 @@ class VariantImpl {
       case VariantType::LinkedString:
         return visit.visit(JsonString(asLinkedString(), true));
 
-      case VariantType::OwnedString:
-        return visit.visit(JsonString(data_->content.asOwnedString->data,
-                                      data_->content.asOwnedString->length));
+      case VariantType::OwnedString: {
+        auto s = asOwnedString();
+        return visit.visit(JsonString(s->data, s->length));
+      }
 
-      case VariantType::RawString:
-        return visit.visit(RawString(data_->content.asOwnedString->data,
-                                     data_->content.asOwnedString->length));
+      case VariantType::RawString: {
+        auto s = asOwnedString();
+        return visit.visit(RawString(s->data, s->length));
+      }
 
       case VariantType::Int32:
         return visit.visit(static_cast<JsonInteger>(data_->content.asInt32));
@@ -160,7 +162,7 @@ class VariantImpl {
         str = asLinkedString();
         break;
       case VariantType::OwnedString:
-        str = data_->content.asOwnedString->data;
+        str = asOwnedString()->data;
         break;
       case VariantType::Float:
         return static_cast<T>(data_->content.asFloat);
@@ -206,7 +208,7 @@ class VariantImpl {
         str = asLinkedString();
         break;
       case VariantType::OwnedString:
-        str = data_->content.asOwnedString->data;
+        str = asOwnedString()->data;
         break;
       case VariantType::Float:
         return convertNumber<T>(data_->content.asFloat);
@@ -224,9 +226,10 @@ class VariantImpl {
 
   JsonString asRawString() const {
     switch (type()) {
-      case VariantType::RawString:
-        return JsonString(data_->content.asOwnedString->data,
-                          data_->content.asOwnedString->length);
+      case VariantType::RawString: {
+        auto s = asOwnedString();
+        return JsonString(s->data, s->length);
+      }
       default:
         return JsonString();
     }
@@ -243,12 +246,18 @@ class VariantImpl {
         return JsonString(data_->content.asTinyString);
       case VariantType::LinkedString:
         return JsonString(asLinkedString(), true);
-      case VariantType::OwnedString:
-        return JsonString(data_->content.asOwnedString->data,
-                          data_->content.asOwnedString->length);
+      case VariantType::OwnedString: {
+        auto s = asOwnedString();
+        return JsonString(s->data, s->length);
+      }
       default:
         return JsonString();
     }
+  }
+
+  StringNode* asOwnedString() const {
+    ARDUINOJSON_ASSERT(type() & VariantTypeBits::OwnedStringBit);
+    return data_->content.asOwnedString;
   }
 
 #if ARDUINOJSON_USE_8_BYTE_POOL
