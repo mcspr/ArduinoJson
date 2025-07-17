@@ -55,6 +55,9 @@ inline VariantData* VariantImpl::addMember(TAdaptedString key) {
   if (!isObject())
     return nullptr;
 
+  if (key.isNull())
+    return nullptr;  // Ignore null key
+
   auto keySlot = allocVariant();
   if (!keySlot)
     return nullptr;

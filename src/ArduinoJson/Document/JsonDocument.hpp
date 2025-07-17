@@ -412,8 +412,8 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   mutable detail::VariantData data_;
 };
 
-inline void convertToJson(const JsonDocument& src, JsonVariant dst) {
-  dst.set(src.as<JsonVariantConst>());
+inline bool convertToJson(const JsonDocument& src, JsonVariant dst) {
+  return dst.set(src.as<JsonVariantConst>());
 }
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

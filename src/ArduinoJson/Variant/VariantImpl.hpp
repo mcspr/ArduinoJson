@@ -468,7 +468,7 @@ class VariantImpl {
       return false;
 
     if (value.isNull())
-      return false;
+      return true;
 
     if (value.isStatic())
       return setLinkedString(value.data());
