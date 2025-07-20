@@ -401,11 +401,18 @@ class MsgPackDeserializer {
       VariantData* member = 0;
 
       if (memberFilter.allow()) {
-        auto keyVariant = object.addPair(&member);
-        if (!keyVariant)
+        auto keySlot = resources_->allocVariant();
+        if (!keySlot)
           return DeserializationError::NoMemory;
 
-        stringBuffer_.save(keyVariant);
+        auto valueSlot = resources_->allocVariant();
+        if (!valueSlot)
+          return DeserializationError::NoMemory;
+
+        object.addMember(keySlot, valueSlot);
+
+        member = valueSlot.ptr();
+        stringBuffer_.save(keySlot.ptr());
       }
 
       err = parseVariant(member, memberFilter, nestingLimit.decrement());

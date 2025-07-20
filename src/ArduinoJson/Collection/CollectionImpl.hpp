@@ -18,8 +18,12 @@ inline VariantImpl::iterator VariantImpl::createIterator() const {
   return iterator(coll->head, resources_);
 }
 
-inline void VariantImpl::appendPair(Slot<VariantData> key,
-                                    Slot<VariantData> value) {
+inline void VariantImpl::addMember(Slot<VariantData> key,
+                                   Slot<VariantData> value) {
+  ARDUINOJSON_ASSERT(isObject());
+  ARDUINOJSON_ASSERT(key);
+  ARDUINOJSON_ASSERT(value);
+
   auto coll = getCollectionData();
 
   key->next = value.id();

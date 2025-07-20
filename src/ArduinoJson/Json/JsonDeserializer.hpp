@@ -280,11 +280,18 @@ class JsonDeserializer {
         VariantImpl object(objectData, resources_);
         auto member = object.getMember(adaptString(key));
         if (!member) {
-          auto keyVariant = object.addPair(&member);
-          if (!keyVariant)
+          auto keySlot = resources_->allocVariant();
+          if (!keySlot)
             return DeserializationError::NoMemory;
 
-          stringBuilder_.save(keyVariant);
+          auto valueSlot = resources_->allocVariant();
+          if (!valueSlot)
+            return DeserializationError::NoMemory;
+
+          object.addMember(keySlot, valueSlot);
+
+          stringBuilder_.save(keySlot.ptr());
+          member = valueSlot.ptr();
         } else {
           VariantImpl(member, resources_).clear();
         }

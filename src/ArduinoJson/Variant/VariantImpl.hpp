@@ -276,7 +276,7 @@ class VariantImpl {
 
   VariantData* getOrAddElement(size_t index);
 
-  VariantData* addPair(VariantData** value);
+  void addMember(Slot<VariantData> key, Slot<VariantData> value);
 
   template <typename TAdaptedString>
   VariantData* addMember(TAdaptedString key);
@@ -353,6 +353,36 @@ class VariantImpl {
   void removeMember(TAdaptedString key);
 
   void removeMember(iterator it);
+
+  bool copyVariant(const VariantImpl& src) {
+    switch (src.type()) {
+      case VariantType::Null:
+        return true;
+
+      case VariantType::Array:
+        return copyArray(src);
+
+      case VariantType::Object:
+        return copyObject(src);
+
+      case VariantType::RawString:
+        return setRawString(adaptString(src.asRawString()));
+
+      case VariantType::LinkedString:
+        return setLinkedString(src.asLinkedString());
+
+      case VariantType::OwnedString:
+        return setOwnedString(adaptString(src.asString()));
+
+      default:
+        data_->content = src.data_->content;
+        data_->type = src.data_->type;
+        return true;
+    }
+  }
+
+  bool copyArray(const VariantImpl& src);
+  bool copyObject(const VariantImpl& src);
 
   bool setBoolean(bool value) {
     if (!data_)
@@ -547,8 +577,6 @@ class VariantImpl {
   iterator findKey(TAdaptedString key) const;
 
   iterator at(size_t index) const;
-
-  void appendPair(Slot<VariantData> key, Slot<VariantData> value);
 
   void removeOne(iterator it);
   void removePair(iterator it);

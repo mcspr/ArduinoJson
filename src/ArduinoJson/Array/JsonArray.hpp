@@ -89,16 +89,8 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Copies an array.
   // https://arduinojson.org/v7/api/jsonarray/set/
   bool set(JsonArrayConst src) const {
-    if (isNull())
-      return false;
-
-    clear();
-    for (auto element : src) {
-      if (!add(element))
-        return false;
-    }
-
-    return true;
+    impl_.clear();
+    return impl_.copyArray(detail::VariantAttorney::getImpl(src));
   }
 
   // Removes the element at the specified iterator.

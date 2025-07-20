@@ -83,16 +83,11 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Copies an object.
   // https://arduinojson.org/v7/api/jsonobject/set/
   bool set(JsonObjectConst src) {
-    if (isNull() || src.isNull())
+    if (isNull() ||
+        src.isNull())  // TODO: this check is not consistent with JsonArray
       return false;
-
-    clear();
-    for (auto kvp : src) {
-      if (!operator[](kvp.key()).set(kvp.value()))
-        return false;
-    }
-
-    return true;
+    impl_.clear();
+    return impl_.copyObject(detail::VariantAttorney::getImpl(src));
   }
 
   // Gets or sets the member with specified key.

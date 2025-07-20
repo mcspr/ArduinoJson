@@ -9,6 +9,46 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
+inline bool VariantImpl::copyObject(const VariantImpl& src) {
+  ARDUINOJSON_ASSERT(isNull());
+
+  if (!data_)
+    return false;
+
+  data_->toObject();
+
+  for (auto it = src.createIterator(); !it.done(); it.move()) {
+    auto keySlot = allocVariant();
+    if (!keySlot)
+      return false;
+
+    auto key = VariantImpl(keySlot.ptr(), resources_);
+    if (!key.copyVariant(*it)) {
+      freeVariant(keySlot);
+      return false;
+    }
+
+    it.move();  // move to value
+    ARDUINOJSON_ASSERT(!it.done());
+
+    auto valueSlot = allocVariant();
+    if (!valueSlot) {
+      freeVariant(keySlot);
+      return false;
+    }
+
+    // TODO: we add the pair before copying the value to be keep the old
+    // behavior but this is not consistent with issue #2081
+    addMember(keySlot, valueSlot);
+
+    auto value = VariantImpl(valueSlot.ptr(), resources_);
+    if (!value.copyVariant(*it))
+      return false;
+  }
+
+  return true;
+}
+
 template <typename TAdaptedString>
 inline VariantData* VariantImpl::getMember(TAdaptedString key) const {
   auto it = findKey(key);
@@ -70,26 +110,9 @@ inline VariantData* VariantImpl::addMember(TAdaptedString key) {
   if (!keyImpl.setString(key))
     return nullptr;
 
-  VariantImpl::appendPair(keySlot, valueSlot);
+  addMember(keySlot, valueSlot);
 
   return valueSlot.ptr();
-}
-
-inline VariantData* VariantImpl::addPair(VariantData** value) {
-  ARDUINOJSON_ASSERT(isObject());
-
-  auto keySlot = allocVariant();
-  if (!keySlot)
-    return nullptr;
-
-  auto valueSlot = allocVariant();
-  if (!valueSlot)
-    return nullptr;
-  *value = valueSlot.ptr();
-
-  VariantImpl::appendPair(keySlot, valueSlot);
-
-  return keySlot.ptr();
 }
 
 // Returns the size (in bytes) of an object with n members.

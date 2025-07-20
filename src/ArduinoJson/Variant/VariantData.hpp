@@ -85,17 +85,19 @@ struct VariantData {
   }
 
   VariantData* toArray() {
+    return toCollection(VariantType::Array);
+  }
+
+  VariantData* toCollection(VariantType collectionType) {
     ARDUINOJSON_ASSERT(type == VariantType::Null);
-    type = VariantType::Array;
+    ARDUINOJSON_ASSERT(collectionType & VariantTypeBits::CollectionMask);
+    type = collectionType;
     new (&content.asCollection) CollectionData();
     return this;
   }
 
   VariantData* toObject() {
-    ARDUINOJSON_ASSERT(type == VariantType::Null);
-    type = VariantType::Object;
-    new (&content.asCollection) CollectionData();
-    return this;
+    return toCollection(VariantType::Object);
   }
 
   VariantData* getOrCreateArray() {

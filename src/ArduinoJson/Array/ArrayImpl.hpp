@@ -76,6 +76,31 @@ inline void VariantImpl::removeElement(size_t index) {
   removeElement(at(index));
 }
 
+inline bool VariantImpl::copyArray(const VariantImpl& src) {
+  ARDUINOJSON_ASSERT(isNull());
+
+  if (!data_)
+    return false;
+
+  data_->toArray();
+
+  for (auto it = src.createIterator(); !it.done(); it.move()) {
+    auto slot = allocVariant();
+    if (!slot)
+      return false;
+
+    VariantImpl element(slot.ptr(), resources_);
+    if (!element.copyVariant(*it)) {
+      freeVariant(slot);
+      return false;
+    }
+
+    addElement(slot);
+  }
+
+  return true;
+}
+
 // Returns the size (in bytes) of an array with n elements.
 constexpr size_t sizeofArray(size_t n) {
   return n * sizeof(VariantData);

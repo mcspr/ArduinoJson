@@ -37,14 +37,12 @@ class JsonVariant : public detail::VariantRefBase<JsonVariant>,
   mutable detail::VariantImpl impl_;
 };
 
-namespace detail {
-bool copyVariant(JsonVariant dst, JsonVariantConst src);
-}
-
 template <>
 struct Converter<JsonVariant> : private detail::VariantAttorney {
   static bool toJson(JsonVariantConst src, JsonVariant dst) {
-    return copyVariant(dst, src);
+    auto impl = getImpl(dst);
+    impl.clear();
+    return impl.copyVariant(getImpl(src));
   }
 
   static JsonVariant fromJson(JsonVariant src) {
@@ -59,7 +57,9 @@ struct Converter<JsonVariant> : private detail::VariantAttorney {
 template <>
 struct Converter<JsonVariantConst> : private detail::VariantAttorney {
   static bool toJson(JsonVariantConst src, JsonVariant dst) {
-    return copyVariant(dst, src);
+    auto impl = getImpl(dst);
+    impl.clear();
+    return impl.copyVariant(getImpl(src));
   }
 
   static JsonVariantConst fromJson(JsonVariantConst src) {
