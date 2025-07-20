@@ -97,9 +97,7 @@ class VariantImpl {
   }
 
   VariantData* addElement();
-
-  template <typename T>
-  bool addValue(const T& value);
+  void addElement(Slot<VariantData> slot);
 
   bool asBoolean() const {
     if (!data_)
@@ -550,7 +548,6 @@ class VariantImpl {
 
   iterator at(size_t index) const;
 
-  void appendOne(Slot<VariantData> slot);
   void appendPair(Slot<VariantData> key, Slot<VariantData> value);
 
   void removeOne(iterator it);

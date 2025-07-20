@@ -25,6 +25,10 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // INTERNAL USE ONLY
   JsonArray(detail::VariantImpl impl) : impl_(impl) {}
 
+  // INTERNAL USE ONLY
+  JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
+      : impl_(data, resources) {}
+
   // Returns a JsonVariant pointing to the array.
   // https://arduinojson.org/v7/api/jsonvariant/
   operator JsonVariant() {
@@ -59,7 +63,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // https://arduinojson.org/v7/api/jsonarray/add/
   template <typename T>
   bool add(const T& value) const {
-    return impl_.addValue(value);
+    return doAdd(value);
   }
 
   // Appends a value to the array.
@@ -67,7 +71,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T,
             detail::enable_if_t<!detail::is_const<T>::value, int> = 0>
   bool add(T* value) const {
-    return impl_.addValue(value);
+    return doAdd(value);
   }
 
   // Returns an iterator to the first element of the array.
@@ -201,6 +205,27 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
 
   const detail::VariantImpl& getOrCreateImpl() const {
     return impl_;
+  }
+
+  template <typename T>
+  bool doAdd(const T& value) const {
+    if (!impl_.isArray())
+      return false;
+
+    auto resources = impl_.resources();
+    ARDUINOJSON_ASSERT(resources != nullptr);
+
+    auto slot = resources->allocVariant();
+    if (!slot)
+      return false;
+
+    if (!JsonVariant(slot.ptr(), resources).set(value)) {
+      detail::VariantImpl(slot.ptr(), resources).clear();
+      resources->freeVariant(slot);
+      return false;
+    }
+    impl_.addElement(slot);
+    return true;
   }
 
   mutable detail::VariantImpl impl_;

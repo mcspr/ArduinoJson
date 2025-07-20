@@ -267,14 +267,14 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   template <typename T, detail::enable_if_t<
                             detail::is_same<T, JsonVariant>::value, int> = 0>
   JsonVariant add() {
-    return JsonVariant(getOrCreateArray().addElement(), &resources_);
+    return getOrCreateArray().add<T>();
   }
 
   // Appends a value to the root array.
   // https://arduinojson.org/v7/api/jsondocument/add/
   template <typename TValue>
   bool add(const TValue& value) {
-    return getOrCreateArray().addValue(value);
+    return getOrCreateArray().add(value);
   }
 
   // Appends a value to the root array.
@@ -282,7 +282,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   template <typename TChar,
             detail::enable_if_t<!detail::is_const<TChar>::value, int> = 0>
   bool add(TChar* value) {
-    return getOrCreateArray().addValue(value);
+    return getOrCreateArray().add(value);
   }
 
   // Removes an element of the root array.
@@ -396,8 +396,8 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
     return {&data_, &resources_};
   }
 
-  detail::VariantImpl getOrCreateArray() {
-    return detail::VariantImpl(data_.getOrCreateArray(), &resources_);
+  JsonArray getOrCreateArray() {
+    return JsonArray(data_.getOrCreateArray(), &resources_);
   }
 
   JsonVariant getVariant() {

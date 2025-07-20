@@ -18,19 +18,6 @@ inline VariantImpl::iterator VariantImpl::createIterator() const {
   return iterator(coll->head, resources_);
 }
 
-inline void VariantImpl::appendOne(Slot<VariantData> slot) {
-  auto coll = getCollectionData();
-
-  if (coll->tail != NULL_SLOT) {
-    auto tail = getVariant(coll->tail);
-    tail->next = slot.id();
-    coll->tail = slot.id();
-  } else {
-    coll->head = slot.id();
-    coll->tail = slot.id();
-  }
-}
-
 inline void VariantImpl::appendPair(Slot<VariantData> key,
                                     Slot<VariantData> value) {
   auto coll = getCollectionData();

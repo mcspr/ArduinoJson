@@ -5,7 +5,6 @@
 #pragma once
 
 #include <ArduinoJson/Collection/CollectionIterator.hpp>
-#include <ArduinoJson/Variant/VariantCompare.hpp>
 #include <ArduinoJson/Variant/VariantImpl.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
@@ -28,8 +27,21 @@ inline VariantData* VariantImpl::addElement() {
   auto slot = allocVariant();
   if (!slot)
     return nullptr;
-  VariantImpl::appendOne(slot);
+  addElement(slot);
   return slot.ptr();
+}
+
+inline void VariantImpl::addElement(Slot<VariantData> slot) {
+  auto coll = getCollectionData();
+
+  if (coll->tail != NULL_SLOT) {
+    auto tail = getVariant(coll->tail);
+    tail->next = slot.id();
+    coll->tail = slot.id();
+  } else {
+    coll->head = slot.id();
+    coll->tail = slot.id();
+  }
 }
 
 inline VariantData* VariantImpl::getOrAddElement(size_t index) {
@@ -62,22 +74,6 @@ inline void VariantImpl::removeElement(iterator it) {
 
 inline void VariantImpl::removeElement(size_t index) {
   removeElement(at(index));
-}
-
-template <typename T>
-inline bool VariantImpl::addValue(const T& value) {
-  if (!isArray())
-    return false;
-  auto slot = allocVariant();
-  if (!slot)
-    return false;
-  JsonVariant variant(slot.ptr(), resources_);
-  if (!variant.set(value)) {
-    freeVariant(slot);
-    return false;
-  }
-  appendOne(slot);
-  return true;
 }
 
 // Returns the size (in bytes) of an array with n elements.
