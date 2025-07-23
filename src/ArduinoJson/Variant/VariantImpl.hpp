@@ -266,10 +266,6 @@ class VariantImpl {
   }
 #endif
 
-  SlotId head() const {
-    return getCollectionData()->head;
-  }
-
   iterator createIterator() const;
 
   VariantData* getElement(size_t index) const;
