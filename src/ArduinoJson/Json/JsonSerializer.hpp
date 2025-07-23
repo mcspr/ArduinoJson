@@ -22,17 +22,14 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
   size_t visitArray(const VariantImpl& array) {
     write('[');
 
-    auto slotId = array.head();
+    bool first = true;
 
-    while (slotId != NULL_SLOT) {
-      auto slot = resources_->getVariant(slotId);
-
-      VariantImpl(slot, resources_).accept(*this);
-
-      slotId = slot->next;
-
-      if (slotId != NULL_SLOT)
+    for (auto it = array.createIterator(); !it.done(); it.move()) {
+      if (!first)
         write(',');
+
+      it->accept(*this);
+      first = false;
     }
 
     write(']');
@@ -42,20 +39,19 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
   size_t visitObject(const VariantImpl& object) {
     write('{');
 
-    auto slotId = object.head();
+    bool first = true;
+    bool isValue = false;
 
-    bool isKey = true;
+    for (auto it = object.createIterator(); !it.done(); it.move()) {
+      if (isValue)
+        write(':');
+      else if (!first)
+        write(',');
 
-    while (slotId != NULL_SLOT) {
-      auto slot = resources_->getVariant(slotId);
-      VariantImpl(slot, resources_).accept(*this);
+      it->accept(*this);
 
-      slotId = slot->next;
-
-      if (slotId != NULL_SLOT)
-        write(isKey ? ':' : ',');
-
-      isKey = !isKey;
+      first = false;
+      isValue = !isValue;
     }
 
     write('}');
