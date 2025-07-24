@@ -99,28 +99,6 @@ struct VariantData {
   VariantData* toObject() {
     return toCollection(VariantType::Object);
   }
-
-  VariantData* getOrCreateArray() {
-    switch (type) {
-      case VariantType::Null:
-        return toArray();
-      case VariantType::Array:
-        return this;
-      default:
-        return nullptr;
-    }
-  }
-
-  VariantData* getOrCreateObject() {
-    switch (type) {
-      case VariantType::Null:
-        return toObject();
-      case VariantType::Object:
-        return this;
-      default:
-        return nullptr;
-    }
-  }
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

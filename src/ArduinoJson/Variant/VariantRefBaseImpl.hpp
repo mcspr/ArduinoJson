@@ -143,9 +143,7 @@ inline bool VariantRefBase<TDerived>::doSet(const T& value, true_type) const {
 template <typename TDerived>
 inline JsonArray VariantRefBase<TDerived>::getOrCreateArray() const {
   auto impl = getOrCreateImpl();
-  auto data = impl.data();
-  if (data)
-    data->getOrCreateArray();
+  impl.toArrayIfNull();
   return JsonArray(impl);
 }
 

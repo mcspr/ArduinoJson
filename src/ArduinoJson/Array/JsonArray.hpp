@@ -25,10 +25,6 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // INTERNAL USE ONLY
   JsonArray(detail::VariantImpl impl) : impl_(impl) {}
 
-  // INTERNAL USE ONLY
-  JsonArray(detail::VariantData* data, detail::ResourceManager* resources)
-      : impl_(data, resources) {}
-
   // Returns a JsonVariant pointing to the array.
   // https://arduinojson.org/v7/api/jsonvariant/
   operator JsonVariant() {

@@ -528,6 +528,16 @@ class VariantImpl {
     return true;
   }
 
+  void toArrayIfNull() {
+    if (data_ && data_->type == VariantType::Null)
+      data_->toArray();
+  }
+
+  void toObjectIfNull() {
+    if (data_ && data_->type == VariantType::Null)
+      data_->toObject();
+  }
+
   void empty() {
     auto coll = getCollectionData();
 

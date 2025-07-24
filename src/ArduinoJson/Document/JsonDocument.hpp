@@ -397,7 +397,9 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   }
 
   JsonArray getOrCreateArray() {
-    return JsonArray(data_.getOrCreateArray(), &resources_);
+    auto impl = getImpl();
+    impl.toArrayIfNull();
+    return JsonArray(impl);
   }
 
   JsonVariant getVariant() {

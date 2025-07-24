@@ -57,9 +57,7 @@ class ElementProxy : public VariantRefBase<ElementProxy<TUpstream>>,
 
   VariantImpl getOrCreateImpl() const {
     auto impl = VariantAttorney::getOrCreateImpl(upstream_);
-    auto data = impl.data();
-    if (data)
-      data->getOrCreateArray();
+    impl.toArrayIfNull();
     return VariantImpl(impl.getOrAddElement(index_), impl.resources());
   }
 
