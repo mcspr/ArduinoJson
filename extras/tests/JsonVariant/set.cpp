@@ -9,6 +9,7 @@
 #include "Literals.hpp"
 
 using ArduinoJson::detail::sizeofObject;
+using ArduinoJson::detail::sizeofString;
 
 enum ErrorCode { ERROR_01 = 1, ERROR_10 = 10 };
 
@@ -21,9 +22,10 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
     bool result = variant.set("hello\0world");
 
     REQUIRE(result == true);
-    CHECK(variant ==
-          "hello"_s);  // linked string cannot contain '\0' at the moment
-    CHECK(spy.log() == AllocatorLog{});
+    REQUIRE(variant == "hello\0world"_s);  // stores by copy
+    REQUIRE(spy.log() == AllocatorLog{
+                             Allocate(sizeofString(11)),
+                         });
   }
 
   SECTION("const char*") {
@@ -140,19 +142,7 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
                          });
   }
 
-  SECTION("static JsonString") {
-    char str[16];
-
-    strcpy(str, "hello");
-    bool result = variant.set(JsonString(str, true));
-    strcpy(str, "world");
-
-    REQUIRE(result == true);
-    REQUIRE(variant == "world");  // stores by pointer
-    REQUIRE(spy.log() == AllocatorLog{});
-  }
-
-  SECTION("non-static JsonString") {
+  SECTION("JsonString") {
     char str[16];
 
     strcpy(str, "hello");

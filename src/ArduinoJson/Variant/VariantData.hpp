@@ -76,16 +76,13 @@ class VariantData {
       case VariantType::TinyString:
         return visit.visit(JsonString(content_.asTinyString));
 
-      case VariantType::LinkedString:
-        return visit.visit(JsonString(content_.asLinkedString, true));
-
-      case VariantType::OwnedString:
-        return visit.visit(JsonString(content_.asOwnedString->data,
-                                      content_.asOwnedString->length));
+      case VariantType::LongString:
+        return visit.visit(JsonString(content_.asStringNode->data,
+                                      content_.asStringNode->length));
 
       case VariantType::RawString:
-        return visit.visit(RawString(content_.asOwnedString->data,
-                                     content_.asOwnedString->length));
+        return visit.visit(RawString(content_.asStringNode->data,
+                                     content_.asStringNode->length));
 
       case VariantType::Int32:
         return visit.visit(static_cast<JsonInteger>(content_.asInt32));
@@ -215,11 +212,8 @@ class VariantData {
       case VariantType::TinyString:
         str = content_.asTinyString;
         break;
-      case VariantType::LinkedString:
-        str = content_.asLinkedString;
-        break;
-      case VariantType::OwnedString:
-        str = content_.asOwnedString->data;
+      case VariantType::LongString:
+        str = content_.asStringNode->data;
         break;
       case VariantType::Float:
         return static_cast<T>(content_.asFloat);
@@ -260,11 +254,8 @@ class VariantData {
       case VariantType::TinyString:
         str = content_.asTinyString;
         break;
-      case VariantType::LinkedString:
-        str = content_.asLinkedString;
-        break;
-      case VariantType::OwnedString:
-        str = content_.asOwnedString->data;
+      case VariantType::LongString:
+        str = content_.asStringNode->data;
         break;
       case VariantType::Float:
         return convertNumber<T>(content_.asFloat);
@@ -291,8 +282,8 @@ class VariantData {
   JsonString asRawString() const {
     switch (type_) {
       case VariantType::RawString:
-        return JsonString(content_.asOwnedString->data,
-                          content_.asOwnedString->length);
+        return JsonString(content_.asStringNode->data,
+                          content_.asStringNode->length);
       default:
         return JsonString();
     }
@@ -302,11 +293,9 @@ class VariantData {
     switch (type_) {
       case VariantType::TinyString:
         return JsonString(content_.asTinyString);
-      case VariantType::LinkedString:
-        return JsonString(content_.asLinkedString, true);
-      case VariantType::OwnedString:
-        return JsonString(content_.asOwnedString->data,
-                          content_.asOwnedString->length);
+      case VariantType::LongString:
+        return JsonString(content_.asStringNode->data,
+                          content_.asStringNode->length);
       default:
         return JsonString();
     }
@@ -415,9 +404,7 @@ class VariantData {
   }
 
   bool isString() const {
-    return type_ == VariantType::LinkedString ||
-           type_ == VariantType::OwnedString ||
-           type_ == VariantType::TinyString;
+    return type_ == VariantType::LongString || type_ == VariantType::TinyString;
   }
 
   size_t nesting(const ResourceManager* resources) const {
@@ -492,7 +479,7 @@ class VariantData {
     ARDUINOJSON_ASSERT(type_ == VariantType::Null);  // must call clear() first
     ARDUINOJSON_ASSERT(s);
     type_ = VariantType::RawString;
-    content_.asOwnedString = s;
+    content_.asStringNode = s;
   }
 
   template <typename T>
@@ -519,13 +506,6 @@ class VariantData {
     var->setString(value, resources);
   }
 
-  void setLinkedString(const char* s) {
-    ARDUINOJSON_ASSERT(type_ == VariantType::Null);  // must call clear() first
-    ARDUINOJSON_ASSERT(s);
-    type_ = VariantType::LinkedString;
-    content_.asLinkedString = s;
-  }
-
   template <typename TAdaptedString>
   void setTinyString(const TAdaptedString& s) {
     ARDUINOJSON_ASSERT(type_ == VariantType::Null);  // must call clear() first
@@ -543,11 +523,11 @@ class VariantData {
     content_.asTinyString[n] = 0;
   }
 
-  void setOwnedString(StringNode* s) {
+  void setLongString(StringNode* s) {
     ARDUINOJSON_ASSERT(type_ == VariantType::Null);  // must call clear() first
     ARDUINOJSON_ASSERT(s);
-    type_ = VariantType::OwnedString;
-    content_.asOwnedString = s;
+    type_ = VariantType::LongString;
+    content_.asStringNode = s;
   }
 
   size_t size(const ResourceManager* resources) const {

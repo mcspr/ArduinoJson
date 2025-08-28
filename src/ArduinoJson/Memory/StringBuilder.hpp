@@ -45,7 +45,7 @@ class StringBuilder {
     } else {
       node->references++;
     }
-    variant->setOwnedString(node);
+    variant->setLongString(node);
   }
 
   void append(const char* s) {

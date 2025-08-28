@@ -43,7 +43,7 @@ class StringBuffer {
     if (isTinyString(s, size_))
       data->setTinyString(adaptString(s, size_));
     else
-      data->setOwnedString(commitStringNode());
+      data->setLongString(commitStringNode());
   }
 
   void saveRaw(VariantData* data) {

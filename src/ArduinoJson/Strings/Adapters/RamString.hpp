@@ -20,14 +20,8 @@ struct IsChar
 class RamString {
  public:
   static const size_t typeSortKey = 2;
-#if ARDUINOJSON_SIZEOF_POINTER <= 2
-  static constexpr size_t sizeMask = size_t(-1) >> 1;
-#else
-  static constexpr size_t sizeMask = size_t(-1);
-#endif
 
-  RamString(const char* str, size_t sz, bool isStatic = false)
-      : str_(str), size_(sz & sizeMask), static_(isStatic) {
+  RamString(const char* str, size_t sz) : str_(str), size_(sz) {
     ARDUINOJSON_ASSERT(size_ == sz);
   }
 
@@ -49,21 +43,9 @@ class RamString {
     return str_;
   }
 
-  bool isStatic() const {
-    return static_;
-  }
-
  protected:
   const char* str_;
-
-#if ARDUINOJSON_SIZEOF_POINTER <= 2
-  // Use a bitfield only on 8-bit microcontrollers
-  size_t size_ : sizeof(size_t) * 8 - 1;
-  bool static_ : 1;
-#else
   size_t size_;
-  bool static_;
-#endif
 };
 
 template <typename TChar>
@@ -91,7 +73,7 @@ struct StringAdapter<const char (&)[N]> {
   using AdaptedString = RamString;
 
   static AdaptedString adapt(const char (&p)[N]) {
-    return RamString(p, N - 1, true);
+    return RamString(p, N - 1);
   }
 };
 

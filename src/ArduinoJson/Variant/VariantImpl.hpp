@@ -26,11 +26,6 @@ inline bool VariantData::setString(TAdaptedString value,
   if (value.isNull())
     return false;
 
-  if (value.isStatic()) {
-    setLinkedString(value.data());
-    return true;
-  }
-
   if (isTinyString(value, value.size())) {
     setTinyString(value);
     return true;
@@ -38,7 +33,7 @@ inline bool VariantData::setString(TAdaptedString value,
 
   auto dup = resources->saveString(value);
   if (dup) {
-    setOwnedString(dup);
+    setLongString(dup);
     return true;
   }
 
@@ -47,7 +42,7 @@ inline bool VariantData::setString(TAdaptedString value,
 
 inline void VariantData::clear(ResourceManager* resources) {
   if (type_ & VariantTypeBits::OwnedStringBit)
-    resources->dereferenceString(content_.asOwnedString->data);
+    resources->dereferenceString(content_.asStringNode->data);
 
 #if ARDUINOJSON_USE_EXTENSIONS
   if (type_ & VariantTypeBits::ExtensionBit)

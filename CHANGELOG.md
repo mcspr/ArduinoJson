@@ -1,6 +1,25 @@
 ArduinoJson: change log
 =======================
 
+HEAD
+----
+
+* Don't store string literals by pointer anymore (issue #2189)
+  Version 7.3 introduced a new way to detect string literals, but it fails in some edge cases.
+  I could not find a way to fix it, so I chose to remove the optimization rather than keep it broken.
+
+> ### BREAKING CHANGES
+>
+> Since version 7.3, you could pass a boolean to `JsonString`'s constructor to force the string to be stored by pointer.
+> This optimization has been removed, and you'll get a deprecation warning if you use it.
+> To fix the issue, you must remove the boolean argument from the constructor, or better yet, remove `JsonString` altogether.
+>
+> ```diff
+>   char name[] = "ArduinoJson";
+> - doc["name"] = JsonString(name, true);
+> + doc["name"] = name;
+> ```
+
 v7.4.2 (2025-06-20)
 ------
 

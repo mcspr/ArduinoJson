@@ -23,15 +23,14 @@ enum class VariantTypeBits : uint8_t {
 };
 
 enum class VariantType : uint8_t {
-  Null = 0,             // 0000 0000
-  TinyString = 0x02,    // 0000 0010
-  RawString = 0x03,     // 0000 0011
-  LinkedString = 0x04,  // 0000 0100
-  OwnedString = 0x05,   // 0000 0101
-  Boolean = 0x06,       // 0000 0110
-  Uint32 = 0x0A,        // 0000 1010
-  Int32 = 0x0C,         // 0000 1100
-  Float = 0x0E,         // 0000 1110
+  Null = 0,           // 0000 0000
+  TinyString = 0x02,  // 0000 0010
+  RawString = 0x03,   // 0000 0011
+  LongString = 0x05,  // 0000 0101
+  Boolean = 0x06,     // 0000 0110
+  Uint32 = 0x0A,      // 0000 1010
+  Int32 = 0x0C,       // 0000 1100
+  Float = 0x0E,       // 0000 1110
 #if ARDUINOJSON_USE_LONG_LONG
   Uint64 = 0x1A,  // 0001 1010
   Int64 = 0x1C,   // 0001 1100
@@ -62,8 +61,7 @@ union VariantContent {
   ArrayData asArray;
   ObjectData asObject;
   CollectionData asCollection;
-  const char* asLinkedString;
-  struct StringNode* asOwnedString;
+  struct StringNode* asStringNode;
   char asTinyString[tinyStringMaxLength + 1];
 };
 
