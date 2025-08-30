@@ -16,8 +16,8 @@ ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 enum class VariantTypeBits : uint8_t {
   OwnedStringBit = 0x01,  // 0000 0001
   NumberBit = 0x08,       // 0000 1000
-#if ARDUINOJSON_USE_EXTENSIONS
-  ExtensionBit = 0x10,  // 0001 0000
+#if ARDUINOJSON_USE_8_BYTE_POOL
+  EightByteBit = 0x10,  // 0001 0000
 #endif
   CollectionMask = 0x60,
 };
@@ -55,7 +55,7 @@ union VariantContent {
   bool asBoolean;
   uint32_t asUint32;
   int32_t asInt32;
-#if ARDUINOJSON_USE_EXTENSIONS
+#if ARDUINOJSON_USE_8_BYTE_POOL
   SlotId asSlotId;
 #endif
   ArrayData asArray;
@@ -65,8 +65,8 @@ union VariantContent {
   char asTinyString[tinyStringMaxLength + 1];
 };
 
-#if ARDUINOJSON_USE_EXTENSIONS
-union VariantExtension {
+#if ARDUINOJSON_USE_8_BYTE_POOL
+union EightByteValue {
 #  if ARDUINOJSON_USE_LONG_LONG
   uint64_t asUint64;
   int64_t asInt64;
@@ -75,6 +75,9 @@ union VariantExtension {
   double asDouble;
 #  endif
 };
+
+static_assert(sizeof(EightByteValue) == 8,
+              "sizeof(EightByteValue) must be 8 bytes");
 #endif
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
