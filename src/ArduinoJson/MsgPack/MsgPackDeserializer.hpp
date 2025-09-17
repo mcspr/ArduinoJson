@@ -24,10 +24,10 @@ class MsgPackDeserializer {
         foundSomething_(false) {}
 
   template <typename TFilter>
-  DeserializationError parse(VariantData& variant, TFilter filter,
+  DeserializationError parse(VariantData* variant, TFilter filter,
                              DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
-    err = parseVariant(&variant, filter, nestingLimit);
+    err = parseVariant(variant, filter, nestingLimit);
     return foundSomething_ ? err : DeserializationError::EmptyInput;
   }
 
