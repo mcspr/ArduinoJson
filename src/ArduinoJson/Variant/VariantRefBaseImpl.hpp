@@ -69,23 +69,20 @@ inline void convertToJson(const VariantRefBase<TDerived>& src,
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 inline T VariantRefBase<TDerived>::add() const {
-  return JsonVariant(
-      detail::VariantData::addElement(getOrCreateData(), getResourceManager()),
-      getResourceManager());
+  return JsonVariant(getOrCreateVariantImpl().addElement(),
+                     getResourceManager());
 }
 
 template <typename TDerived>
 template <typename TString, enable_if_t<IsString<TString>::value, int>>
 inline bool VariantRefBase<TDerived>::containsKey(const TString& key) const {
-  return VariantData::getMember(getData(), adaptString(key),
-                                getResourceManager()) != 0;
+  return getVariantImpl().getMember(adaptString(key)) != 0;
 }
 
 template <typename TDerived>
 template <typename TChar, enable_if_t<IsString<TChar*>::value, int>>
 inline bool VariantRefBase<TDerived>::containsKey(TChar* key) const {
-  return VariantData::getMember(getData(), adaptString(key),
-                                getResourceManager()) != 0;
+  return getVariantImpl().getMember(adaptString(key)) != 0;
 }
 
 template <typename TDerived>
@@ -150,24 +147,21 @@ inline bool VariantRefBase<TDerived>::doSet(const T& value, true_type) const {
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonArray>::value, int>>
 inline JsonArray VariantRefBase<TDerived>::to() const {
-  return JsonArray(
-      VariantData::toArray(getOrCreateData(), getResourceManager()));
+  return JsonArray(getOrCreateVariantImpl().toArray());
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonObject>::value, int>>
 JsonObject VariantRefBase<TDerived>::to() const {
-  return JsonObject(
-      VariantData::toObject(getOrCreateData(), getResourceManager()));
+  return JsonObject(getOrCreateVariantImpl().toObject());
 }
 
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 JsonVariant VariantRefBase<TDerived>::to() const {
-  auto data = getOrCreateData();
-  auto resources = getResourceManager();
-  detail::VariantData::clear(data, resources);
-  return JsonVariant(data, resources);
+  auto impl = getOrCreateVariantImpl();
+  impl.clear();
+  return JsonVariant(impl);
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

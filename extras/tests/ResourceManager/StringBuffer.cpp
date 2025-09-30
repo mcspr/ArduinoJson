@@ -21,7 +21,7 @@ TEST_CASE("StringBuffer") {
     strcpy(ptr, "hi!");
     sb.save(&variant);
 
-    REQUIRE(variant.type() == VariantType::TinyString);
+    REQUIRE(variant.type == VariantType::TinyString);
     REQUIRE(variant.asString() == "hi!");
   }
 
@@ -30,7 +30,7 @@ TEST_CASE("StringBuffer") {
     memcpy(ptr, "a\0b", 3);
     sb.save(&variant);
 
-    REQUIRE(variant.type() == VariantType::LongString);
+    REQUIRE(variant.type == VariantType::LongString);
 
     auto str = variant.asString();
     REQUIRE(str.size() == 3);
@@ -44,7 +44,7 @@ TEST_CASE("StringBuffer") {
     strcpy(ptr, "alfa");
     sb.save(&variant);
 
-    REQUIRE(variant.type() == VariantType::LongString);
+    REQUIRE(variant.type == VariantType::LongString);
     REQUIRE(variant.asString() == "alfa");
   }
 }

@@ -59,7 +59,7 @@ inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
   if (!valueSlot)
     return nullptr;
 
-  if (!keySlot->setString(key, resources_))
+  if (!VariantImpl::setString(key, keySlot.ptr(), resources_))
     return nullptr;
 
   CollectionImpl::appendPair(keySlot, valueSlot);

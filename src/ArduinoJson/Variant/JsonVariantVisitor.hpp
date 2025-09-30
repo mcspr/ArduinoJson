@@ -48,12 +48,8 @@ class VisitorAdapter {
 template <typename TVisitor>
 typename TVisitor::result_type accept(JsonVariantConst variant,
                                       TVisitor& visit) {
-  auto data = VariantAttorney::getData(variant);
-  if (!data)
-    return visit.visit(nullptr);
-  auto resources = VariantAttorney::getResourceManager(variant);
   VisitorAdapter<TVisitor> adapter(visit);
-  return data->accept(adapter, resources);
+  return VariantAttorney::getVariantImpl(variant).accept(adapter);
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

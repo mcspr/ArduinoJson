@@ -16,27 +16,29 @@ class JsonVariant : public detail::VariantRefBase<JsonVariant>,
 
  public:
   // Creates an unbound reference.
-  JsonVariant() : data_(0), resources_(0) {}
+  JsonVariant() {}
 
   // INTERNAL USE ONLY
   JsonVariant(detail::VariantData* data, detail::ResourceManager* resources)
-      : data_(data), resources_(resources) {}
+      : impl_(data, resources) {}
+
+  // INTERNAL USE ONLY
+  JsonVariant(detail::VariantImpl impl) : impl_(impl) {}
 
  private:
   detail::ResourceManager* getResourceManager() const {
-    return resources_;
+    return impl_.getResourceManager();
   }
 
   detail::VariantData* getData() const {
-    return data_;
+    return impl_.getData();
   }
 
   detail::VariantData* getOrCreateData() const {
-    return data_;
+    return impl_.getData();
   }
 
-  detail::VariantData* data_;
-  detail::ResourceManager* resources_;
+  mutable detail::VariantImpl impl_;
 };
 
 namespace detail {

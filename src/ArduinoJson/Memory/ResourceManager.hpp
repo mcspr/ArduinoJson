@@ -14,7 +14,7 @@
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
-class VariantData;
+struct VariantData;
 class VariantWithId;
 
 class ResourceManager {

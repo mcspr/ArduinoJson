@@ -71,13 +71,14 @@ class JsonDeserializer {
     switch (current()) {
       case '[':
         if (filter.allowArray())
-          return parseArray(variant->toArray(resources_), filter, nestingLimit);
+          return parseArray(VariantImpl::toArray(variant, resources_), filter,
+                            nestingLimit);
         else
           return skipArray(nestingLimit);
 
       case '{':
         if (filter.allowObject())
-          return parseObject(variant->toObject(resources_), filter,
+          return parseObject(VariantImpl::toObject(variant, resources_), filter,
                              nestingLimit);
         else
           return skipObject(nestingLimit);
@@ -282,7 +283,7 @@ class JsonDeserializer {
 
           stringBuilder_.save(keyVariant);
         } else {
-          member->clear(resources_);
+          VariantImpl::clear(member, resources_);
         }
 
         // Parse value
@@ -519,26 +520,28 @@ class JsonDeserializer {
     auto number = parseNumber(buffer_);
     switch (number.type()) {
       case NumberType::UnsignedInteger:
-        if (result->setInteger(number.asUnsignedInteger(), resources_))
+        if (VariantImpl::setInteger(number.asUnsignedInteger(), result,
+                                    resources_))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;
 
       case NumberType::SignedInteger:
-        if (result->setInteger(number.asSignedInteger(), resources_))
+        if (VariantImpl::setInteger(number.asSignedInteger(), result,
+                                    resources_))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;
 
       case NumberType::Float:
-        if (result->setFloat(number.asFloat(), resources_))
+        if (VariantImpl::setFloat(number.asFloat(), result, resources_))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;
 
 #if ARDUINOJSON_USE_DOUBLE
       case NumberType::Double:
-        if (result->setFloat(number.asDouble(), resources_))
+        if (VariantImpl::setFloat(number.asDouble(), result, resources_))
           return DeserializationError::Ok;
         else
           return DeserializationError::NoMemory;

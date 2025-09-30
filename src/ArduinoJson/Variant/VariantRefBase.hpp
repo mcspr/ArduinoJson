@@ -29,13 +29,13 @@ class VariantRefBase : public VariantTag {
   // Sets the value to null.
   // https://arduinojson.org/v7/api/jsonvariant/clear/
   void clear() const {
-    VariantData::clear(getOrCreateData(), getResourceManager());
+    getOrCreateVariantImpl().clear();
   }
 
   // Returns true if the value is null or the reference is unbound.
   // https://arduinojson.org/v7/api/jsonvariant/isnull/
   bool isNull() const {
-    return VariantData::isNull(getData());
+    return getVariantImpl().isNull();
   }
 
   // Returns true if the reference is unbound.
@@ -93,13 +93,13 @@ class VariantRefBase : public VariantTag {
   // Returns the size of the array or object.
   // https://arduinojson.org/v7/api/jsonvariant/size/
   size_t size() const {
-    return VariantData::size(getData(), getResourceManager());
+    return getVariantImpl().size();
   }
 
   // Returns the depth (nesting level) of the value.
   // https://arduinojson.org/v7/api/jsonvariant/nesting/
   size_t nesting() const {
-    return VariantData::nesting(getData(), getResourceManager());
+    return getVariantImpl().nesting();
   }
 
   // Appends a new (empty) element to the array.
@@ -120,38 +120,34 @@ class VariantRefBase : public VariantTag {
   // https://arduinojson.org/v7/api/jsonvariant/add/
   template <typename T>
   bool add(const T& value) const {
-    return detail::VariantData::addValue(getOrCreateData(), value,
-                                         getResourceManager());
+    return getOrCreateVariantImpl().addValue(value);
   }
 
   // Appends a value to the array.
   // https://arduinojson.org/v7/api/jsonvariant/add/
   template <typename T, enable_if_t<!is_const<T>::value, int> = 0>
   bool add(T* value) const {
-    return detail::VariantData::addValue(getOrCreateData(), value,
-                                         getResourceManager());
+    return getOrCreateVariantImpl().addValue(value);
   }
 
   // Removes an element of the array.
   // https://arduinojson.org/v7/api/jsonvariant/remove/
   void remove(size_t index) const {
-    VariantData::removeElement(getData(), index, getResourceManager());
+    getVariantImpl().removeElement(index);
   }
 
   // Removes a member of the object.
   // https://arduinojson.org/v7/api/jsonvariant/remove/
   template <typename TChar, enable_if_t<IsString<TChar*>::value, int> = 0>
   void remove(TChar* key) const {
-    VariantData::removeMember(getData(), adaptString(key),
-                              getResourceManager());
+    getVariantImpl().removeMember(adaptString(key));
   }
 
   // Removes a member of the object.
   // https://arduinojson.org/v7/api/jsonvariant/remove/
   template <typename TString, enable_if_t<IsString<TString>::value, int> = 0>
   void remove(const TString& key) const {
-    VariantData::removeMember(getData(), adaptString(key),
-                              getResourceManager());
+    getVariantImpl().removeMember(adaptString(key));
   }
 
   // Removes a member of the object or an element of the array.
@@ -273,6 +269,14 @@ class VariantRefBase : public VariantTag {
 
   VariantData* getOrCreateData() const {
     return VariantAttorney::getOrCreateData(derived());
+  }
+
+  VariantImpl getVariantImpl() const {
+    return VariantImpl(getData(), getResourceManager());
+  }
+
+  VariantImpl getOrCreateVariantImpl() const {
+    return VariantImpl(getOrCreateData(), getResourceManager());
   }
 
   FORCE_INLINE ArduinoJson::JsonVariant getVariant() const;

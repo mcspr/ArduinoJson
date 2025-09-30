@@ -31,11 +31,11 @@ class MsgPackExtension {
 template <>
 struct Converter<MsgPackExtension> : private detail::VariantAttorney {
   static void toJson(MsgPackExtension src, JsonVariant dst) {
-    auto data = VariantAttorney::getData(dst);
+    auto data = getData(dst);
     if (!data)
       return;
     auto resources = getResourceManager(dst);
-    data->clear(resources);
+    detail::VariantImpl::clear(data, resources);
     if (src.data()) {
       uint8_t format, sizeBytes;
       if (src.size() >= 0x10000) {

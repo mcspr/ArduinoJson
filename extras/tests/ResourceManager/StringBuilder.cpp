@@ -26,7 +26,7 @@ TEST_CASE("StringBuilder") {
     REQUIRE(spyingAllocator.log() == AllocatorLog{
                                          Allocate(sizeofStringBuffer()),
                                      });
-    REQUIRE(data.type() == VariantType::TinyString);
+    REQUIRE(data.type == VariantType::TinyString);
   }
 
   SECTION("Tiny string") {
@@ -45,7 +45,7 @@ TEST_CASE("StringBuilder") {
     str.save(&data);
 
     REQUIRE(resources.overflowed() == false);
-    REQUIRE(data.type() == VariantType::TinyString);
+    REQUIRE(data.type == VariantType::TinyString);
     REQUIRE(data.asString() == "url");
   }
 

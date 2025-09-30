@@ -14,7 +14,7 @@ ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 inline void CollectionIterator::next(const ResourceManager* resources) {
   ARDUINOJSON_ASSERT(slot_);
-  auto nextId = slot_->next();
+  auto nextId = slot_->next;
   slot_ = resources->getVariant(nextId);
   currentId_ = nextId;
 }
@@ -31,7 +31,7 @@ inline void CollectionImpl::appendOne(Slot<VariantData> slot) {
 
   if (data_->tail != NULL_SLOT) {
     auto tail = resources_->getVariant(data_->tail);
-    tail->setNext(slot.id());
+    tail->next = slot.id();
     data_->tail = slot.id();
   } else {
     data_->head = slot.id();
@@ -44,11 +44,11 @@ inline void CollectionImpl::appendPair(Slot<VariantData> key,
   ARDUINOJSON_ASSERT(data_ != nullptr);
   ARDUINOJSON_ASSERT(resources_ != nullptr);
 
-  key->setNext(value.id());
+  key->next = value.id();
 
   if (data_->tail != NULL_SLOT) {
     auto tail = resources_->getVariant(data_->tail);
-    tail->setNext(key.id());
+    tail->next = key.id();
     data_->tail = value.id();
   } else {
     data_->head = key.id();
@@ -63,7 +63,7 @@ inline void CollectionImpl::clear() {
   while (next != NULL_SLOT) {
     auto currId = next;
     auto slot = resources_->getVariant(next);
-    next = slot->next();
+    next = slot->next;
     resources_->freeVariant({slot, currId});
   }
 
@@ -80,7 +80,7 @@ inline Slot<VariantData> CollectionImpl::getPreviousSlot(
     if (currentSlot == target)
       break;
     prev = Slot<VariantData>(currentSlot, currentId);
-    currentId = currentSlot->next();
+    currentId = currentSlot->next;
   }
   return prev;
 }
@@ -90,9 +90,9 @@ inline void CollectionImpl::removeOne(iterator it) {
     return;
   auto curr = it.slot_;
   auto prev = getPreviousSlot(curr);
-  auto next = curr->next();
+  auto next = curr->next;
   if (prev)
-    prev->setNext(next);
+    prev->next = next;
   else
     data_->head = next;
   if (next == NULL_SLOT)
@@ -106,11 +106,11 @@ inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
 
   auto keySlot = it.slot_;
 
-  auto valueId = keySlot->next();
+  auto valueId = keySlot->next;
   auto valueSlot = resources_->getVariant(valueId);
 
   // remove value slot
-  keySlot->setNext(valueSlot->next());
+  keySlot->next = valueSlot->next;
   resources_->freeVariant({valueSlot, valueId});
 
   // remove key slot
@@ -122,7 +122,7 @@ inline size_t CollectionImpl::nesting() const {
     return 0;
   size_t maxChildNesting = 0;
   for (auto it = createIterator(); !it.done(); it.next(resources_)) {
-    size_t childNesting = it->nesting(resources_);
+    size_t childNesting = VariantImpl(it.data(), resources_).nesting();
     if (childNesting > maxChildNesting)
       maxChildNesting = childNesting;
   }

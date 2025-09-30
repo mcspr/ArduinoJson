@@ -29,7 +29,7 @@ struct Converter<MsgPackBinary> : private detail::VariantAttorney {
     if (!data)
       return;
     auto resources = getResourceManager(dst);
-    data->clear(resources);
+    detail::VariantImpl::clear(data, resources);
     if (src.data()) {
       size_t headerSize = src.size() >= 0x10000 ? 5
                           : src.size() >= 0x100 ? 3
