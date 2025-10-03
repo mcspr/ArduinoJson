@@ -3,6 +3,7 @@
 // MIT License
 
 #include <ArduinoJson/Memory/StringBuilder.hpp>
+#include <ArduinoJson/Variant/VariantImpl.hpp>
 #include <catch.hpp>
 
 #include "Allocators.hpp"
