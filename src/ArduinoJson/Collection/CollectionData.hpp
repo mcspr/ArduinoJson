@@ -68,7 +68,7 @@ class CollectionIterator {
 
 class CollectionImpl {
  protected:
-  CollectionData* data_;
+  VariantData* data_;
   ResourceManager* resources_;
 
  public:
@@ -76,40 +76,55 @@ class CollectionImpl {
 
   CollectionImpl() : data_(nullptr), resources_(nullptr) {}
 
-  CollectionImpl(CollectionData* data, ResourceManager* resources)
+  CollectionImpl(VariantData* data, ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
   explicit operator bool() const {
-    return data_ != nullptr;
+    return data_ && data_->isCollection();
   }
 
   bool isNull() const {
-    return data_ == nullptr;
+    return !operator bool();
   }
 
   VariantData* getData() const {
-    void* data = data_;  // prevent warning cast-align
-    return reinterpret_cast<VariantData*>(data);
+    return data_;
   }
 
   ResourceManager* getResourceManager() const {
     return resources_;
   }
 
-  iterator createIterator() const;
+  iterator createIterator() const {
+    if (isNull())
+      return iterator();
+    return createIterator(data_, resources_);
+  }
+
+  static iterator createIterator(VariantData*, ResourceManager*);
 
   size_t size() const;
   size_t nesting() const;
 
-  void clear();
+  void clear() {
+    if (isNull())
+      return;
+    clear(data_, resources_);
+  }
+
+  static void clear(VariantData*, ResourceManager*);
 
   SlotId head() const {
-    return data_->head;
+    ARDUINOJSON_ASSERT(data_ != nullptr);
+    ARDUINOJSON_ASSERT(data_->isCollection());
+    return data_->content.asCollection.head;
   }
 
  protected:
-  void appendOne(Slot<VariantData> slot);
-  void appendPair(Slot<VariantData> key, Slot<VariantData> value);
+  static void appendOne(Slot<VariantData> slot, VariantData*, ResourceManager*);
+
+  static void appendPair(Slot<VariantData> key, Slot<VariantData> value,
+                         VariantData*, ResourceManager*);
 
   void removeOne(iterator it);
   void removePair(iterator it);

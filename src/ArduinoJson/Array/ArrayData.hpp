@@ -12,13 +12,30 @@ class ArrayImpl : public CollectionImpl {
  public:
   ArrayImpl() {}
 
-  ArrayImpl(CollectionData* data, ResourceManager* resources)
+  ArrayImpl(VariantData* data, ResourceManager* resources)
       : CollectionImpl(data, resources) {}
 
-  VariantData* addElement();
+  bool isNull() const {
+    return !data_ || data_->type != VariantType::Array;
+  }
+
+  VariantData* addElement() {
+    if (isNull())
+      return nullptr;
+    return addElement(data_, resources_);
+  }
+
+  static VariantData* addElement(VariantData*, ResourceManager*);
 
   template <typename T>
-  bool addValue(const T& value);
+  bool addValue(const T& value) {
+    if (isNull())
+      return false;
+    return addValue(value, data_, resources_);
+  }
+
+  template <typename T>
+  static bool addValue(const T& value, VariantData*, ResourceManager*);
 
   VariantData* getOrAddElement(size_t index);
 

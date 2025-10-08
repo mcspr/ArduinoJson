@@ -65,6 +65,10 @@ struct VariantData {
     return type == VariantType::Boolean;
   }
 
+  bool isCollection() const {
+    return type & VariantTypeBits::CollectionMask;
+  }
+
   bool isFloat() const {
     return type & VariantTypeBits::NumberBit;
   }

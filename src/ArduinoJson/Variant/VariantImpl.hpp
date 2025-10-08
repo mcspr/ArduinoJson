@@ -57,10 +57,10 @@ class VariantImpl {
 #endif
 
       case VariantType::Array:
-        return visit.visit(ArrayImpl(&data->content.asCollection, resources));
+        return visit.visit(ArrayImpl(data, resources));
 
       case VariantType::Object:
-        return visit.visit(ObjectImpl(&data->content.asCollection, resources));
+        return visit.visit(ObjectImpl(data, resources));
 
       case VariantType::TinyString:
         return visit.visit(JsonString(data->content.asTinyString));
@@ -163,15 +163,11 @@ class VariantImpl {
   }
 
   static ArrayImpl asArray(VariantData* data, ResourceManager* resources) {
-    return ArrayImpl(data && data->type == VariantType::Array
-                         ? &data->content.asCollection
-                         : nullptr,
-                     resources);
+    return ArrayImpl(data, resources);
   }
 
   CollectionImpl asCollection() {
-    return CollectionImpl(
-        isCollection() ? &data_->content.asCollection : nullptr, resources_);
+    return CollectionImpl(data_, resources_);
   }
 
   template <typename T>
@@ -275,10 +271,7 @@ class VariantImpl {
   }
 
   static ObjectImpl asObject(VariantData* data, ResourceManager* resources) {
-    return ObjectImpl(data && data->type == VariantType::Object
-                          ? &data->content.asCollection
-                          : nullptr,
-                      resources);
+    return ObjectImpl(data, resources);
   }
 
 #if ARDUINOJSON_USE_8_BYTE_POOL
@@ -563,7 +556,8 @@ class VariantImpl {
   static ArrayImpl toArray(VariantData* data, ResourceManager* resources) {
     ARDUINOJSON_ASSERT(data != nullptr);
     ARDUINOJSON_ASSERT(resources != nullptr);
-    return ArrayImpl(data->toArray(), resources);
+    data->toArray();
+    return ArrayImpl(data, resources);
   }
 
   ObjectImpl toObject() {
@@ -576,7 +570,8 @@ class VariantImpl {
   static ObjectImpl toObject(VariantData* data, ResourceManager* resources) {
     ARDUINOJSON_ASSERT(data != nullptr);
     ARDUINOJSON_ASSERT(resources != nullptr);
-    return ObjectImpl(data->toObject(), resources);
+    data->toObject();
+    return ObjectImpl(data, resources);
   }
 
   VariantType type() const {
@@ -602,7 +597,7 @@ class VariantImpl {
 #endif
 
     if (data->type & VariantTypeBits::CollectionMask)
-      CollectionImpl(&data->content.asCollection, resources).clear();
+      CollectionImpl::clear(data, resources);
 
     data->type = VariantType::Null;
   }

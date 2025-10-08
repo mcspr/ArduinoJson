@@ -11,11 +11,12 @@
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename TAdaptedString>
-inline VariantData* ObjectImpl::getMember(TAdaptedString key) const {
-  auto it = findKey(key);
+inline VariantData* ObjectImpl::getMember(TAdaptedString key, VariantData* data,
+                                          ResourceManager* resources) {
+  auto it = findKey(key, data, resources);
   if (it.done())
     return nullptr;
-  it.next(resources_);
+  it.next(resources);
   return it.data();
 }
 
@@ -28,11 +29,17 @@ VariantData* ObjectImpl::getOrAddMember(TAdaptedString key) {
 }
 
 template <typename TAdaptedString>
-inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key) const {
+inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key,
+                                                VariantData* data,
+                                                ResourceManager* resources) {
+  ARDUINOJSON_ASSERT(data != nullptr);
+  ARDUINOJSON_ASSERT(data->isObject());
+  ARDUINOJSON_ASSERT(resources != nullptr);
   if (key.isNull())
     return iterator();
   bool isKey = true;
-  for (auto it = createIterator(); !it.done(); it.next(resources_)) {
+  for (auto it = createIterator(data, resources); !it.done();
+       it.next(resources)) {
     if (isKey && stringEquals(key, adaptString(it->asString())))
       return it;
     isKey = !isKey;
@@ -47,7 +54,7 @@ inline void ObjectImpl::removeMember(TAdaptedString key) {
 
 template <typename TAdaptedString>
 inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
-  if (!data_)
+  if (isNull())
     return nullptr;
   ARDUINOJSON_ASSERT(resources_ != nullptr);
 
@@ -62,26 +69,28 @@ inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
   if (!VariantImpl::setString(key, keySlot.ptr(), resources_))
     return nullptr;
 
-  CollectionImpl::appendPair(keySlot, valueSlot);
+  CollectionImpl::appendPair(keySlot, valueSlot, data_, resources_);
 
   return valueSlot.ptr();
 }
 
-inline VariantData* ObjectImpl::addPair(VariantData** value) {
-  if (!data_)
-    return nullptr;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
+inline VariantData* ObjectImpl::addPair(VariantData** value, VariantData* data,
+                                        ResourceManager* resources) {
+  ARDUINOJSON_ASSERT(value != nullptr);
+  ARDUINOJSON_ASSERT(data != nullptr);
+  ARDUINOJSON_ASSERT(data->isObject());
+  ARDUINOJSON_ASSERT(resources != nullptr);
 
-  auto keySlot = resources_->allocVariant();
+  auto keySlot = resources->allocVariant();
   if (!keySlot)
     return nullptr;
 
-  auto valueSlot = resources_->allocVariant();
+  auto valueSlot = resources->allocVariant();
   if (!valueSlot)
     return nullptr;
   *value = valueSlot.ptr();
 
-  CollectionImpl::appendPair(keySlot, valueSlot);
+  CollectionImpl::appendPair(keySlot, valueSlot, data, resources);
 
   return keySlot.ptr();
 }

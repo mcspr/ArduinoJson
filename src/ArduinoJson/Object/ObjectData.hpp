@@ -14,19 +14,38 @@ class ObjectImpl : public CollectionImpl {
  public:
   ObjectImpl() {}
 
-  ObjectImpl(CollectionData* data, ResourceManager* resources)
+  ObjectImpl(VariantData* data, ResourceManager* resources)
       : CollectionImpl(data, resources) {}
+
+  bool isNull() const {
+    return !data_ || data_->type != VariantType::Object;
+  }
 
   template <typename TAdaptedString>
   VariantData* addMember(TAdaptedString key);
 
-  VariantData* addPair(VariantData** value);
+  VariantData* addPair(VariantData** value) {
+    if (isNull())
+      return nullptr;
+    return addPair(value, data_, resources_);
+  }
+
+  static VariantData* addPair(VariantData** value, VariantData*,
+                              ResourceManager*);
 
   template <typename TAdaptedString>
   VariantData* getOrAddMember(TAdaptedString key);
 
   template <typename TAdaptedString>
-  VariantData* getMember(TAdaptedString key) const;
+  VariantData* getMember(TAdaptedString key) const {
+    if (isNull())
+      return nullptr;
+    return getMember(key, data_, resources_);
+  }
+
+  template <typename TAdaptedString>
+  static VariantData* getMember(TAdaptedString key, VariantData*,
+                                ResourceManager*);
 
   template <typename TAdaptedString>
   void removeMember(TAdaptedString key);
@@ -41,7 +60,14 @@ class ObjectImpl : public CollectionImpl {
 
  private:
   template <typename TAdaptedString>
-  iterator findKey(TAdaptedString key) const;
+  iterator findKey(TAdaptedString key) const {
+    if (isNull())
+      return iterator();
+    return findKey(key, data_, resources_);
+  }
+
+  template <typename TAdaptedString>
+  static iterator findKey(TAdaptedString key, VariantData*, ResourceManager*);
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

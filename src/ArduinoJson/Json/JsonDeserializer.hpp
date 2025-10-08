@@ -71,15 +71,13 @@ class JsonDeserializer {
     switch (current()) {
       case '[':
         if (filter.allowArray())
-          return parseArray(VariantImpl::toArray(variant, resources_), filter,
-                            nestingLimit);
+          return parseArray(variant, filter, nestingLimit);
         else
           return skipArray(nestingLimit);
 
       case '{':
         if (filter.allowObject())
-          return parseObject(VariantImpl::toObject(variant, resources_), filter,
-                             nestingLimit);
+          return parseObject(variant, filter, nestingLimit);
         else
           return skipObject(nestingLimit);
 
@@ -148,9 +146,11 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseArray(
-      ArrayImpl array, TFilter filter,
+      VariantData* array, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
+
+    array->toArray();
 
     if (nestingLimit.reached())
       return DeserializationError::TooDeep;
@@ -174,7 +174,7 @@ class JsonDeserializer {
     for (;;) {
       if (elementFilter.allow()) {
         // Allocate slot in array
-        VariantData* value = array.addElement();
+        VariantData* value = ArrayImpl::addElement(array, resources_);
         if (!value)
           return DeserializationError::NoMemory;
 
@@ -234,9 +234,11 @@ class JsonDeserializer {
 
   template <typename TFilter>
   DeserializationError::Code parseObject(
-      ObjectImpl object, TFilter filter,
+      VariantData* object, TFilter filter,
       DeserializationOption::NestingLimit nestingLimit) {
     DeserializationError::Code err;
+
+    object->toObject();
 
     if (nestingLimit.reached())
       return DeserializationError::TooDeep;
@@ -275,9 +277,10 @@ class JsonDeserializer {
       TFilter memberFilter = filter[key];
 
       if (memberFilter.allow()) {
-        auto member = object.getMember(adaptString(key));
+        auto member =
+            ObjectImpl::getMember(adaptString(key), object, resources_);
         if (!member) {
-          auto keyVariant = object.addPair(&member);
+          auto keyVariant = ObjectImpl::addPair(&member, object, resources_);
           if (!keyVariant)
             return DeserializationError::NoMemory;
 

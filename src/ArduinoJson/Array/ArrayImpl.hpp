@@ -11,6 +11,9 @@
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
+  if (isNull())
+    return iterator();
+
   auto it = createIterator();
   while (!it.done() && index) {
     it.next(resources_);
@@ -19,14 +22,16 @@ inline ArrayImpl::iterator ArrayImpl::at(size_t index) const {
   return it;
 }
 
-inline VariantData* ArrayImpl::addElement() {
-  if (!data_)
-    return nullptr;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-  auto slot = resources_->allocVariant();
+inline VariantData* ArrayImpl::addElement(VariantData* data,
+                                          ResourceManager* resources) {
+  ARDUINOJSON_ASSERT(data != nullptr);
+  ARDUINOJSON_ASSERT(data->isArray());
+  ARDUINOJSON_ASSERT(resources != nullptr);
+
+  auto slot = resources->allocVariant();
   if (!slot)
     return nullptr;
-  CollectionImpl::appendOne(slot);
+  CollectionImpl::appendOne(slot, data, resources);
   return slot.ptr();
 }
 
@@ -57,19 +62,19 @@ inline void ArrayImpl::removeElement(size_t index) {
 }
 
 template <typename T>
-inline bool ArrayImpl::addValue(const T& value) {
-  if (!data_)
-    return false;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-  auto slot = resources_->allocVariant();
+inline bool ArrayImpl::addValue(const T& value, VariantData* data,
+                                ResourceManager* resources) {
+  ARDUINOJSON_ASSERT(data != nullptr);
+  ARDUINOJSON_ASSERT(resources != nullptr);
+  auto slot = resources->allocVariant();
   if (!slot)
     return false;
-  JsonVariant variant(slot.ptr(), resources_);
+  JsonVariant variant(slot.ptr(), resources);
   if (!variant.set(value)) {
-    resources_->freeVariant(slot);
+    resources->freeVariant(slot);
     return false;
   }
-  CollectionImpl::appendOne(slot);
+  CollectionImpl::appendOne(slot, data, resources);
   return true;
 }
 
