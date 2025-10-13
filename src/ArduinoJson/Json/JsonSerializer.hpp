@@ -19,10 +19,13 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
   JsonSerializer(TWriter writer, ResourceManager* resources)
       : formatter_(writer), resources_(resources) {}
 
-  size_t visit(const ArrayImpl& array) {
+  size_t visitArray(VariantData* array) {
+    ARDUINOJSON_ASSERT(array != nullptr);
+    ARDUINOJSON_ASSERT(array->isArray());
+
     write('[');
 
-    auto slotId = array.head();
+    auto slotId = array->content.asCollection.head;
 
     while (slotId != NULL_SLOT) {
       auto slot = resources_->getVariant(slotId);
@@ -39,10 +42,13 @@ class JsonSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ObjectImpl& object) {
+  size_t visitObject(VariantData* object) {
+    ARDUINOJSON_ASSERT(object != nullptr);
+    ARDUINOJSON_ASSERT(object->isObject());
+
     write('{');
 
-    auto slotId = object.head();
+    auto slotId = object->content.asCollection.head;
 
     bool isKey = true;
 

@@ -57,10 +57,10 @@ class VariantImpl {
 #endif
 
       case VariantType::Array:
-        return visit.visit(ArrayImpl(data, resources));
+        return visit.visitArray(data);
 
       case VariantType::Object:
-        return visit.visit(ObjectImpl(data, resources));
+        return visit.visitObject(data);
 
       case VariantType::TinyString:
         return visit.visit(JsonString(data->content.asTinyString));

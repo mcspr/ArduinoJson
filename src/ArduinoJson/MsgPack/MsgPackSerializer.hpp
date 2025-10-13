@@ -47,8 +47,11 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ArrayImpl& array) {
-    size_t n = array.size();
+  size_t visitArray(VariantData* array) {
+    ARDUINOJSON_ASSERT(array != nullptr);
+    ARDUINOJSON_ASSERT(array->isArray());
+
+    auto n = VariantImpl::size(array, resources_);
     if (n < 0x10) {
       writeByte(uint8_t(0x90 + n));
     } else if (n < 0x10000) {
@@ -59,7 +62,7 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
       writeInteger(uint32_t(n));
     }
 
-    auto slotId = array.head();
+    auto slotId = array->content.asCollection.head;
     while (slotId != NULL_SLOT) {
       auto slot = resources_->getVariant(slotId);
       VariantImpl::accept(*this, slot, resources_);
@@ -69,8 +72,11 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visit(const ObjectImpl& object) {
-    size_t n = object.size();
+  size_t visitObject(VariantData* object) {
+    ARDUINOJSON_ASSERT(object != nullptr);
+    ARDUINOJSON_ASSERT(object->isObject());
+
+    auto n = VariantImpl::size(object, resources_);
     if (n < 0x10) {
       writeByte(uint8_t(0x80 + n));
     } else if (n < 0x10000) {
@@ -81,7 +87,7 @@ class MsgPackSerializer : public VariantDataVisitor<size_t> {
       writeInteger(uint32_t(n));
     }
 
-    auto slotId = object.head();
+    auto slotId = object->content.asCollection.head;
     while (slotId != NULL_SLOT) {
       auto slot = resources_->getVariant(slotId);
       VariantImpl::accept(*this, slot, resources_);
