@@ -537,13 +537,24 @@ class VariantImpl {
   }
 
   size_t size() {
-    if (isObject())
-      return asObject().size();
+    if (!data_)
+      return 0;
 
-    if (isArray())
-      return asArray().size();
+    return size(data_, resources_);
+  }
 
-    return 0;
+  static size_t size(VariantData* data, ResourceManager* resources) {
+    ARDUINOJSON_ASSERT(data != nullptr);
+    ARDUINOJSON_ASSERT(resources != nullptr);
+
+    size_t n = CollectionImpl(data, resources).size();
+
+    if (data->type == VariantType::Object) {
+      ARDUINOJSON_ASSERT((n % 2) == 0);
+      n /= 2;
+    }
+
+    return n;
   }
 
   ArrayImpl toArray() {
