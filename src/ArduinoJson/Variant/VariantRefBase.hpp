@@ -8,7 +8,6 @@
 #include <ArduinoJson/Variant/Converter.hpp>
 #include <ArduinoJson/Variant/JsonVariantConst.hpp>
 #include <ArduinoJson/Variant/VariantOperators.hpp>
-#include <ArduinoJson/Variant/VariantTo.hpp>
 
 ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE
 class JsonVariant;

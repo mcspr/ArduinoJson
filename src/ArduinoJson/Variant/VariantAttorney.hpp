@@ -7,7 +7,6 @@
 #include <ArduinoJson/Polyfills/attributes.hpp>
 #include <ArduinoJson/Polyfills/type_traits.hpp>
 #include <ArduinoJson/Variant/VariantImpl.hpp>
-#include <ArduinoJson/Variant/VariantTo.hpp>
 #include "JsonVariantConst.hpp"
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE

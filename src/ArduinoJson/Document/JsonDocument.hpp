@@ -11,7 +11,6 @@
 #include <ArduinoJson/Object/MemberProxy.hpp>
 #include <ArduinoJson/Polyfills/utility.hpp>
 #include <ArduinoJson/Variant/JsonVariantConst.hpp>
-#include <ArduinoJson/Variant/VariantTo.hpp>
 
 ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE
 
@@ -152,12 +151,33 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
     return to<JsonVariant>().set(src);
   }
 
-  // Clears the document and converts it to the specified type.
+  // Sets the document to an empty array.
   // https://arduinojson.org/v7/api/jsondocument/to/
-  template <typename T>
-  typename detail::VariantTo<T>::type to() {
+  template <typename T,
+            detail::enable_if_t<detail::is_same<T, JsonArray>::value, int> = 0>
+  JsonArray to() {
     clear();
-    return getVariant().template to<T>();
+    data_.toArray();
+    return JsonArray(&data_, &resources_);
+  }
+
+  // Sets the document to an empty object.
+  // https://arduinojson.org/v7/api/jsondocument/to/
+  template <typename T,
+            detail::enable_if_t<detail::is_same<T, JsonObject>::value, int> = 0>
+  JsonObject to() {
+    clear();
+    data_.toObject();
+    return JsonObject(&data_, &resources_);
+  }
+
+  // Sets the document to null.
+  // https://arduinojson.org/v7/api/jsondocument/to/
+  template <typename T, detail::enable_if_t<
+                            detail::is_same<T, JsonVariant>::value, int> = 0>
+  JsonVariant to() {
+    clear();
+    return JsonVariant(&data_, &resources_);
   }
 
   // DEPRECATED: use obj["key"].is<T>() instead
