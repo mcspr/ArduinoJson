@@ -120,7 +120,6 @@ class CollectionImpl {
     return data_->content.asCollection.head;
   }
 
- protected:
   static void appendOne(Slot<VariantData> slot, VariantData*, ResourceManager*);
 
   static void appendPair(Slot<VariantData> key, Slot<VariantData> value,

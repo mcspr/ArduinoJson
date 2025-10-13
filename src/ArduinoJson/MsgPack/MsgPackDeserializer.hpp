@@ -360,7 +360,7 @@ class MsgPackDeserializer {
       VariantData* value;
 
       if (elementFilter.allow()) {
-        value = ArrayImpl::addElement(variant, resources_);
+        value = VariantImpl::addElement(variant, resources_);
         if (!value)
           return DeserializationError::NoMemory;
       } else {

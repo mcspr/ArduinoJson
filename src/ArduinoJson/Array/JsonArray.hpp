@@ -27,7 +27,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
       : impl_(data, resources) {}
 
   // INTERNAL USE ONLY
-  JsonArray(const detail::ArrayImpl& impl) : impl_(impl) {}
+  JsonArray(const detail::VariantImpl& impl) : impl_(impl) {}
 
   // Returns a JsonVariant pointing to the array.
   // https://arduinojson.org/v7/api/jsonvariant/
@@ -89,9 +89,6 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Copies an array.
   // https://arduinojson.org/v7/api/jsonarray/set/
   bool set(JsonArrayConst src) const {
-    if (isNull())
-      return false;
-
     clear();
     for (auto element : src) {
       if (!add(element))
@@ -125,7 +122,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Removes all the elements of the array.
   // https://arduinojson.org/v7/api/jsonarray/clear/
   void clear() const {
-    impl_.clear();
+    impl_.empty();
   }
 
   // Gets or sets the element at the specified index.
@@ -210,7 +207,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
     return impl_.getData();
   }
 
-  mutable detail::ArrayImpl impl_;
+  mutable detail::VariantImpl impl_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

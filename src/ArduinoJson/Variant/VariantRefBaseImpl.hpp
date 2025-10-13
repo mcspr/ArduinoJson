@@ -69,8 +69,7 @@ inline void convertToJson(const VariantRefBase<TDerived>& src,
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonVariant>::value, int>>
 inline T VariantRefBase<TDerived>::add() const {
-  return JsonVariant(getOrCreateVariantImpl().addElement(),
-                     getResourceManager());
+  return JsonVariant(getOrCreateArray().addElement(), getResourceManager());
 }
 
 template <typename TDerived>
@@ -147,7 +146,9 @@ inline bool VariantRefBase<TDerived>::doSet(const T& value, true_type) const {
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonArray>::value, int>>
 inline JsonArray VariantRefBase<TDerived>::to() const {
-  return JsonArray(getOrCreateVariantImpl().toArray());
+  auto impl = getOrCreateVariantImpl();
+  impl.toArray();
+  return JsonArray(impl);
 }
 
 template <typename TDerived>

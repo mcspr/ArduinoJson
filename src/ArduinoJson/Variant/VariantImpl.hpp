@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <ArduinoJson/Array/ArrayData.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
@@ -19,6 +18,8 @@ ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 // to the compiler to optimize the `this` pointer away.
 class VariantImpl {
  public:
+  using iterator = CollectionIterator;
+
   VariantImpl() : data_(nullptr), resources_(nullptr) {}
 
   VariantImpl(VariantData* data, ResourceManager* resources)
@@ -96,32 +97,22 @@ class VariantImpl {
   }
 
   VariantData* addElement() {
+    if (!isArray())
+      return nullptr;
     return addElement(data_, resources_);
   }
 
-  static VariantData* addElement(VariantData* data,
-                                 ResourceManager* resources) {
-    if (!data)
-      return nullptr;
-    auto array = data->type == VariantType::Null ? toArray(data, resources)
-                                                 : asArray(data, resources);
-    return array.addElement();
-  }
+  static VariantData* addElement(VariantData*, ResourceManager*);
 
   template <typename T>
   bool addValue(const T& value) {
+    if (!isArray())
+      return false;
     return addValue(value, data_, resources_);
   }
 
   template <typename T>
-  static bool addValue(const T& value, VariantData* data,
-                       ResourceManager* resources) {
-    if (!data)
-      return false;
-    auto array = data->type == VariantType::Null ? toArray(data, resources)
-                                                 : asArray(data, resources);
-    return array.addValue(value);
-  }
+  static bool addValue(const T& value, VariantData*, ResourceManager*);
 
   bool asBoolean() const {
     return asBoolean(data_, resources_);
@@ -158,15 +149,7 @@ class VariantImpl {
     }
   }
 
-  ArrayImpl asArray() {
-    return asArray(data_, resources_);
-  }
-
-  static ArrayImpl asArray(VariantData* data, ResourceManager* resources) {
-    return ArrayImpl(data, resources);
-  }
-
-  CollectionImpl asCollection() {
+  CollectionImpl asCollection() const {
     return CollectionImpl(data_, resources_);
   }
 
@@ -274,6 +257,12 @@ class VariantImpl {
     return ObjectImpl(data, resources);
   }
 
+  iterator at(size_t index) const;
+
+  iterator createIterator() const {
+    return asCollection().createIterator();
+  }
+
 #if ARDUINOJSON_USE_8_BYTE_POOL
   static const EightByteValue* getEightByte(VariantData* data,
                                             ResourceManager* resources) {
@@ -285,18 +274,13 @@ class VariantImpl {
   }
 #endif
 
-  VariantData* getElement(size_t index) {
-    return asArray().getElement(index);
-  }
+  VariantData* getOrAddElement(size_t index);
+
+  VariantData* getElement(size_t index) const;
 
   template <typename TAdaptedString>
   VariantData* getMember(TAdaptedString key) {
     return asObject().getMember(key);
-  }
-
-  VariantData* getOrAddElement(size_t index) {
-    auto array = isNull() ? toArray() : asArray();
-    return array.getOrAddElement(index);
   }
 
   template <typename TAdaptedString>
@@ -367,12 +351,14 @@ class VariantImpl {
     return type() == VariantType::Object;
   }
 
-  size_t nesting() {
+  size_t nesting() const {
     return asCollection().nesting();
   }
 
-  void removeElement(size_t index) {
-    asArray().removeElement(index);
+  void removeElement(size_t index);
+
+  void remove(CollectionIterator it) {
+    asCollection().removeOne(it);
   }
 
   template <typename TAdaptedString>
@@ -536,7 +522,7 @@ class VariantImpl {
     return false;
   }
 
-  size_t size() {
+  size_t size() const {
     if (!data_)
       return 0;
 
@@ -557,18 +543,12 @@ class VariantImpl {
     return n;
   }
 
-  ArrayImpl toArray() {
+  bool toArray() {
     if (!data_)
-      return ArrayImpl();
+      return false;
     clear(data_, resources_);
-    return toArray(data_, resources_);
-  }
-
-  static ArrayImpl toArray(VariantData* data, ResourceManager* resources) {
-    ARDUINOJSON_ASSERT(data != nullptr);
-    ARDUINOJSON_ASSERT(resources != nullptr);
-    data->toArray();
-    return ArrayImpl(data, resources);
+    data_->toArray();
+    return true;
   }
 
   ObjectImpl toObject() {
@@ -613,8 +593,14 @@ class VariantImpl {
     data->type = VariantType::Null;
   }
 
+  void empty() {
+    if (isCollection())
+      CollectionImpl::clear(data_, resources_);
+  }
+
  private:
   VariantData* data_;
   ResourceManager* resources_;
 };
+
 ARDUINOJSON_END_PRIVATE_NAMESPACE

@@ -59,8 +59,11 @@ class ElementProxy : public VariantRefBase<ElementProxy<TUpstream>>,
   }
 
   VariantData* getOrCreateData() const {
-    return VariantAttorney::getOrCreateVariantImpl(upstream_).getOrAddElement(
-        index_);
+    auto data = VariantAttorney::getOrCreateData(upstream_);
+    auto resources = VariantAttorney::getResourceManager(upstream_);
+    if (data && data->type == VariantType::Null)
+      data->toArray();
+    return VariantImpl(data, resources).getOrAddElement(index_);
   }
 
   TUpstream upstream_;
