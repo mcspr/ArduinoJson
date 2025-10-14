@@ -101,7 +101,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   // Removes the element at the specified iterator.
   // https://arduinojson.org/v7/api/jsonarray/remove/
   void remove(iterator it) const {
-    impl_.remove(it.iterator_);
+    impl_.removeElement(it.iterator_);
   }
 
   // Removes the element at the specified index.

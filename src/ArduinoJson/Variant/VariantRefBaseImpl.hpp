@@ -154,7 +154,9 @@ inline JsonArray VariantRefBase<TDerived>::to() const {
 template <typename TDerived>
 template <typename T, enable_if_t<is_same<T, JsonObject>::value, int>>
 JsonObject VariantRefBase<TDerived>::to() const {
-  return JsonObject(getOrCreateVariantImpl().toObject());
+  auto impl = getOrCreateVariantImpl();
+  impl.toObject();
+  return JsonObject(impl);
 }
 
 template <typename TDerived>

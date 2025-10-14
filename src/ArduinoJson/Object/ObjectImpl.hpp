@@ -4,15 +4,15 @@
 
 #pragma once
 
-#include <ArduinoJson/Object/ObjectData.hpp>
 #include <ArduinoJson/Variant/VariantCompare.hpp>
-#include <ArduinoJson/Variant/VariantData.hpp>
+#include <ArduinoJson/Variant/VariantImpl.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename TAdaptedString>
-inline VariantData* ObjectImpl::getMember(TAdaptedString key, VariantData* data,
-                                          ResourceManager* resources) {
+inline VariantData* VariantImpl::getMember(TAdaptedString key,
+                                           VariantData* data,
+                                           ResourceManager* resources) {
   auto it = findKey(key, data, resources);
   if (it.done())
     return nullptr;
@@ -21,24 +21,30 @@ inline VariantData* ObjectImpl::getMember(TAdaptedString key, VariantData* data,
 }
 
 template <typename TAdaptedString>
-VariantData* ObjectImpl::getOrAddMember(TAdaptedString key) {
-  auto data = getMember(key);
-  if (data)
-    return data;
-  return addMember(key);
-}
-
-template <typename TAdaptedString>
-inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key,
-                                                VariantData* data,
-                                                ResourceManager* resources) {
+VariantData* VariantImpl::getOrAddMember(TAdaptedString key, VariantData* data,
+                                         ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isObject());
   ARDUINOJSON_ASSERT(resources != nullptr);
+
+  auto member = getMember(key, data, resources);
+  if (member)
+    return member;
+  return addMember(key, data, resources);
+}
+
+template <typename TAdaptedString>
+inline VariantImpl::iterator VariantImpl::findKey(TAdaptedString key,
+                                                  VariantData* data,
+                                                  ResourceManager* resources) {
+  ARDUINOJSON_ASSERT(data != nullptr);
+  ARDUINOJSON_ASSERT(data->isObject());
+  ARDUINOJSON_ASSERT(resources != nullptr);
+
   if (key.isNull())
     return iterator();
   bool isKey = true;
-  for (auto it = createIterator(data, resources); !it.done();
+  for (auto it = CollectionImpl::createIterator(data, resources); !it.done();
        it.next(resources)) {
     if (isKey && stringEquals(key, adaptString(it->asString())))
       return it;
@@ -48,34 +54,31 @@ inline ObjectImpl::iterator ObjectImpl::findKey(TAdaptedString key,
 }
 
 template <typename TAdaptedString>
-inline void ObjectImpl::removeMember(TAdaptedString key) {
-  remove(findKey(key));
-}
+inline VariantData* VariantImpl::addMember(TAdaptedString key,
+                                           VariantData* data,
+                                           ResourceManager* resources) {
+  ARDUINOJSON_ASSERT(data != nullptr);
+  ARDUINOJSON_ASSERT(data->isObject());
+  ARDUINOJSON_ASSERT(resources != nullptr);
 
-template <typename TAdaptedString>
-inline VariantData* ObjectImpl::addMember(TAdaptedString key) {
-  if (isNull())
-    return nullptr;
-  ARDUINOJSON_ASSERT(resources_ != nullptr);
-
-  auto keySlot = resources_->allocVariant();
+  auto keySlot = resources->allocVariant();
   if (!keySlot)
     return nullptr;
 
-  auto valueSlot = resources_->allocVariant();
+  auto valueSlot = resources->allocVariant();
   if (!valueSlot)
     return nullptr;
 
-  if (!VariantImpl::setString(key, keySlot.ptr(), resources_))
+  if (!VariantImpl::setString(key, keySlot.ptr(), resources))
     return nullptr;
 
-  CollectionImpl::appendPair(keySlot, valueSlot, data_, resources_);
+  CollectionImpl::appendPair(keySlot, valueSlot, data, resources);
 
   return valueSlot.ptr();
 }
 
-inline VariantData* ObjectImpl::addPair(VariantData** value, VariantData* data,
-                                        ResourceManager* resources) {
+inline VariantData* VariantImpl::addPair(VariantData** value, VariantData* data,
+                                         ResourceManager* resources) {
   ARDUINOJSON_ASSERT(value != nullptr);
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isObject());

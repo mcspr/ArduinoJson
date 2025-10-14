@@ -399,7 +399,7 @@ class MsgPackDeserializer {
       VariantData* member = 0;
 
       if (memberFilter.allow()) {
-        auto keyVariant = ObjectImpl::addPair(&member, variant, resources_);
+        auto keyVariant = VariantImpl::addPair(&member, variant, resources_);
         if (!keyVariant)
           return DeserializationError::NoMemory;
 

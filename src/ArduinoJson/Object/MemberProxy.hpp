@@ -60,8 +60,11 @@ class MemberProxy
   }
 
   VariantData* getOrCreateData() const {
-    return VariantAttorney::getOrCreateVariantImpl(upstream_).getOrAddMember(
-        key_);
+    auto data = VariantAttorney::getOrCreateData(upstream_);
+    auto resources = VariantAttorney::getResourceManager(upstream_);
+    if (data && data->type == VariantType::Null)
+      data->toObject();
+    return VariantImpl(data, resources).getOrAddMember(key_);
   }
 
  private:

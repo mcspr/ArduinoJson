@@ -57,7 +57,7 @@ inline VariantData* VariantImpl::getElement(size_t index) const {
 }
 
 inline void VariantImpl::removeElement(size_t index) {
-  remove(at(index));
+  removeElement(at(index));
 }
 
 template <typename T>

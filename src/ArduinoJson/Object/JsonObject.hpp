@@ -23,7 +23,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   JsonObject() {}
 
   // INTERNAL USE ONLY
-  JsonObject(const detail::ObjectImpl& impl) : impl_(impl) {}
+  JsonObject(const detail::VariantImpl& impl) : impl_(impl) {}
 
   // INTERNAL USE ONLY
   JsonObject(detail::VariantData* data, detail::ResourceManager* resource)
@@ -44,13 +44,13 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Returns true if the reference is unbound.
   // https://arduinojson.org/v7/api/jsonobject/isnull/
   bool isNull() const {
-    return impl_.isNull();
+    return !impl_.isObject();
   }
 
   // Returns true if the reference is bound.
   // https://arduinojson.org/v7/api/jsonobject/isnull/
   operator bool() const {
-    return !isNull();
+    return impl_.isObject();
   }
 
   // Returns the depth (nesting level) of the object.
@@ -80,7 +80,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Removes all the members of the object.
   // https://arduinojson.org/v7/api/jsonobject/clear/
   void clear() const {
-    impl_.clear();
+    impl_.empty();
   }
 
   // Copies an object.
@@ -130,7 +130,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Removes the member at the specified iterator.
   // https://arduinojson.org/v7/api/jsonobject/remove/
   FORCE_INLINE void remove(iterator it) const {
-    impl_.remove(it.iterator_);
+    impl_.removeMember(it.iterator_);
   }
 
   // Removes the member with the specified key.
@@ -233,7 +233,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
     return impl_.getData();
   }
 
-  mutable detail::ObjectImpl impl_;
+  mutable detail::VariantImpl impl_;
 };
 
 ARDUINOJSON_END_PUBLIC_NAMESPACE

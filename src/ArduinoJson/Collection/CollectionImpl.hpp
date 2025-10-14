@@ -121,7 +121,7 @@ inline void CollectionImpl::removeOne(iterator it) {
   resources_->freeVariant({it.slot_, it.currentId_});
 }
 
-inline void CollectionImpl::removePair(ObjectImpl::iterator it) {
+inline void CollectionImpl::removePair(iterator it) {
   if (it.done())
     return;
 

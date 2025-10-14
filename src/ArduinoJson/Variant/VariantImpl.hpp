@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <ArduinoJson/Collection/CollectionData.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
-#include <ArduinoJson/Object/ObjectData.hpp>
 #include <ArduinoJson/Strings/JsonString.hpp>
 #include <ArduinoJson/Strings/StringAdapters.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>
@@ -103,6 +103,26 @@ class VariantImpl {
   }
 
   static VariantData* addElement(VariantData*, ResourceManager*);
+
+  template <typename TAdaptedString>
+  VariantData* addMember(TAdaptedString key) {
+    if (!isObject())
+      return nullptr;
+    return addMember(key, data_, resources_);
+  }
+
+  template <typename TAdaptedString>
+  static VariantData* addMember(TAdaptedString key, VariantData*,
+                                ResourceManager*);
+
+  VariantData* addPair(VariantData** value) {
+    if (isNull())
+      return nullptr;
+    return addPair(value, data_, resources_);
+  }
+
+  static VariantData* addPair(VariantData** value, VariantData*,
+                              ResourceManager*);
 
   template <typename T>
   bool addValue(const T& value) {
@@ -249,14 +269,6 @@ class VariantImpl {
     return parseNumber<T>(str);
   }
 
-  ObjectImpl asObject() {
-    return asObject(data_, resources_);
-  }
-
-  static ObjectImpl asObject(VariantData* data, ResourceManager* resources) {
-    return ObjectImpl(data, resources);
-  }
-
   iterator at(size_t index) const;
 
   iterator createIterator() const {
@@ -279,26 +291,26 @@ class VariantImpl {
   VariantData* getElement(size_t index) const;
 
   template <typename TAdaptedString>
-  VariantData* getMember(TAdaptedString key) {
-    return asObject().getMember(key);
+  VariantData* getMember(TAdaptedString key) const {
+    if (!isObject())
+      return nullptr;
+    return getMember(key, data_, resources_);
   }
 
   template <typename TAdaptedString>
+  static VariantData* getMember(TAdaptedString key, VariantData*,
+                                ResourceManager*);
+
+  template <typename TAdaptedString>
   VariantData* getOrAddMember(TAdaptedString key) {
+    if (!isObject())
+      return nullptr;
     return getOrAddMember(key, data_, resources_);
   }
 
   template <typename TAdaptedString>
-  static VariantData* getOrAddMember(TAdaptedString key, VariantData* data,
-                                     ResourceManager* resources) {
-    if (key.isNull())
-      return nullptr;
-    if (!data)
-      return nullptr;
-    auto obj = data->type == VariantType::Null ? toObject(data, resources)
-                                               : asObject(data, resources);
-    return obj.getOrAddMember(key);
-  }
+  static VariantData* getOrAddMember(TAdaptedString key, VariantData*,
+                                     ResourceManager*);
 
   bool isArray() const {
     return type() == VariantType::Array;
@@ -357,13 +369,17 @@ class VariantImpl {
 
   void removeElement(size_t index);
 
-  void remove(CollectionIterator it) {
+  void removeElement(CollectionIterator it) {
     asCollection().removeOne(it);
   }
 
   template <typename TAdaptedString>
   void removeMember(TAdaptedString key) {
-    asObject().removeMember(key);
+    asCollection().removePair(findKey(key));
+  }
+
+  void removeMember(CollectionIterator it) {
+    asCollection().removePair(it);
   }
 
   bool setBoolean(bool value) {
@@ -551,18 +567,12 @@ class VariantImpl {
     return true;
   }
 
-  ObjectImpl toObject() {
+  bool toObject() {
     if (!data_)
-      return ObjectImpl();
+      return false;
     clear(data_, resources_);
-    return toObject(data_, resources_);
-  }
-
-  static ObjectImpl toObject(VariantData* data, ResourceManager* resources) {
-    ARDUINOJSON_ASSERT(data != nullptr);
-    ARDUINOJSON_ASSERT(resources != nullptr);
-    data->toObject();
-    return ObjectImpl(data, resources);
+    data_->toObject();
+    return true;
   }
 
   VariantType type() const {
@@ -601,6 +611,16 @@ class VariantImpl {
  private:
   VariantData* data_;
   ResourceManager* resources_;
+
+  template <typename TAdaptedString>
+  iterator findKey(TAdaptedString key) const {
+    if (!isObject())
+      return iterator();
+    return findKey(key, data_, resources_);
+  }
+
+  template <typename TAdaptedString>
+  static iterator findKey(TAdaptedString key, VariantData*, ResourceManager*);
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

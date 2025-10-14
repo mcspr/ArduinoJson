@@ -132,7 +132,7 @@ class VariantRefBase : public VariantTag {
   // Removes an element of the array.
   // https://arduinojson.org/v7/api/jsonvariant/remove/
   void remove(size_t index) const {
-    getOrCreateArray().removeElement(index);
+    getVariantImpl().removeElement(index);
   }
 
   // Removes a member of the object.

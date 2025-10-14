@@ -26,7 +26,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
       : impl_(data, resources) {}
 
   // INTERNAL USE ONLY
-  JsonObjectConst(const detail::ObjectImpl& impl) : impl_(impl) {}
+  JsonObjectConst(const detail::VariantImpl& impl) : impl_(impl) {}
 
   operator JsonVariantConst() const {
     return JsonVariantConst(impl_.getData(), impl_.getResourceManager());
@@ -136,7 +136,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
     return impl_.getData();
   }
 
-  detail::ObjectImpl impl_;
+  detail::VariantImpl impl_;
 };
 
 inline bool operator==(JsonObjectConst lhs, JsonObjectConst rhs) {

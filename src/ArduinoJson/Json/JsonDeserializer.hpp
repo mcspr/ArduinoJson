@@ -278,9 +278,9 @@ class JsonDeserializer {
 
       if (memberFilter.allow()) {
         auto member =
-            ObjectImpl::getMember(adaptString(key), object, resources_);
+            VariantImpl::getMember(adaptString(key), object, resources_);
         if (!member) {
-          auto keyVariant = ObjectImpl::addPair(&member, object, resources_);
+          auto keyVariant = VariantImpl::addPair(&member, object, resources_);
           if (!keyVariant)
             return DeserializationError::NoMemory;
 
