@@ -44,7 +44,7 @@ inline VariantImpl::iterator VariantImpl::findKey(TAdaptedString key,
   if (key.isNull())
     return iterator();
   bool isKey = true;
-  for (auto it = CollectionImpl::createIterator(data, resources); !it.done();
+  for (auto it = createIterator(data, resources); !it.done();
        it.next(resources)) {
     if (isKey && stringEquals(key, adaptString(it->asString())))
       return it;
@@ -72,7 +72,7 @@ inline VariantData* VariantImpl::addMember(TAdaptedString key,
   if (!VariantImpl::setString(key, keySlot.ptr(), resources))
     return nullptr;
 
-  CollectionImpl::appendPair(keySlot, valueSlot, data, resources);
+  appendPair(keySlot, valueSlot, data, resources);
 
   return valueSlot.ptr();
 }
@@ -93,7 +93,7 @@ inline VariantData* VariantImpl::addPair(VariantData** value, VariantData* data,
     return nullptr;
   *value = valueSlot.ptr();
 
-  CollectionImpl::appendPair(keySlot, valueSlot, data, resources);
+  appendPair(keySlot, valueSlot, data, resources);
 
   return keySlot.ptr();
 }

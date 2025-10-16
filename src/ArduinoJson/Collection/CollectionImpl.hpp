@@ -19,7 +19,7 @@ inline void CollectionIterator::next(const ResourceManager* resources) {
   currentId_ = nextId;
 }
 
-inline CollectionImpl::iterator CollectionImpl::createIterator(
+inline VariantImpl::iterator VariantImpl::createIterator(
     VariantData* data, ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isCollection());
@@ -28,8 +28,8 @@ inline CollectionImpl::iterator CollectionImpl::createIterator(
   return iterator(resources->getVariant(head), head);
 }
 
-inline void CollectionImpl::appendOne(Slot<VariantData> slot, VariantData* data,
-                                      ResourceManager* resources) {
+inline void VariantImpl::appendOne(Slot<VariantData> slot, VariantData* data,
+                                   ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isCollection());
   ARDUINOJSON_ASSERT(resources != nullptr);
@@ -46,10 +46,9 @@ inline void CollectionImpl::appendOne(Slot<VariantData> slot, VariantData* data,
   }
 }
 
-inline void CollectionImpl::appendPair(Slot<VariantData> key,
-                                       Slot<VariantData> value,
-                                       VariantData* data,
-                                       ResourceManager* resources) {
+inline void VariantImpl::appendPair(Slot<VariantData> key,
+                                    Slot<VariantData> value, VariantData* data,
+                                    ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(resources != nullptr);
 
@@ -67,8 +66,7 @@ inline void CollectionImpl::appendPair(Slot<VariantData> key,
   }
 }
 
-inline void CollectionImpl::clear(VariantData* data,
-                                  ResourceManager* resources) {
+inline void VariantImpl::empty(VariantData* data, ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isCollection());
   ARDUINOJSON_ASSERT(resources != nullptr);
@@ -87,7 +85,7 @@ inline void CollectionImpl::clear(VariantData* data,
   coll->tail = NULL_SLOT;
 }
 
-inline Slot<VariantData> CollectionImpl::getPreviousSlot(
+inline Slot<VariantData> VariantImpl::getPreviousSlot(
     VariantData* target) const {
   ARDUINOJSON_ASSERT(data_ != nullptr);
   ARDUINOJSON_ASSERT(data_->isCollection());
@@ -105,7 +103,7 @@ inline Slot<VariantData> CollectionImpl::getPreviousSlot(
   return prev;
 }
 
-inline void CollectionImpl::removeOne(iterator it) {
+inline void VariantImpl::removeOne(iterator it) {
   if (it.done())
     return;
   auto curr = it.slot_;
@@ -121,7 +119,7 @@ inline void CollectionImpl::removeOne(iterator it) {
   resources_->freeVariant({it.slot_, it.currentId_});
 }
 
-inline void CollectionImpl::removePair(iterator it) {
+inline void VariantImpl::removePair(iterator it) {
   if (it.done())
     return;
 
@@ -138,7 +136,7 @@ inline void CollectionImpl::removePair(iterator it) {
   removeOne(it);
 }
 
-inline size_t CollectionImpl::nesting() const {
+inline size_t VariantImpl::nesting() const {
   if (!data_ || !data_->isCollection())
     return 0;
   size_t maxChildNesting = 0;
@@ -148,13 +146,6 @@ inline size_t CollectionImpl::nesting() const {
       maxChildNesting = childNesting;
   }
   return maxChildNesting + 1;
-}
-
-inline size_t CollectionImpl::size() const {
-  size_t count = 0;
-  for (auto it = createIterator(); !it.done(); it.next(resources_))
-    count++;
-  return count;
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

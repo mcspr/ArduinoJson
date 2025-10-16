@@ -30,7 +30,7 @@ inline VariantData* VariantImpl::addElement(VariantData* data,
   auto slot = resources->allocVariant();
   if (!slot)
     return nullptr;
-  CollectionImpl::appendOne(slot, data, resources);
+  appendOne(slot, data, resources);
   return slot.ptr();
 }
 
@@ -73,7 +73,7 @@ inline bool VariantImpl::addValue(const T& value, VariantData* data,
     resources->freeVariant(slot);
     return false;
   }
-  CollectionImpl::appendOne(slot, data, resources);
+  appendOne(slot, data, resources);
   return true;
 }
 

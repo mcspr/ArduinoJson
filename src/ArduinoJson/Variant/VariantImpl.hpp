@@ -169,10 +169,6 @@ class VariantImpl {
     }
   }
 
-  CollectionImpl asCollection() const {
-    return CollectionImpl(data_, resources_);
-  }
-
   template <typename T>
   T asFloat() const {
     return asFloat<T>(data_, resources_);
@@ -272,8 +268,12 @@ class VariantImpl {
   iterator at(size_t index) const;
 
   iterator createIterator() const {
-    return asCollection().createIterator();
+    if (!isCollection())
+      return iterator();
+    return createIterator(data_, resources_);
   }
+
+  static iterator createIterator(VariantData*, ResourceManager*);
 
 #if ARDUINOJSON_USE_8_BYTE_POOL
   static const EightByteValue* getEightByte(VariantData* data,
@@ -363,23 +363,21 @@ class VariantImpl {
     return type() == VariantType::Object;
   }
 
-  size_t nesting() const {
-    return asCollection().nesting();
-  }
+  size_t nesting() const;
 
   void removeElement(size_t index);
 
   void removeElement(CollectionIterator it) {
-    asCollection().removeOne(it);
+    removeOne(it);
   }
 
   template <typename TAdaptedString>
   void removeMember(TAdaptedString key) {
-    asCollection().removePair(findKey(key));
+    removePair(findKey(key));
   }
 
   void removeMember(CollectionIterator it) {
-    asCollection().removePair(it);
+    removePair(it);
   }
 
   bool setBoolean(bool value) {
@@ -539,7 +537,7 @@ class VariantImpl {
   }
 
   size_t size() const {
-    if (!data_)
+    if (!isCollection())
       return 0;
 
     return size(data_, resources_);
@@ -547,9 +545,13 @@ class VariantImpl {
 
   static size_t size(VariantData* data, ResourceManager* resources) {
     ARDUINOJSON_ASSERT(data != nullptr);
+    ARDUINOJSON_ASSERT(data->isCollection());
     ARDUINOJSON_ASSERT(resources != nullptr);
 
-    size_t n = CollectionImpl(data, resources).size();
+    size_t n = 0;
+    for (auto it = createIterator(data, resources); !it.done();
+         it.next(resources))
+      n++;
 
     if (data->type == VariantType::Object) {
       ARDUINOJSON_ASSERT((n % 2) == 0);
@@ -598,15 +600,18 @@ class VariantImpl {
 #endif
 
     if (data->type & VariantTypeBits::CollectionMask)
-      CollectionImpl::clear(data, resources);
+      empty(data, resources);
 
     data->type = VariantType::Null;
   }
 
   void empty() {
-    if (isCollection())
-      CollectionImpl::clear(data_, resources_);
+    if (!isCollection())
+      return;
+    empty(data_, resources_);
   }
+
+  static void empty(VariantData*, ResourceManager*);
 
  private:
   VariantData* data_;
@@ -621,6 +626,16 @@ class VariantImpl {
 
   template <typename TAdaptedString>
   static iterator findKey(TAdaptedString key, VariantData*, ResourceManager*);
+
+  static void appendOne(Slot<VariantData> slot, VariantData*, ResourceManager*);
+
+  static void appendPair(Slot<VariantData> key, Slot<VariantData> value,
+                         VariantData*, ResourceManager*);
+
+  void removeOne(iterator it);
+  void removePair(iterator it);
+
+  Slot<VariantData> getPreviousSlot(VariantData*) const;
 };
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE
