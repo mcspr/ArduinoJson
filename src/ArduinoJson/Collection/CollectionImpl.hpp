@@ -74,7 +74,7 @@ inline void VariantImpl::empty(VariantData* data, ResourceManager* resources) {
     auto currId = next;
     auto slot = resources->getVariant(next);
     next = slot->next;
-    resources->freeVariant({slot, currId});
+    freeVariant({slot, currId}, resources);
   }
 
   coll->head = NULL_SLOT;
@@ -112,7 +112,7 @@ inline void VariantImpl::removeOne(iterator it) {
     coll->head = next;
   if (next == NULL_SLOT)
     coll->tail = prev.id();
-  resources_->freeVariant({it.slot_, it.currentId_});
+  freeVariant({it.slot_, it.currentId_}, resources_);
 }
 
 inline void VariantImpl::removePair(iterator it) {
@@ -126,7 +126,7 @@ inline void VariantImpl::removePair(iterator it) {
 
   // remove value slot
   keySlot->next = valueSlot->next;
-  resources_->freeVariant({valueSlot, valueId});
+  freeVariant({valueSlot, valueId}, resources_);
 
   // remove key slot
   removeOne(it);

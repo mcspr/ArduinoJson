@@ -635,6 +635,11 @@ class VariantImpl {
   void removeOne(iterator it);
   void removePair(iterator it);
 
+  static void freeVariant(Slot<VariantData> slot, ResourceManager* resources) {
+    clear(slot.ptr(), resources);
+    resources->freeVariant(slot);
+  }
+
   Slot<VariantData> getPreviousSlot(VariantData*) const;
 };
 

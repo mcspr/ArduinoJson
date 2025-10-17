@@ -70,7 +70,7 @@ inline bool VariantImpl::addValue(const T& value, VariantData* data,
     return false;
   JsonVariant variant(slot.ptr(), resources);
   if (!variant.set(value)) {
-    resources->freeVariant(slot);
+    freeVariant(slot, resources);
     return false;
   }
   appendOne(slot, data, resources);
