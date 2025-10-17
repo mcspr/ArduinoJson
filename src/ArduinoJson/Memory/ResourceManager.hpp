@@ -54,14 +54,43 @@ class ResourceManager {
     return overflowed_;
   }
 
-  Slot<VariantData> allocVariant();
-  void freeVariant(Slot<VariantData> slot);
-  VariantData* getVariant(SlotId id) const;
+  Slot<VariantData> allocVariant() {
+    auto slot = variantPools_.allocSlot(allocator_);
+    if (!slot) {
+      overflowed_ = true;
+      return {};
+    }
+    new (slot.ptr()) VariantData();
+    return slot;
+  }
+
+  void freeVariant(Slot<VariantData> slot) {
+    ARDUINOJSON_ASSERT(slot->type == VariantType::Null);
+    variantPools_.freeSlot(slot);
+  }
+
+  VariantData* getVariant(SlotId id) const {
+    return reinterpret_cast<VariantData*>(variantPools_.getSlot(id));
+  }
 
 #if ARDUINOJSON_USE_8_BYTE_POOL
-  Slot<EightByteValue> allocEightByte();
-  void freeEightByte(SlotId slot);
-  EightByteValue* getEightByte(SlotId id) const;
+  Slot<EightByteValue> allocEightByte() {
+    auto slot = eightBytePools_.allocSlot(allocator_);
+    if (!slot) {
+      overflowed_ = true;
+      return {};
+    }
+    return slot;
+  }
+
+  void freeEightByte(SlotId id) {
+    auto p = getEightByte(id);
+    eightBytePools_.freeSlot({p, id});
+  }
+
+  EightByteValue* getEightByte(SlotId id) const {
+    return eightBytePools_.getSlot(id);
+  }
 #endif
 
   template <typename TAdaptedString>
