@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <ArduinoJson/Collection/CollectionData.hpp>
+#include <ArduinoJson/Collection/CollectionIterator.hpp>
 #include <ArduinoJson/Memory/ResourceManager.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>

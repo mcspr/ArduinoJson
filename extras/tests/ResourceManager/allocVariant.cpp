@@ -5,6 +5,8 @@
 #include <ArduinoJson.hpp>
 #include <catch.hpp>
 
+#include <ArduinoJson/Memory/Alignment.hpp>
+
 #include "Allocators.hpp"
 
 using namespace ArduinoJson::detail;

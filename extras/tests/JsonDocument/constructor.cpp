@@ -8,8 +8,6 @@
 #include "Allocators.hpp"
 #include "Literals.hpp"
 
-using ArduinoJson::detail::addPadding;
-
 TEST_CASE("JsonDocument constructor") {
   SpyingAllocator spyingAllocator;
 

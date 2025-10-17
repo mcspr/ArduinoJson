@@ -4,11 +4,7 @@
 
 #pragma once
 
-#include <ArduinoJson/Collection/CollectionData.hpp>
-#include <ArduinoJson/Memory/Alignment.hpp>
-#include <ArduinoJson/Strings/StringAdapters.hpp>
-#include <ArduinoJson/Variant/VariantCompare.hpp>
-#include <ArduinoJson/Variant/VariantData.hpp>
+#include <ArduinoJson/Variant/VariantImpl.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
