@@ -21,8 +21,8 @@ inline VariantImpl::iterator VariantImpl::at(size_t index) const {
   return it;
 }
 
-inline VariantData* VariantImpl::addElement(VariantData* data,
-                                            ResourceManager* resources) {
+inline VariantData* VariantImpl::addNewElement(VariantData* data,
+                                               ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isArray());
   ARDUINOJSON_ASSERT(resources != nullptr);
@@ -30,7 +30,7 @@ inline VariantData* VariantImpl::addElement(VariantData* data,
   auto slot = resources->allocVariant();
   if (!slot)
     return nullptr;
-  appendOne(slot, data, resources);
+  addElement(slot, data, resources);
   return slot.ptr();
 }
 
@@ -44,7 +44,7 @@ inline VariantData* VariantImpl::getOrAddElement(size_t index) {
     index++;
   VariantData* element = it.data();
   while (index > 0) {
-    element = addElement();
+    element = addNewElement();
     if (!element)
       return nullptr;
     index--;
@@ -58,23 +58,6 @@ inline VariantData* VariantImpl::getElement(size_t index) const {
 
 inline void VariantImpl::removeElement(size_t index) {
   removeElement(at(index));
-}
-
-template <typename T>
-inline bool VariantImpl::addValue(const T& value, VariantData* data,
-                                  ResourceManager* resources) {
-  ARDUINOJSON_ASSERT(data != nullptr);
-  ARDUINOJSON_ASSERT(resources != nullptr);
-  auto slot = resources->allocVariant();
-  if (!slot)
-    return false;
-  JsonVariant variant(slot.ptr(), resources);
-  if (!variant.set(value)) {
-    freeVariant(slot, resources);
-    return false;
-  }
-  appendOne(slot, data, resources);
-  return true;
 }
 
 // Returns the size (in bytes) of an array with n elements.

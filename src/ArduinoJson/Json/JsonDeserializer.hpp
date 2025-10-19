@@ -174,7 +174,7 @@ class JsonDeserializer {
     for (;;) {
       if (elementFilter.allow()) {
         // Allocate slot in array
-        VariantData* value = VariantImpl::addElement(array, resources_);
+        VariantData* value = VariantImpl::addNewElement(array, resources_);
         if (!value)
           return DeserializationError::NoMemory;
 

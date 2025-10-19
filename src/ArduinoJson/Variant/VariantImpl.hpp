@@ -96,13 +96,16 @@ class VariantImpl {
     }
   }
 
-  VariantData* addElement() {
+  VariantData* addNewElement() {
     if (!isArray())
       return nullptr;
-    return addElement(data_, resources_);
+    return addNewElement(data_, resources_);
   }
 
-  static VariantData* addElement(VariantData*, ResourceManager*);
+  static VariantData* addNewElement(VariantData*, ResourceManager*);
+
+  static void addElement(Slot<VariantData> slot, VariantData*,
+                         ResourceManager*);
 
   template <typename TAdaptedString>
   VariantData* addMember(TAdaptedString key) {
@@ -123,16 +126,6 @@ class VariantImpl {
 
   static VariantData* addPair(VariantData** value, VariantData*,
                               ResourceManager*);
-
-  template <typename T>
-  bool addValue(const T& value) {
-    if (!isArray())
-      return false;
-    return addValue(value, data_, resources_);
-  }
-
-  template <typename T>
-  static bool addValue(const T& value, VariantData*, ResourceManager*);
 
   bool asBoolean() const {
     return asBoolean(data_, resources_);
@@ -613,6 +606,11 @@ class VariantImpl {
 
   static void empty(VariantData*, ResourceManager*);
 
+  static void freeVariant(Slot<VariantData> slot, ResourceManager* resources) {
+    clear(slot.ptr(), resources);
+    resources->freeVariant(slot);
+  }
+
  private:
   VariantData* data_;
   ResourceManager* resources_;
@@ -627,18 +625,11 @@ class VariantImpl {
   template <typename TAdaptedString>
   static iterator findKey(TAdaptedString key, VariantData*, ResourceManager*);
 
-  static void appendOne(Slot<VariantData> slot, VariantData*, ResourceManager*);
-
   static void appendPair(Slot<VariantData> key, Slot<VariantData> value,
                          VariantData*, ResourceManager*);
 
   void removeOne(iterator it);
   void removePair(iterator it);
-
-  static void freeVariant(Slot<VariantData> slot, ResourceManager* resources) {
-    clear(slot.ptr(), resources);
-    resources->freeVariant(slot);
-  }
 
   Slot<VariantData> getPreviousSlot(VariantData*) const;
 };

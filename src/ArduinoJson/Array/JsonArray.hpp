@@ -56,14 +56,16 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T, detail::enable_if_t<
                             detail::is_same<T, JsonVariant>::value, int> = 0>
   JsonVariant add() const {
-    return JsonVariant(impl_.addElement(), impl_.getResourceManager());
+    return JsonVariant(impl_.addNewElement(), impl_.getResourceManager());
   }
 
   // Appends a value to the array.
   // https://arduinojson.org/v7/api/jsonarray/add/
   template <typename T>
   bool add(const T& value) const {
-    return impl_.addValue(value);
+    if (!impl_.isArray())
+      return false;
+    return addValue(value, impl_.getData(), impl_.getResourceManager());
   }
 
   // Appends a value to the array.
@@ -71,7 +73,9 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T,
             detail::enable_if_t<!detail::is_const<T>::value, int> = 0>
   bool add(T* value) const {
-    return impl_.addValue(value);
+    if (!impl_.isArray())
+      return false;
+    return addValue(value, impl_.getData(), impl_.getResourceManager());
   }
 
   // Returns an iterator to the first element of the array.
@@ -205,6 +209,28 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
 
   detail::VariantData* getOrCreateData() const {
     return impl_.getData();
+  }
+
+  // HACK: this function has been pulled out of VariantImpl to avoid the
+  // circular dependency between VariantImpl and JsonVariant
+  template <typename T>
+  static bool addValue(const T& value, detail::VariantData* data,
+                       detail::ResourceManager* resources) {
+    ARDUINOJSON_ASSERT(data != nullptr);
+    ARDUINOJSON_ASSERT(data->isArray());
+    ARDUINOJSON_ASSERT(resources != nullptr);
+
+    auto slot = resources->allocVariant();
+    if (!slot)
+      return false;
+
+    if (!JsonVariant(slot.ptr(), resources).set(value)) {
+      detail::VariantImpl::freeVariant(slot, resources);
+      return false;
+    }
+
+    detail::VariantImpl::addElement(slot, data, resources);
+    return true;
   }
 
   mutable detail::VariantImpl impl_;

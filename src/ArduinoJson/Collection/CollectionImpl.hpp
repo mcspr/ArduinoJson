@@ -24,8 +24,8 @@ inline VariantImpl::iterator VariantImpl::createIterator(
   return iterator(resources->getVariant(head), head);
 }
 
-inline void VariantImpl::appendOne(Slot<VariantData> slot, VariantData* data,
-                                   ResourceManager* resources) {
+inline void VariantImpl::addElement(Slot<VariantData> slot, VariantData* data,
+                                    ResourceManager* resources) {
   ARDUINOJSON_ASSERT(data != nullptr);
   ARDUINOJSON_ASSERT(data->isCollection());
   ARDUINOJSON_ASSERT(resources != nullptr);
