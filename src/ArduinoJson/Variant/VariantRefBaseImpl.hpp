@@ -61,9 +61,9 @@ inline JsonObject VariantRefBase<TDerived>::createNestedObject(
 }
 
 template <typename TDerived>
-inline void convertToJson(const VariantRefBase<TDerived>& src,
+inline bool convertToJson(const VariantRefBase<TDerived>& src,
                           JsonVariant dst) {
-  dst.set(src.template as<JsonVariantConst>());
+  return dst.set(src.template as<JsonVariantConst>());
 }
 
 template <typename TDerived>

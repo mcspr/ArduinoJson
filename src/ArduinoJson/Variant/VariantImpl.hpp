@@ -515,7 +515,7 @@ class VariantImpl {
     ARDUINOJSON_ASSERT(resources != nullptr);
 
     if (value.isNull())
-      return false;
+      return true;  // TODO: should this be moved up to the member function?
 
     if (isTinyString(value, value.size())) {
       data->setTinyString(value);
@@ -577,9 +577,11 @@ class VariantImpl {
   }
 
   // Release the resources used by this variant and set it to null.
-  void clear() {
-    if (data_)
-      clear(data_, resources_);
+  bool clear() {
+    if (!data_)
+      return false;
+    clear(data_, resources_);
+    return true;
   }
 
   static void clear(VariantData* data, ResourceManager* resources) {

@@ -25,9 +25,10 @@ struct Converter {
                 "type 'char' is not supported, use 'signed char', 'unsigned "
                 "char' or another integer type instead");
 
-  static void toJson(const T& src, JsonVariant dst) {
+  static auto toJson(const T& src, JsonVariant dst)
+      -> decltype(convertToJson(src, dst)) {
     // clang-format off
-    convertToJson(src, dst); // Error here? See https://arduinojson.org/v7/unsupported-set/
+    return convertToJson(src, dst); // Error here? See https://arduinojson.org/v7/unsupported-set/
     // clang-format on
   }
 
@@ -124,8 +125,8 @@ struct Converter<T, detail::enable_if_t<detail::is_floating_point<T>::value>>
 
 template <>
 struct Converter<const char*> : private detail::VariantAttorney {
-  static void toJson(const char* src, JsonVariant dst) {
-    getVariantImpl(dst).setString(detail::adaptString(src));
+  static bool toJson(const char* src, JsonVariant dst) {
+    return getVariantImpl(dst).setString(detail::adaptString(src));
   }
 
   static const char* fromJson(JsonVariantConst src) {
@@ -176,8 +177,8 @@ struct Converter<SerializedValue<T>> : private detail::VariantAttorney {
 
 template <>
 struct Converter<detail::nullptr_t> : private detail::VariantAttorney {
-  static void toJson(detail::nullptr_t, JsonVariant dst) {
-    getVariantImpl(dst).clear();
+  static bool toJson(detail::nullptr_t, JsonVariant dst) {
+    return getVariantImpl(dst).clear();
   }
   static detail::nullptr_t fromJson(JsonVariantConst) {
     return nullptr;
@@ -225,17 +226,18 @@ class StringBuilderPrint : public Print {
 };
 }  // namespace detail
 
-inline void convertToJson(const ::Printable& src, JsonVariant dst) {
+inline bool convertToJson(const ::Printable& src, JsonVariant dst) {
   auto resources = detail::VariantAttorney::getResourceManager(dst);
   auto data = detail::VariantAttorney::getData(dst);
   if (!resources || !data)
-    return;
+    return false;
   detail::VariantImpl::clear(data, resources);
   detail::StringBuilderPrint print(resources);
   src.printTo(print);
   if (print.overflowed())
-    return;
+    return false;
   print.save(data);
+  return true;
 }
 
 #endif
@@ -288,11 +290,11 @@ inline bool canConvertFromJson(JsonVariantConst src, const std::string_view&) {
 
 template <>
 struct Converter<JsonArrayConst> : private detail::VariantAttorney {
-  static void toJson(JsonArrayConst src, JsonVariant dst) {
+  static bool toJson(JsonArrayConst src, JsonVariant dst) {
     if (src.isNull())
-      dst.set(nullptr);
+      return dst.set(nullptr);
     else
-      dst.to<JsonArray>().set(src);
+      return dst.to<JsonArray>().set(src);
   }
 
   static JsonArrayConst fromJson(JsonVariantConst src) {
@@ -307,11 +309,11 @@ struct Converter<JsonArrayConst> : private detail::VariantAttorney {
 
 template <>
 struct Converter<JsonArray> : private detail::VariantAttorney {
-  static void toJson(JsonVariantConst src, JsonVariant dst) {
+  static bool toJson(JsonVariantConst src, JsonVariant dst) {
     if (src.isNull())
-      dst.set(nullptr);
+      return dst.set(nullptr);
     else
-      dst.to<JsonArray>().set(src);
+      return dst.to<JsonArray>().set(src);
   }
 
   static JsonArray fromJson(JsonVariant src) {
@@ -326,11 +328,11 @@ struct Converter<JsonArray> : private detail::VariantAttorney {
 
 template <>
 struct Converter<JsonObjectConst> : private detail::VariantAttorney {
-  static void toJson(JsonVariantConst src, JsonVariant dst) {
+  static bool toJson(JsonVariantConst src, JsonVariant dst) {
     if (src.isNull())
-      dst.set(nullptr);
+      return dst.set(nullptr);
     else
-      dst.to<JsonObject>().set(src);
+      return dst.to<JsonObject>().set(src);
   }
 
   static JsonObjectConst fromJson(JsonVariantConst src) {
@@ -345,11 +347,11 @@ struct Converter<JsonObjectConst> : private detail::VariantAttorney {
 
 template <>
 struct Converter<JsonObject> : private detail::VariantAttorney {
-  static void toJson(JsonVariantConst src, JsonVariant dst) {
+  static bool toJson(JsonVariantConst src, JsonVariant dst) {
     if (src.isNull())
-      dst.set(nullptr);
+      return dst.set(nullptr);
     else
-      dst.to<JsonObject>().set(src);
+      return dst.to<JsonObject>().set(src);
   }
 
   static JsonObject fromJson(JsonVariant src) {

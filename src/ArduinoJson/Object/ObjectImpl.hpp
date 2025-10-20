@@ -61,6 +61,9 @@ inline VariantData* VariantImpl::addMember(TAdaptedString key,
   ARDUINOJSON_ASSERT(data->isObject());
   ARDUINOJSON_ASSERT(resources != nullptr);
 
+  if (key.isNull())
+    return nullptr;  // Ignore null key
+
   auto keySlot = resources->allocVariant();
   if (!keySlot)
     return nullptr;
