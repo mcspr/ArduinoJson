@@ -27,7 +27,7 @@ class JsonVariant : public detail::VariantRefBase<JsonVariant>,
 
  private:
   detail::ResourceManager* getResourceManager() const {
-    return impl_.getResourceManager();
+    return impl_.resources();
   }
 
   detail::VariantData* getData() const {

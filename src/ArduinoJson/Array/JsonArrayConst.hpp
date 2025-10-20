@@ -24,7 +24,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarrayconst/begin/
   iterator begin() const {
-    return iterator(impl_.createIterator(), impl_.getResourceManager());
+    return iterator(impl_.createIterator(), impl_.resources());
   }
 
   // Returns an iterator to the element following the last element of the array.
@@ -48,8 +48,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   template <typename T,
             detail::enable_if_t<detail::is_integral<T>::value, int> = 0>
   JsonVariantConst operator[](T index) const {
-    return JsonVariantConst(impl_.getElement(size_t(index)),
-                            impl_.getResourceManager());
+    return JsonVariantConst(impl_.getElement(size_t(index)), impl_.resources());
   }
 
   // Returns the element at the specified index.
@@ -64,7 +63,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(impl_.data(), impl_.getResourceManager());
+    return JsonVariantConst(impl_.data(), impl_.resources());
   }
 
   // Returns true if the reference is unbound.

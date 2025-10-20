@@ -29,7 +29,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   JsonObjectConst(const detail::VariantImpl& impl) : impl_(impl) {}
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(impl_.data(), impl_.getResourceManager());
+    return JsonVariantConst(impl_.data(), impl_.resources());
   }
 
   // Returns true if the reference is unbound.
@@ -59,7 +59,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
   // Returns an iterator to the first key-value pair of the object.
   // https://arduinojson.org/v7/api/jsonobjectconst/begin/
   iterator begin() const {
-    return iterator(impl_.createIterator(), impl_.getResourceManager());
+    return iterator(impl_.createIterator(), impl_.resources());
   }
 
   // Returns an iterator following the last key-value pair of the object.
@@ -100,7 +100,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
             detail::enable_if_t<detail::IsString<TString>::value, int> = 0>
   JsonVariantConst operator[](const TString& key) const {
     return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
-                            impl_.getResourceManager());
+                            impl_.resources());
   }
 
   // Gets the member with specified key.
@@ -111,7 +111,7 @@ class JsonObjectConst : public detail::VariantOperators<JsonObjectConst> {
                                 int> = 0>
   JsonVariantConst operator[](TChar* key) const {
     return JsonVariantConst(impl_.getMember(detail::adaptString(key)),
-                            impl_.getResourceManager());
+                            impl_.resources());
   }
 
   // Gets the member with specified key.

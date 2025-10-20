@@ -56,7 +56,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   template <typename T, detail::enable_if_t<
                             detail::is_same<T, JsonVariant>::value, int> = 0>
   JsonVariant add() const {
-    return JsonVariant(impl_.addNewElement(), impl_.getResourceManager());
+    return JsonVariant(impl_.addNewElement(), impl_.resources());
   }
 
   // Appends a value to the array.
@@ -65,7 +65,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   bool add(const T& value) const {
     if (!impl_.isArray())
       return false;
-    return addValue(value, impl_.data(), impl_.getResourceManager());
+    return addValue(value, impl_.data(), impl_.resources());
   }
 
   // Appends a value to the array.
@@ -75,13 +75,13 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   bool add(T* value) const {
     if (!impl_.isArray())
       return false;
-    return addValue(value, impl_.data(), impl_.getResourceManager());
+    return addValue(value, impl_.data(), impl_.resources());
   }
 
   // Returns an iterator to the first element of the array.
   // https://arduinojson.org/v7/api/jsonarray/begin/
   iterator begin() const {
-    return iterator(impl_.createIterator(), impl_.getResourceManager());
+    return iterator(impl_.createIterator(), impl_.resources());
   }
 
   // Returns an iterator following the last element of the array.
@@ -200,7 +200,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
 
  private:
   detail::ResourceManager* getResourceManager() const {
-    return impl_.getResourceManager();
+    return impl_.resources();
   }
 
   detail::VariantData* getData() const {
