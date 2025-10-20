@@ -25,7 +25,7 @@ class VariantImpl {
   VariantImpl(VariantData* data, ResourceManager* resources)
       : data_(data), resources_(resources) {}
 
-  VariantData* getData() const {
+  VariantData* data() const {
     return data_;
   }
 

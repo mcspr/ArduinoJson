@@ -64,7 +64,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
   }
 
   operator JsonVariantConst() const {
-    return JsonVariantConst(impl_.getData(), impl_.getResourceManager());
+    return JsonVariantConst(impl_.data(), impl_.getResourceManager());
   }
 
   // Returns true if the reference is unbound.
@@ -99,7 +99,7 @@ class JsonArrayConst : public detail::VariantOperators<JsonArrayConst> {
 
  private:
   const detail::VariantData* getData() const {
-    return impl_.getData();
+    return impl_.data();
   }
 
   detail::VariantImpl impl_;

@@ -65,7 +65,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   bool add(const T& value) const {
     if (!impl_.isArray())
       return false;
-    return addValue(value, impl_.getData(), impl_.getResourceManager());
+    return addValue(value, impl_.data(), impl_.getResourceManager());
   }
 
   // Appends a value to the array.
@@ -75,7 +75,7 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   bool add(T* value) const {
     if (!impl_.isArray())
       return false;
-    return addValue(value, impl_.getData(), impl_.getResourceManager());
+    return addValue(value, impl_.data(), impl_.getResourceManager());
   }
 
   // Returns an iterator to the first element of the array.
@@ -204,11 +204,11 @@ class JsonArray : public detail::VariantOperators<JsonArray> {
   }
 
   detail::VariantData* getData() const {
-    return impl_.getData();
+    return impl_.data();
   }
 
   detail::VariantData* getOrCreateData() const {
-    return impl_.getData();
+    return impl_.data();
   }
 
   // HACK: this function has been pulled out of VariantImpl to avoid the

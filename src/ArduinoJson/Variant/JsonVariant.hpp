@@ -31,11 +31,11 @@ class JsonVariant : public detail::VariantRefBase<JsonVariant>,
   }
 
   detail::VariantData* getData() const {
-    return impl_.getData();
+    return impl_.data();
   }
 
   detail::VariantData* getOrCreateData() const {
-    return impl_.getData();
+    return impl_.data();
   }
 
   mutable detail::VariantImpl impl_;
