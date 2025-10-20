@@ -168,8 +168,8 @@ inline detail::enable_if_t<detail::IsString<T>::value, bool> convertToJson(
 // SerializedValue<const __FlashStringHelper*>
 template <typename T>
 struct Converter<SerializedValue<T>> : private detail::VariantAttorney {
-  static void toJson(SerializedValue<T> src, JsonVariant dst) {
-    getVariantImpl(dst).setRawString(
+  static bool toJson(SerializedValue<T> src, JsonVariant dst) {
+    return getVariantImpl(dst).setRawString(
         detail::adaptString(src.data(), src.size()));
   }
 };

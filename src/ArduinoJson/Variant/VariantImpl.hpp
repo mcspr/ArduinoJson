@@ -488,13 +488,15 @@ class VariantImpl {
   }
 
   template <typename TAdaptedString>
-  void setRawString(TAdaptedString value) {
+  bool setRawString(TAdaptedString value) {
     if (!data_)
-      return;
+      return false;
     clear(data_, resources_);
     auto dup = resources_->saveString(adaptString(value.data(), value.size()));
-    if (dup)
-      data_->setRawString(dup);
+    if (!dup)
+      return false;
+    data_->setRawString(dup);
+    return true;
   }
 
   template <typename TAdaptedString>
