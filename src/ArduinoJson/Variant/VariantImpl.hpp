@@ -487,8 +487,8 @@ class VariantImpl {
     return true;
   }
 
-  template <typename T>
-  void setRawString(SerializedValue<T> value) {
+  template <typename TAdaptedString>
+  void setRawString(TAdaptedString value) {
     if (!data_)
       return;
     clear(data_, resources_);
