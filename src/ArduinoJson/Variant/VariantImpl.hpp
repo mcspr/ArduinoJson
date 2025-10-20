@@ -543,7 +543,7 @@ class VariantImpl {
 
     size_t n = 0;
     for (auto it = createIterator(data, resources); !it.done();
-         it.next(resources))
+         it.move(resources))
       n++;
 
     if (data->type == VariantType::Object) {

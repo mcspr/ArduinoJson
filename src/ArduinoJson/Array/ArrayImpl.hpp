@@ -15,7 +15,7 @@ inline VariantImpl::iterator VariantImpl::at(size_t index) const {
 
   auto it = createIterator();
   while (!it.done() && index) {
-    it.next(resources_);
+    it.move(resources_);
     --index;
   }
   return it;
@@ -37,7 +37,7 @@ inline VariantData* VariantImpl::addNewElement(VariantData* data,
 inline VariantData* VariantImpl::getOrAddElement(size_t index) {
   auto it = createIterator();
   while (!it.done() && index > 0) {
-    it.next(resources_);
+    it.move(resources_);
     index--;
   }
   if (it.done())

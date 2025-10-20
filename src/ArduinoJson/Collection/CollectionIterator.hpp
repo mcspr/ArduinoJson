@@ -20,7 +20,7 @@ class CollectionIterator {
  public:
   CollectionIterator() : slot_(nullptr), currentId_(NULL_SLOT) {}
 
-  void next(const ResourceManager* resources);
+  void move(const ResourceManager* resources);
 
   bool done() const {
     return slot_ == nullptr;

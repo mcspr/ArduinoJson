@@ -16,7 +16,7 @@ inline VariantData* VariantImpl::getMember(TAdaptedString key,
   auto it = findKey(key, data, resources);
   if (it.done())
     return nullptr;
-  it.next(resources);
+  it.move(resources);
   return it.data();
 }
 
@@ -45,7 +45,7 @@ inline VariantImpl::iterator VariantImpl::findKey(TAdaptedString key,
     return iterator();
   bool isKey = true;
   for (auto it = createIterator(data, resources); !it.done();
-       it.next(resources)) {
+       it.move(resources)) {
     if (isKey && stringEquals(key, adaptString(it->asString())))
       return it;
     isKey = !isKey;

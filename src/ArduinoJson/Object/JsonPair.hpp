@@ -19,7 +19,7 @@ class JsonPair {
            detail::ResourceManager* resources) {
     if (!iterator.done()) {
       key_ = iterator->asString();
-      iterator.next(resources);
+      iterator.move(resources);
       value_ = JsonVariant(iterator.data(), resources);
     }
   }
@@ -47,7 +47,7 @@ class JsonPairConst {
                 detail::ResourceManager* resources) {
     if (!iterator.done()) {
       key_ = iterator->asString();
-      iterator.next(resources);
+      iterator.move(resources);
       value_ = JsonVariantConst(iterator.data(), resources);
     }
   }
