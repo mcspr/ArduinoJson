@@ -398,7 +398,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Particle CLI
-        run: sudo npm install -g particle-cli
+        run: |
+          bash <( curl -sL https://particle.io/install-cli )
+          echo "$HOME/bin" >> $GITHUB_PATH
       - name: Login to Particle
         run: particle login -t "${{ secrets.PARTICLE_TOKEN }}"
       - name: Compile
