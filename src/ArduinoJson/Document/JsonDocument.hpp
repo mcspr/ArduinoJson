@@ -145,8 +145,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
 
   // Replaces the root with the specified value.
   // https://arduinojson.org/v7/api/jsondocument/set/
-  template <typename TChar,
-            detail::enable_if_t<!detail::is_const<TChar>::value, int> = 0>
+  template <typename TChar>
   bool set(TChar* src) {
     return to<JsonVariant>().set(src);
   }
@@ -218,9 +217,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   // Gets or sets a root object's member.
   // https://arduinojson.org/v7/api/jsondocument/subscript/
   template <typename TChar,
-            detail::enable_if_t<detail::IsString<TChar*>::value &&
-                                    !detail::is_const<TChar>::value,
-                                int> = 0>
+            detail::enable_if_t<detail::IsString<TChar*>::value, int> = 0>
   detail::MemberProxy<JsonDocument&, detail::AdaptedString<TChar*>> operator[](
       TChar* key) {
     return {*this, detail::adaptString(key)};
@@ -238,9 +235,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   // Gets a root object's member.
   // https://arduinojson.org/v7/api/jsondocument/subscript/
   template <typename TChar,
-            detail::enable_if_t<detail::IsString<TChar*>::value &&
-                                    !detail::is_const<TChar>::value,
-                                int> = 0>
+            detail::enable_if_t<detail::IsString<TChar*>::value, int> = 0>
   JsonVariantConst operator[](TChar* key) const {
     return JsonVariantConst(
         getVariantImpl().getMember(detail::adaptString(key)), &resources_);
@@ -299,8 +294,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
 
   // Appends a value to the root array.
   // https://arduinojson.org/v7/api/jsondocument/add/
-  template <typename TChar,
-            detail::enable_if_t<!detail::is_const<TChar>::value, int> = 0>
+  template <typename TChar>
   bool add(TChar* value) {
     return getOrCreateArray().add(value);
   }
@@ -316,9 +310,7 @@ class JsonDocument : public detail::VariantOperators<const JsonDocument&> {
   // Removes a member of the root object.
   // https://arduinojson.org/v7/api/jsondocument/remove/
   template <typename TChar,
-            detail::enable_if_t<detail::IsString<TChar*>::value &&
-                                    !detail::is_const<TChar>::value,
-                                int> = 0>
+            detail::enable_if_t<detail::IsString<TChar*>::value, int> = 0>
   void remove(TChar* key) {
     getVariantImpl().removeMember(detail::adaptString(key));
   }

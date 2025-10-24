@@ -14,7 +14,7 @@ TEST_CASE("JsonDocument::operator[]") {
 
   SECTION("object") {
     doc["abc"_s] = "ABC";
-    doc["abc\0d"_s] = "ABCD";
+    doc["abcd"_s] = "ABCD";
 
     SECTION("const char*") {
       const char* key = "abc";
@@ -25,20 +25,20 @@ TEST_CASE("JsonDocument::operator[]") {
     SECTION("string literal") {
       REQUIRE(doc["abc"] == "ABC");
       REQUIRE(cdoc["abc"] == "ABC");
-      REQUIRE(doc["abc\0d"] == "ABCD");
-      REQUIRE(cdoc["abc\0d"] == "ABCD");
+      REQUIRE(doc["abcd"] == "ABCD");
+      REQUIRE(cdoc["abcd"] == "ABCD");
     }
 
     SECTION("std::string") {
       REQUIRE(doc["abc"_s] == "ABC");
       REQUIRE(cdoc["abc"_s] == "ABC");
-      REQUIRE(doc["abc\0d"_s] == "ABCD");
-      REQUIRE(cdoc["abc\0d"_s] == "ABCD");
+      REQUIRE(doc["abcd"_s] == "ABCD");
+      REQUIRE(cdoc["abcd"_s] == "ABCD");
     }
 
     SECTION("JsonVariant") {
       doc["key1"] = "abc";
-      doc["key2"] = "abc\0d"_s;
+      doc["key2"] = "abcd"_s;
       doc["key3"] = "foo";
 
       CHECK(doc[doc["key1"]] == "ABC");

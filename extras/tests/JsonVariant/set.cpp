@@ -18,10 +18,10 @@ TEST_CASE("JsonVariant::set() when there is enough memory") {
   JsonVariant variant = doc.to<JsonVariant>();
 
   SECTION("string literal") {
-    bool result = variant.set("hello\0world");
+    bool result = variant.set("hello world");
 
     REQUIRE(result == true);
-    REQUIRE(variant == "hello\0world"_s);  // stores by copy
+    REQUIRE(variant == "hello world"_s);  // stores by copy
     REQUIRE(spy.log() == AllocatorLog{
                              Allocate(sizeofString(11)),
                          });

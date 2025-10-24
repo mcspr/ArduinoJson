@@ -11,6 +11,8 @@ HEAD
 
 > ### BREAKING CHANGES
 >
+> #### `JsonString` constructor's boolean parameter
+>
 > Since version 7.3, you could pass a boolean to `JsonString`'s constructor to force the string to be stored by pointer.
 > This optimization has been removed, and you'll get a deprecation warning if you use it.
 > To fix the issue, you must remove the boolean argument from the constructor, or better yet, remove `JsonString` altogether.
@@ -19,6 +21,18 @@ HEAD
 >   char name[] = "ArduinoJson";
 > - doc["name"] = JsonString(name, true);
 > + doc["name"] = name;
+> ```
+>
+> #### NUL characters in string literals
+> 
+> Since version 7.3, ArduinoJson has supported NUL characters (`\0`) in string literals.
+> This feature has been removed as part of the storage policy change.
+>
+> If you do need to include NULs in your string, you must use a `JsonString` instead:
+>
+> ```diff
+> - doc["strings"] = "hello\0world"
+> + doc["strings"] = JsonString("hello\0world", 11)
 > ```
 
 v7.4.2 (2025-06-20)

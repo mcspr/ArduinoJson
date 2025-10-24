@@ -110,9 +110,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // Gets or sets the member with specified key.
   // https://arduinojson.org/v7/api/jsonobject/subscript/
   template <typename TChar,
-            detail::enable_if_t<detail::IsString<TChar*>::value &&
-                                    !detail::is_const<TChar>::value,
-                                int> = 0>
+            detail::enable_if_t<detail::IsString<TChar*>::value, int> = 0>
   detail::MemberProxy<JsonObject, detail::AdaptedString<TChar*>> operator[](
       TChar* key) const {
     return {*this, detail::adaptString(key)};
@@ -169,9 +167,7 @@ class JsonObject : public detail::VariantOperators<JsonObject> {
   // DEPRECATED: use obj["key"].is<T>() instead
   // https://arduinojson.org/v7/api/jsonobject/containskey/
   template <typename TChar,
-            detail::enable_if_t<detail::IsString<TChar*>::value &&
-                                    !detail::is_const<TChar>::value,
-                                int> = 0>
+            detail::enable_if_t<detail::IsString<TChar*>::value, int> = 0>
   ARDUINOJSON_DEPRECATED("use obj[\"key\"].is<T>() instead")
   bool containsKey(TChar* key) const {
     return impl_.getMember(detail::adaptString(key)) != 0;
