@@ -7,6 +7,7 @@
 #include <ArduinoJson/Configuration.hpp>
 #include <ArduinoJson/Numbers/FloatTraits.hpp>
 #include <ArduinoJson/Numbers/JsonFloat.hpp>
+#include <ArduinoJson/Polyfills/assert.hpp>
 #include <ArduinoJson/Polyfills/math.hpp>
 
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
@@ -23,6 +24,9 @@ constexpr uint32_t pow10(int exponent) {
 }
 
 inline FloatParts decomposeFloat(JsonFloat value, int8_t decimalPlaces) {
+  ARDUINOJSON_ASSERT(value >= 0);
+  ARDUINOJSON_ASSERT(decimalPlaces >= 0);
+
   using traits = FloatTraits<JsonFloat>;
 
   uint32_t maxDecimalPart = pow10(decimalPlaces);

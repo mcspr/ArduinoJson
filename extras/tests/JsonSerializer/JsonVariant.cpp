@@ -50,12 +50,19 @@ TEST_CASE("serializeJson(JsonVariant)") {
   }
 
   SECTION("double") {
+    CHECK(serialize(0.0) == "0");
     CHECK(serialize(3.1415927) == "3.1415927");
+    CHECK(serialize(-3.1415927) == "-3.1415927");
+    CHECK(serialize(1.7976931348623157E+308) == "1.797693135e308");
+    CHECK(serialize(4.94065645841247e-324) == "4.940656458e-324");
   }
 
   SECTION("float") {
     REQUIRE(sizeof(float) == 4);
     CHECK(serialize(3.1415927f) == "3.141593");
+    CHECK(serialize(-3.1415927f) == "-3.141593");
+    CHECK(serialize(3.4E+38f) == "3.4e38");
+    CHECK(serialize(1.17549435e-38f) == "1.175494e-38");
   }
 
   SECTION("int") {
