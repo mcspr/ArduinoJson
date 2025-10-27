@@ -29,6 +29,8 @@ struct FloatTraits<T, 8 /*64bits*/> {
   using exponent_type = int16_t;
   static const exponent_type exponent_max = 308;
 
+  static const int8_t binaryPowersOfTenArraySize = 9;
+
   static pgm_ptr<T> positiveBinaryPowersOfTen() {
     ARDUINOJSON_DEFINE_PROGMEM_ARRAY(  //
         uint64_t, factors,
@@ -112,6 +114,8 @@ struct FloatTraits<T, 4 /*32bits*/> {
 
   using exponent_type = int8_t;
   static const exponent_type exponent_max = 38;
+
+  static const int8_t binaryPowersOfTenArraySize = 6;
 
   static pgm_ptr<T> positiveBinaryPowersOfTen() {
     ARDUINOJSON_DEFINE_PROGMEM_ARRAY(uint32_t, factors,

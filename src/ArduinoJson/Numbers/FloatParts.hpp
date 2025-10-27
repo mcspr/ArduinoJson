@@ -18,19 +18,24 @@ struct FloatParts {
   int8_t decimalPlaces;
 };
 
-template <typename TFloat>
-inline int16_t normalize(TFloat& value) {
-  using traits = FloatTraits<TFloat>;
-  int16_t powersOf10 = 0;
+constexpr uint32_t pow10(int exponent) {
+  return (exponent == 0) ? 1 : 10 * pow10(exponent - 1);
+}
 
-  int8_t index = sizeof(TFloat) == 8 ? 8 : 5;
+inline FloatParts decomposeFloat(JsonFloat value, int8_t decimalPlaces) {
+  using traits = FloatTraits<JsonFloat>;
+
+  uint32_t maxDecimalPart = pow10(decimalPlaces);
+
+  int16_t exponent = 0;
+  int8_t index = traits::binaryPowersOfTenArraySize - 1;
   int bit = 1 << index;
 
   if (value >= ARDUINOJSON_POSITIVE_EXPONENTIATION_THRESHOLD) {
     for (; index >= 0; index--) {
       if (value >= traits::positiveBinaryPowersOfTen()[index]) {
         value *= traits::negativeBinaryPowersOfTen()[index];
-        powersOf10 = int16_t(powersOf10 + bit);
+        exponent = int16_t(exponent + bit);
       }
       bit >>= 1;
     }
@@ -40,23 +45,11 @@ inline int16_t normalize(TFloat& value) {
     for (; index >= 0; index--) {
       if (value < traits::negativeBinaryPowersOfTen()[index] * 10) {
         value *= traits::positiveBinaryPowersOfTen()[index];
-        powersOf10 = int16_t(powersOf10 - bit);
+        exponent = int16_t(exponent - bit);
       }
       bit >>= 1;
     }
   }
-
-  return powersOf10;
-}
-
-constexpr uint32_t pow10(int exponent) {
-  return (exponent == 0) ? 1 : 10 * pow10(exponent - 1);
-}
-
-inline FloatParts decomposeFloat(JsonFloat value, int8_t decimalPlaces) {
-  uint32_t maxDecimalPart = pow10(decimalPlaces);
-
-  int16_t exponent = normalize(value);
 
   uint32_t integral = uint32_t(value);
   // reduce number of decimal places by the number of integral places

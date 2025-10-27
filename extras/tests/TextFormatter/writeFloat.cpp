@@ -60,7 +60,6 @@ TEST_CASE("TextFormatter::writeFloat(double)") {
   }
 
   SECTION("Big exponent") {
-    // this test increases coverage of normalize()
     check<double>(1e255, "1e255");
     check<double>(1e-255, "1e-255");
   }
