@@ -66,12 +66,15 @@ class TextFormatter {
 
   template <typename T>
   void writeFloat(T value) {
-    writeFloat(JsonFloat(value), sizeof(T) >= 8 ? 9 : 6);
+    writeFloat(JsonFloat(value), sizeof(T) >= 8 ? 9 : 7);
   }
 
   void writeFloat(JsonFloat value, int8_t decimalPlaces) {
     if (isnan(value))
       return writeRaw(ARDUINOJSON_ENABLE_NAN ? "NaN" : "null");
+
+    if (!value)
+      return writeRaw("0");
 
 #if ARDUINOJSON_ENABLE_INFINITY
     if (value < 0.0) {
@@ -93,9 +96,28 @@ class TextFormatter {
 
     auto parts = decomposeFloat(value, decimalPlaces);
 
-    writeInteger(parts.integral);
-    if (parts.decimalPlaces)
-      writeDecimals(parts.decimal, parts.decimalPlaces);
+    // buffer should be big enough for all digits and the dot
+    char buffer[32];
+    char* end = buffer + sizeof(buffer);
+    char* begin = end;
+
+    // write the string in reverse order
+    while (parts.mantissa != 0 || parts.pointIndex > 0) {
+      *--begin = char(parts.mantissa % 10 + '0');
+      parts.mantissa /= 10;
+      if (parts.pointIndex == 1) {
+        *--begin = '.';
+      }
+      parts.pointIndex--;
+    }
+
+    // Avoid a leading dot
+    if (parts.pointIndex == 0) {
+      *--begin = '0';
+    }
+
+    // and dump it in the right order
+    writeRaw(begin, end);
 
     if (parts.exponent) {
       writeRaw('e');
@@ -127,23 +149,6 @@ class TextFormatter {
       *--begin = char(value % 10 + '0');
       value = T(value / 10);
     } while (value);
-
-    // and dump it in the right order
-    writeRaw(begin, end);
-  }
-
-  void writeDecimals(uint32_t value, int8_t width) {
-    // buffer should be big enough for all digits and the dot
-    char buffer[16];
-    char* end = buffer + sizeof(buffer);
-    char* begin = end;
-
-    // write the string in reverse order
-    while (width--) {
-      *--begin = char(value % 10 + '0');
-      value /= 10;
-    }
-    *--begin = '.';
 
     // and dump it in the right order
     writeRaw(begin, end);

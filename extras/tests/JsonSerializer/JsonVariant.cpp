@@ -51,10 +51,15 @@ TEST_CASE("serializeJson(JsonVariant)") {
 
   SECTION("double") {
     CHECK(serialize(0.0) == "0");
+    CHECK(serialize(-0.0) == "0");
+    CHECK(serialize(10.0) == "10");
+    CHECK(serialize(100.0) == "100");
+    CHECK(serialize(0.1) == "0.1");
+    CHECK(serialize(0.01) == "0.01");
     CHECK(serialize(3.1415927) == "3.1415927");
     CHECK(serialize(-3.1415927) == "-3.1415927");
-    CHECK(serialize(1.7976931348623157E+308) == "1.797693135e308");
-    CHECK(serialize(4.94065645841247e-324) == "4.940656458e-324");
+    CHECK(serialize(1.7976931348623157E+308) == "1.79769313e308");
+    CHECK(serialize(4.94065645841247e-324) == "4.94065646e-324");
   }
 
   SECTION("float") {

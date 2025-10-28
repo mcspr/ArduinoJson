@@ -13,29 +13,32 @@
 ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 struct FloatParts {
-  uint32_t integral;
-  uint32_t decimal;
+  uint32_t mantissa;
   int16_t exponent;
-  int8_t decimalPlaces;
+  int8_t pointIndex;
 };
 
 constexpr uint32_t pow10(int exponent) {
   return (exponent == 0) ? 1 : 10 * pow10(exponent - 1);
 }
 
-inline FloatParts decomposeFloat(JsonFloat value, int8_t decimalPlaces) {
-  ARDUINOJSON_ASSERT(value >= 0);
-  ARDUINOJSON_ASSERT(decimalPlaces >= 0);
+inline FloatParts decomposeFloat(JsonFloat value, int8_t significantDigits) {
+  ARDUINOJSON_ASSERT(value > 0);
+  ARDUINOJSON_ASSERT(significantDigits > 1);
+  ARDUINOJSON_ASSERT(significantDigits <= 9);  // to prevent uint32_t overflow
 
   using traits = FloatTraits<JsonFloat>;
 
-  uint32_t maxDecimalPart = pow10(decimalPlaces);
+  bool useScientificNotation =
+      value >= ARDUINOJSON_POSITIVE_EXPONENTIATION_THRESHOLD ||
+      value <= ARDUINOJSON_NEGATIVE_EXPONENTIATION_THRESHOLD;
 
   int16_t exponent = 0;
   int8_t index = traits::binaryPowersOfTenArraySize - 1;
   int bit = 1 << index;
 
-  if (value >= ARDUINOJSON_POSITIVE_EXPONENTIATION_THRESHOLD) {
+  // Normalize value to range [1..10) and compute exponent
+  if (value > 1) {
     for (; index >= 0; index--) {
       if (value >= traits::positiveBinaryPowersOfTen()[index]) {
         value *= traits::negativeBinaryPowersOfTen()[index];
@@ -44,8 +47,8 @@ inline FloatParts decomposeFloat(JsonFloat value, int8_t decimalPlaces) {
       bit >>= 1;
     }
   }
-
-  if (value > 0 && value <= ARDUINOJSON_NEGATIVE_EXPONENTIATION_THRESHOLD) {
+  ARDUINOJSON_ASSERT(value < 10);
+  if (value < 1) {
     for (; index >= 0; index--) {
       if (value < traits::negativeBinaryPowersOfTen()[index] * 10) {
         value *= traits::positiveBinaryPowersOfTen()[index];
@@ -54,39 +57,36 @@ inline FloatParts decomposeFloat(JsonFloat value, int8_t decimalPlaces) {
       bit >>= 1;
     }
   }
+  ARDUINOJSON_ASSERT(value >= 1);
+  // ARDUINOJSON_ASSERT(value < 10);
 
-  uint32_t integral = uint32_t(value);
-  // reduce number of decimal places by the number of integral places
-  for (uint32_t tmp = integral; tmp >= 10; tmp /= 10) {
-    maxDecimalPart /= 10;
-    decimalPlaces--;
-  }
+  value *= JsonFloat(pow10(significantDigits - 1));
 
-  JsonFloat remainder =
-      (value - JsonFloat(integral)) * JsonFloat(maxDecimalPart);
+  auto mantissa = uint32_t(value);
+  ARDUINOJSON_ASSERT(mantissa > 0);
 
-  uint32_t decimal = uint32_t(remainder);
-  remainder = remainder - JsonFloat(decimal);
+  // rounding
+  auto remainder = value - JsonFloat(mantissa);
+  if (remainder >= 0.5)
+    mantissa++;
 
-  // rounding:
-  // increment by 1 if remainder >= 0.5
-  decimal += uint32_t(remainder * 2);
-  if (decimal >= maxDecimalPart) {
-    decimal = 0;
-    integral++;
-    if (exponent && integral >= 10) {
-      exponent++;
-      integral = 1;
-    }
+  auto pointIndex = int8_t(significantDigits - 1);
+
+  if (!useScientificNotation) {
+    pointIndex = int8_t(pointIndex - int8_t(exponent));
+    exponent = 0;
   }
 
   // remove trailing zeros
-  while (decimal % 10 == 0 && decimalPlaces > 0) {
-    decimal /= 10;
-    decimalPlaces--;
+  while (mantissa % 10 == 0 && (useScientificNotation || pointIndex > 0)) {
+    mantissa /= 10;
+    if (pointIndex > 0)
+      pointIndex--;
+    else
+      exponent++;
   }
 
-  return {integral, decimal, exponent, decimalPlaces};
+  return {mantissa, exponent, pointIndex};
 }
 
 ARDUINOJSON_END_PRIVATE_NAMESPACE

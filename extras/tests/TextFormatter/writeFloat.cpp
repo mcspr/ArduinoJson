@@ -24,7 +24,7 @@ static std::string toString(TFloat input) {
 
 TEST_CASE("TextFormatter::writeFloat(double)") {
   SECTION("Pi") {
-    REQUIRE(toString(3.14159265359) == "3.141592654");
+    REQUIRE(toString(3.14159265359) == "3.14159265");
   }
 
   SECTION("Signaling NaN") {
@@ -49,13 +49,13 @@ TEST_CASE("TextFormatter::writeFloat(double)") {
   }
 
   SECTION("Espilon") {
-    REQUIRE(toString(2.2250738585072014E-308) == "2.225073859e-308");
-    REQUIRE(toString(-2.2250738585072014E-308) == "-2.225073859e-308");
+    REQUIRE(toString(2.2250738585072014E-308) == "2.22507386e-308");
+    REQUIRE(toString(-2.2250738585072014E-308) == "-2.22507386e-308");
   }
 
   SECTION("Max double") {
-    REQUIRE(toString(1.7976931348623157E+308) == "1.797693135e308");
-    REQUIRE(toString(-1.7976931348623157E+308) == "-1.797693135e308");
+    REQUIRE(toString(1.7976931348623157E+308) == "1.79769313e308");
+    REQUIRE(toString(-1.7976931348623157E+308) == "-1.79769313e308");
   }
 
   SECTION("Big exponent") {
@@ -72,10 +72,10 @@ TEST_CASE("TextFormatter::writeFloat(double)") {
   }
 
   SECTION("Exponentation when >= 1e7") {
-    REQUIRE(toString(9999999.999) == "9999999.999");
+    REQUIRE(toString(9999999.99) == "9999999.99");
     REQUIRE(toString(10000000.0) == "1e7");
 
-    REQUIRE(toString(-9999999.999) == "-9999999.999");
+    REQUIRE(toString(-9999999.99) == "-9999999.99");
     REQUIRE(toString(-10000000.0) == "-1e7");
   }
 
@@ -86,11 +86,19 @@ TEST_CASE("TextFormatter::writeFloat(double)") {
   }
 
   SECTION("9 decimal places") {
+    REQUIRE(toString(0.10000001) == "0.10000001");
+    REQUIRE(toString(0.99999999) == "0.99999999");
+
+    REQUIRE(toString(9.00000001) == "9.00000001");
+    REQUIRE(toString(9.99999999) == "9.99999999");
+  }
+
+  SECTION("9 decimal places") {
     REQUIRE(toString(0.100000001) == "0.100000001");
     REQUIRE(toString(0.999999999) == "0.999999999");
 
-    REQUIRE(toString(9.000000001) == "9.000000001");
-    REQUIRE(toString(9.999999999) == "9.999999999");
+    REQUIRE(toString(9.000000001) == "9");
+    REQUIRE(toString(9.999999999) == "10");
   }
 
   SECTION("10 decimal places") {
