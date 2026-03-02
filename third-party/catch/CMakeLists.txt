@@ -11,3 +11,8 @@ target_include_directories(catch
 	PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+target_compile_definitions(catch
+	PUBLIC
+		CATCH_INTERNAL_CONFIG_NO_POSIX_SIGNALS
+)
