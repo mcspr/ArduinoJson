@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v7.3.2 (2026-03-02)
+------
 
 * Fix a buffer overrun in `as<T>()` when `T` is a numeric type and
   the variant contains a string representing a floating point number
