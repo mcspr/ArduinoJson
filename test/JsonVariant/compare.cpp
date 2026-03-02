@@ -3,7 +3,9 @@
 // MIT License
 
 #include <ArduinoJson.h>
+
 #include <catch.hpp>
+
 
 static const char* null = 0;
 
@@ -176,8 +178,8 @@ TEST_CASE("JsonVariant comparisons") {
   }
 
   SECTION("StringInVariant") {
-    JsonVariant variant1 = "0hello" + 1;  // make sure they have
-    JsonVariant variant2 = "1hello" + 1;  // different addresses
+    JsonVariant variant1 = &"0hello"[1];  // make sure they have
+    JsonVariant variant2 = &"1hello"[1];  // different addresses
     JsonVariant variant3 = "world";
 
     REQUIRE(variant1 == variant2);
