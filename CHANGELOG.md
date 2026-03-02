@@ -6,6 +6,9 @@ HEAD
 
 * Improve error messages when using `char` or `char*` (issue #2043)
 * Make string support even more generic (PR #2084 by @d-a-v)
+* Fix a buffer overrun in `as<T>()` when `T` is a numeric type and
+  the variant contains a string representing a floating point number
+  with a large number of digits (issue #2220)
 
 v6.21.5 (2024-01-10)
 -------
