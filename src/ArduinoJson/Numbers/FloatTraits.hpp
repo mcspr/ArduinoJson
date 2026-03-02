@@ -198,10 +198,13 @@ inline TFloat make_float(TFloat m, TExponent e) {
 
   auto powersOfTen = e > 0 ? traits::positiveBinaryPowersOfTen()
                            : traits::negativeBinaryPowersOfTen();
+
   if (e <= 0)
     e = TExponent(-e);
 
   for (uint8_t index = 0; e != 0; index++) {
+    if (index >= powersOfTen.size())
+      return traits::nan();
     if (e & 1)
       m *= powersOfTen[index];
     e >>= 1;
