@@ -30,12 +30,14 @@ struct FloatTraits<T, 8 /*64bits*/> {
   static T make_float(T m, TExponent e) {
     if (e > 0) {
       for (uint8_t index = 0; e != 0; index++) {
+        if (index >= binaryPowersOfTen) return nan();
         if (e & 1) m *= positiveBinaryPowerOfTen(index);
         e >>= 1;
       }
     } else {
       e = TExponent(-e);
       for (uint8_t index = 0; e != 0; index++) {
+        if (index >= binaryPowersOfTen) return nan();
         if (e & 1) m *= negativeBinaryPowerOfTen(index);
         e >>= 1;
       }
@@ -43,8 +45,10 @@ struct FloatTraits<T, 8 /*64bits*/> {
     return m;
   }
 
+  static const size_t binaryPowersOfTen = 9;
+
   static T positiveBinaryPowerOfTen(int index) {
-    static T factors[] = {
+    static T factors[binaryPowersOfTen] = {
         1e1,
         1e2,
         1e4,
@@ -59,7 +63,7 @@ struct FloatTraits<T, 8 /*64bits*/> {
   }
 
   static T negativeBinaryPowerOfTen(int index) {
-    static T factors[] = {
+    static T factors[binaryPowersOfTen] = {
         forge(0x3FB99999, 0x9999999A),  // 1e-1
         forge(0x3F847AE1, 0x47AE147B),  // 1e-2
         forge(0x3F1A36E2, 0xEB1C432D),  // 1e-4
@@ -118,18 +122,22 @@ struct FloatTraits<T, 4 /*32bits*/> {
   static T make_float(T m, TExponent e) {
     if (e > 0) {
       for (uint8_t index = 0; e != 0; index++) {
+        if (index >= binaryPowersOfTen) return nan();
         if (e & 1) m *= positiveBinaryPowerOfTen(index);
         e >>= 1;
       }
     } else {
       e = -e;
       for (uint8_t index = 0; e != 0; index++) {
+        if (index >= binaryPowersOfTen) return nan();
         if (e & 1) m *= negativeBinaryPowerOfTen(index);
         e >>= 1;
       }
     }
     return m;
   }
+
+  static const size_t binaryPowersOfTen = 6;
 
   static T positiveBinaryPowerOfTen(int index) {
     static T factors[] = {1e1f, 1e2f, 1e4f, 1e8f, 1e16f, 1e32f};

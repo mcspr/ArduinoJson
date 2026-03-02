@@ -6,6 +6,9 @@ HEAD
 
 * `JsonObject::createNestedObject()` returns `JsonObject::invalid()` if key is null (issue #1891)
 * `JsonObject::createNestedArray()` returns `JsonArray::invalid()` if key is null
+* Fix a buffer overrun in `as<T>()` when `T` is a numeric type and
+  the variant contains a string representing a floating point number
+  with a large number of digits (issue #2220)
 
 v5.13.5
 -------
