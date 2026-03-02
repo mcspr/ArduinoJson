@@ -44,7 +44,7 @@ TEST_CASE("serialize MsgPack object") {
   SECTION("map 16") {
     for (int i = 0; i < 16; ++i) {
       char key[16];
-      sprintf(key, "i%X", i);
+      snprintf(key, 16, "i%X", i);
       object[key] = i;
     }
 
