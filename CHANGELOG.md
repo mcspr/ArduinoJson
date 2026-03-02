@@ -5,6 +5,9 @@ HEAD
 ----
 
 * Fix support for NUL characters in `deserializeJson()`
+* Fix a buffer overrun in `as<T>()` when `T` is a numeric type and
+  the variant contains a string representing a floating point number
+  with a large number of digits (issue #2220)
 
 v7.2.1 (2024-11-15)
 ------
