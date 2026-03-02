@@ -93,44 +93,40 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - clang: "3.9"
-            runner: ubuntu-20.04
-            archive: bionic
-          - clang: "4.0"
-            runner: ubuntu-20.04
-            archive: bionic
-          - clang: "5.0"
-            runner: ubuntu-20.04
-            archive: bionic
-          - clang: "6.0"
-            runner: ubuntu-20.04
-            archive: bionic
           - clang: "7"
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "8"
             cxxflags: -fsanitize=leak -fno-sanitize-recover=all
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "9"
             cxxflags: -fsanitize=undefined -fno-sanitize-recover=all
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "10"
             cxxflags: -fsanitize=address -fno-sanitize-recover=all
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "11"
             runner: ubuntu-22.04
           - clang: "12"
             runner: ubuntu-22.04
           - clang: "13"
             runner: ubuntu-22.04
-          - clang: "14"
-            runner: ubuntu-22.04
-          - clang: "15"
-            runner: ubuntu-22.04
-    runs-on: ${{ matrix.runner }}
+          - clang: 14
+          - clang: 15
+          - clang: 16
+          - clang: 17
+          - clang: 18
+          - clang: 19
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     steps:
       - name: Add archive repositories
         if: matrix.archive
         run: |
+          sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
+          sudo gpg --export 3B4FE6ACC0B21F32 | sudo tee /etc/apt/trusted.gpg.d/ubuntu-keyring.gpg > /dev/null
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} main'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} universe'
       - name: Install Clang ${{ matrix.clang }}
@@ -138,10 +134,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-${{ matrix.clang }}
       - name: Install libc++ ${{ matrix.clang }}
-        if: matrix.clang >= 11
         run: sudo apt-get install -y libc++-${{ matrix.clang }}-dev libc++abi-${{ matrix.clang }}-dev
       - name: Install libunwind ${{ matrix.clang }}
-        if: matrix.clang == 12  # dependency is missing in Ubuntu 22.04
+        if: matrix.clang == 12 # dependency is missing in Ubuntu 22.04
         run: sudo apt-get install -y libunwind-${{ matrix.clang }}-dev
       - name: Checkout
         uses: actions/checkout@v4
@@ -163,7 +158,7 @@ jobs:
   conf_test:
     name: Test configuration on Linux
     needs: [gcc, clang]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: |
@@ -184,36 +179,34 @@ jobs:
 
   conf_test_windows:
     name: Test configuration on Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: [gcc, clang]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: 32-bit
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
           cl /Isrc extras/conf_test/x86.cpp
         shell: cmd
       - name: 64-bit
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cl /Isrc extras/conf_test/x64.cpp
         shell: cmd
 
   xcode:
     name: XCode
     needs: clang
-    runs-on: macos-13
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
         include:
-          - xcode: "14.1"
-          - xcode: "14.2"
-          - xcode: "14.3.1"
-          - xcode: "15.0.1"
-          - xcode: "15.1"
-          - xcode: "15.2"
+          - xcode: "26.0"
+          - xcode: "26.1"
+          - xcode: "26.2"
+          - xcode: "26.3"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -257,7 +250,7 @@ jobs:
             board: arduino:avr:uno
           - core: arduino:samd
             board: arduino:samd:mkr1000
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -403,7 +396,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Particle CLI
-        run: sudo npm install -g particle-cli
+        run: |
+          bash <( curl -sL https://particle.io/install-cli )
+          echo "$HOME/bin" >> $GITHUB_PATH
       - name: Login to Particle
         run: particle login -t "${{ secrets.PARTICLE_TOKEN }}"
       - name: Compile
@@ -412,7 +407,7 @@ jobs:
   arm:
     name: GCC for ARM processor
     needs: gcc
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: |
@@ -431,7 +426,7 @@ jobs:
   coverage:
     needs: gcc
     name: Coverage
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: sudo apt-get install -y lcov ninja-build
@@ -463,7 +458,7 @@ jobs:
   valgrind:
     needs: gcc
     name: Valgrind
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: |
@@ -485,24 +480,24 @@ jobs:
   clang-tidy:
     needs: clang
     name: Clang-Tidy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Install
-        run: sudo apt-get install -y clang-tidy cmake ninja-build
+        run: sudo apt-get install -y clang-tidy libc++-dev libc++abi-dev
       - name: Checkout
         uses: actions/checkout@v4
       - name: Configure
-        run: cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy-10;--warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug .
+        run: cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy;--warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug .
         env:
-          CC: clang-10
-          CXX: clang++-10
+          CC: clang
+          CXX: clang++
       - name: Check
         run: cmake --build . -- -k 0
 
   amalgamate:
     needs: gcc
     name: Amalgamate ArduinoJson.h
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -578,7 +573,7 @@ jobs:
 
   codeql:
     name: CodeQL
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: gcc
 
     permissions:
@@ -587,20 +582,20 @@ jobs:
       security-events: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: cpp
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
 
-    - name: Build
-      run: |
-        cmake -DCMAKE_BUILD_TYPE=Debug .
-        cmake --build .
+      - name: Build
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=Debug .
+          cmake --build .
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:cpp"
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:cpp"
