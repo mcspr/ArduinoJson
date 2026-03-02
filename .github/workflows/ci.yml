@@ -2,6 +2,10 @@ name: Continuous Integration
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
@@ -10,7 +14,7 @@ jobs:
       - name: Install
         run: sudo apt-get install -y clang-format
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Symlinks
         run: find * -type l -printf "::error::%p is a symlink. This is forbidden by the Arduino Library Specification." -exec false {} +
       - name: Clang-format
@@ -44,97 +48,117 @@ jobs:
           - gcc: "10"
             cxxflags: -funsigned-char # Issue #1715
           - gcc: "11"
+          - gcc: "12"
     steps:
+      - name: Workaround for actions/runner-images#9491
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
       - name: Install
         run: |
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 3B4FE6ACC0B21F32
+          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ xenial main universe'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ bionic main universe'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ focal main universe'
           sudo apt-get update
           sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+        timeout-minutes: 5
+
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        timeout-minutes: 1
+
       - name: Configure
         run: cmake -DCMAKE_BUILD_TYPE=Debug .
         env:
           CC: gcc-${{ matrix.gcc }}
           CXX: g++-${{ matrix.gcc }}
           CXXFLAGS: ${{ matrix.cxxflags }}
+        timeout-minutes: 1
+
       - name: Build
         run: cmake --build .
+        timeout-minutes: 10
+
       - name: Test
-        run: |
-          echo "## CTest output" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          ctest --output-on-failure -C Debug . | tee -a $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+        run: ctest --output-on-failure -C Debug .
         env:
           UBSAN_OPTIONS: print_stacktrace=1
+        timeout-minutes: 2
 
   clang:
     name: Clang
     needs: lint
-    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - clang: "3.8"
-            cxxflags: "-stdlib=libc++"
-          - clang: "3.9"
-            cxxflags: "-stdlib=libc++"
-          - clang: "4.0"
-            cxxflags: "-stdlib=libc++"
-          - clang: "5.0"
-          - clang: "6.0"
           - clang: "7"
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "8"
             cxxflags: -fsanitize=leak -fno-sanitize-recover=all
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "9"
             cxxflags: -fsanitize=undefined -fno-sanitize-recover=all
+            runner: ubuntu-22.04
+            archive: focal
           - clang: "10"
             cxxflags: -fsanitize=address -fno-sanitize-recover=all
+            runner: ubuntu-22.04
+            archive: focal
+          - clang: "11"
+            runner: ubuntu-22.04
+          - clang: "12"
+            runner: ubuntu-22.04
+          - clang: "13"
+            runner: ubuntu-22.04
+          - clang: 16
+          - clang: 17
+          - clang: 18
+          - clang: 19
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     steps:
-      - name: Install
+      - name: Add archive repositories
+        if: matrix.archive
         run: |
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ xenial main'
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ xenial universe'
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ bionic main'
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ bionic universe'
+          sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
+          sudo gpg --export 3B4FE6ACC0B21F32 | sudo tee /etc/apt/trusted.gpg.d/ubuntu-keyring.gpg > /dev/null
+          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} main'
+          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} universe'
+      - name: Install Clang ${{ matrix.clang }}
+        run: |
           sudo apt-get update
           sudo apt-get install -y clang-${{ matrix.clang }}
+      - name: Install libunwind ${{ matrix.clang }}
+        if: matrix.clang == 12 # dependency is missing in Ubuntu 22.04
+        run: sudo apt-get install -y libunwind-${{ matrix.clang }}-dev
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Configure
         run: cmake -DCMAKE_BUILD_TYPE=Debug .
         env:
           CC: clang-${{ matrix.clang }}
           CXX: clang++-${{ matrix.clang }}
-          CXXFLAGS: >-
-            ${{ matrix.cxxflags }}
-            ${{ contains(matrix.cxxflags, 'libc++') && '-I/usr/lib/llvm-10/include/c++/v1/' || '' }}
+          CXXFLAGS: ${{ matrix.cxxflags }}
       - name: Build
         run: cmake --build .
       - name: Test
-        run: |
-          echo "## CTest output" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          ctest --output-on-failure -C Debug . | tee -a $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+        run: ctest --output-on-failure -C Debug .
         env:
           UBSAN_OPTIONS: print_stacktrace=1
 
   conf_test:
     name: Test configuration on Linux
     needs: [gcc, clang]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: |
           sudo apt-get update
           sudo apt-get install -y g++-multilib gcc-avr avr-libc
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: AVR
         run: avr-g++ -std=c++11 -Isrc extras/conf_test/avr.cpp
       - name: GCC 32-bit
@@ -148,36 +172,37 @@ jobs:
 
   conf_test_windows:
     name: Test configuration on Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: [gcc, clang]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 32-bit
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
           cl /Isrc extras/conf_test/x86.cpp
         shell: cmd
       - name: 64-bit
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cl /Isrc extras/conf_test/x64.cpp
         shell: cmd
 
   xcode:
     name: XCode
     needs: clang
-    runs-on: macos-11
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
         include:
-          - xcode: "11.7"
-          - xcode: "12.4"
-          - xcode: "13.2.1"
+          - xcode: "26.0"
+          - xcode: "26.1"
+          - xcode: "26.2"
+          - xcode: "26.3"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Select XCode version
         run: sudo xcode-select --switch /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Configure
@@ -199,7 +224,7 @@ jobs:
   #   runs-on: ${{ matrix.os }}
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v3
+  #       uses: actions/checkout@v4
   #     - name: Configure
   #       run: cmake -DCMAKE_BUILD_TYPE=Debug .
   #     - name: Build
@@ -218,10 +243,10 @@ jobs:
             board: arduino:avr:uno
           - core: arduino:samd
             board: arduino:samd:mkr1000
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install arduino-cli
         run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
       - name: Install core
@@ -294,14 +319,14 @@ jobs:
             conf_test: esp8266
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up cache for pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip
       - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install PlatformIO
@@ -313,7 +338,7 @@ jobs:
         if: ${{ matrix.platform == 'nordicnrf52' }}
         run: find examples/ -name '*.ino' -exec sed -i 's/\(#include <ArduinoJson.h>\)/\1\n#include <Adafruit_TinyUSB.h>/' {} +
       - name: Set up cache for platformio
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-platformio-${{ matrix.platform }}
@@ -362,9 +387,11 @@ jobs:
           - board: argon
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Particle CLI
-        run: sudo npm install -g particle-cli
+        run: |
+          bash <( curl -sL https://particle.io/install-cli )
+          echo "$HOME/bin" >> $GITHUB_PATH
       - name: Login to Particle
         run: particle login -t "${{ secrets.PARTICLE_TOKEN }}"
       - name: Compile
@@ -373,14 +400,14 @@ jobs:
   arm:
     name: GCC for ARM processor
     needs: gcc
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: |
           sudo apt-get update
           sudo apt-get install -y g++-arm-linux-gnueabihf
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Configure
         run: cmake .
         env:
@@ -392,18 +419,18 @@ jobs:
   coverage:
     needs: gcc
     name: Coverage
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: sudo apt-get install -y lcov ninja-build
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Configure
         run: cmake -G Ninja -DCOVERAGE=true .
       - name: Build
         run: ninja
       - name: Test
-        run: ctest -LE 'WillFail|Fuzzing' -T test
+        run: ctest --output-on-failure -LE 'WillFail|Fuzzing' -T test
       - name: lcov --capture
         run: lcov --capture --no-external --directory . --output-file coverage.info
       - name: lcov --remove
@@ -411,12 +438,12 @@ jobs:
       - name: genhtml
         run: mkdir coverage && genhtml coverage_filtered.info -o coverage -t ArduinoJson
       - name: Upload HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Coverage report
           path: coverage
       - name: Upload to Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: coverage_filtered.info
@@ -424,109 +451,87 @@ jobs:
   valgrind:
     needs: gcc
     name: Valgrind
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install
         run: |
           sudo apt-get update
           sudo apt-get install -y valgrind ninja-build
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Configure
         run: cmake -G Ninja -D MEMORYCHECK_COMMAND_OPTIONS="--error-exitcode=1 --leak-check=full"  .
       - name: Build
         run: ninja
       - name: Memcheck
-        run: ctest -LE WillFail -T memcheck
+        run: ctest --output-on-failure -LE WillFail -T memcheck
         id: memcheck
       - name: MemoryChecker.*.log
-        run: cat Testing/Temporary/MemoryChecker.*.log
+        run: cat Testing/Temporary/MemoryChecker.*.log > $GITHUB_STEP_SUMMARY
         if: failure()
 
   clang-tidy:
     needs: clang
     name: Clang-Tidy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Install
-        run: sudo apt-get install -y clang-tidy cmake ninja-build
+        run: sudo apt-get install -y clang-tidy libc++-dev libc++abi-dev
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Configure
-        run: cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy-10;--warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug .
+        run: cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy;--warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug .
         env:
-          CC: clang-10
-          CXX: clang++-10
+          CC: clang
+          CXX: clang++
       - name: Check
         run: cmake --build . -- -k 0
 
-  amalgamate-h:
+  amalgamate:
     needs: gcc
     name: Amalgamate ArduinoJson.h
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Amalgamate
-        id: amalgamate
+        uses: actions/checkout@v4
+      - name: Setup
         run: |
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
           else
             VERSION=${GITHUB_SHA::7}
           fi
-          INPUT=src/ArduinoJson.h
-          OUTPUT=ArduinoJson-$VERSION.h
-          extras/scripts/build-single-header.sh "$INPUT" "$OUTPUT"
-          echo "filename=${OUTPUT}" >> $GITHUB_OUTPUT
-      - name: Smoke test
+          echo "ARDUINOJSON_H=ArduinoJson-$VERSION.h" >> $GITHUB_ENV
+          echo "ARDUINOJSON_HPP=ArduinoJson-$VERSION.hpp" >> $GITHUB_ENV
+      - name: Amalgamate ArduinoJson.h
+        run: extras/scripts/build-single-header.sh "src/ArduinoJson.h" "$ARDUINOJSON_H"
+      - name: Amalgamate ArduinoJson.hpp
+        run: extras/scripts/build-single-header.sh "src/ArduinoJson.hpp" "$ARDUINOJSON_HPP"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Single headers
+          path: |
+            ${{ env.ARDUINOJSON_H }}
+            ${{ env.ARDUINOJSON_HPP }}
+      - name: Smoke test ArduinoJson.h
         run: |
           g++ -x c++ - <<END
-          #include "${{ steps.amalgamate.outputs.filename }}"
+          #include "$ARDUINOJSON_H"
           int main() {
             StaticJsonDocument<300> doc;
             deserializeJson(doc, "{}");
           }
           END
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Single headers
-          path: ${{ steps.amalgamate.outputs.filename }}
-
-  amalgamate-hpp:
-    needs: gcc
-    name: Amalgamate ArduinoJson.hpp
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Amalgamate
-        id: amalgamate
-        run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            VERSION=${GITHUB_SHA::7}
-          fi
-          INPUT=src/ArduinoJson.hpp
-          OUTPUT=ArduinoJson-$VERSION.hpp
-          extras/scripts/build-single-header.sh "$INPUT" "$OUTPUT"
-          echo "filename=${OUTPUT}" >> $GITHUB_OUTPUT
-      - name: Smoke test
+      - name: Smoke test ArduinoJson.hpp
         run: |
           g++ -x c++ - <<END
-          #include "${{ steps.amalgamate.outputs.filename }}"
+          #include "$ARDUINOJSON_HPP"
           int main() {
             ArduinoJson::StaticJsonDocument<300> doc;
             deserializeJson(doc, "{}");
           }
           END
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Single headers
-          path: ${{ steps.amalgamate.outputs.filename }}
 
   esp-idf:
     needs: gcc
@@ -534,14 +539,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.espressif
           key: ${{ runner.os }}-esp-idf
       - name: Checkout ArduinoJson
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout ESP-IDF
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: espressif/esp-idf
           path: esp-idf
@@ -561,7 +566,7 @@ jobs:
 
   codeql:
     name: CodeQL
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: gcc
 
     permissions:
@@ -570,20 +575,20 @@ jobs:
       security-events: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: cpp
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
 
-    - name: Build
-      run: |
-        cmake -DCMAKE_BUILD_TYPE=Debug .
-        cmake --build .
+      - name: Build
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=Debug .
+          cmake --build .
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-      with:
-        category: "/language:cpp"
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:cpp"
