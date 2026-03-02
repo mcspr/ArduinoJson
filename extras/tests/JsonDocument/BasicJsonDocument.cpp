@@ -77,6 +77,7 @@ TEST_CASE("BasicJsonDocument") {
       BasicJsonDocument<SpyingAllocator> doc2(std::move(doc1));
 
       REQUIRE(doc2.as<std::string>() == "The size of this string is 32!!");
+      // NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
       REQUIRE(doc1.as<std::string>() == "null");
       REQUIRE(doc1.capacity() == 0);
       REQUIRE(doc2.capacity() == 4096);
@@ -138,6 +139,7 @@ TEST_CASE("BasicJsonDocument") {
       doc2 = std::move(doc1);
 
       REQUIRE(doc2.as<std::string>() == "The size of this string is 32!!");
+      // NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
       REQUIRE(doc1.as<std::string>() == "null");
       REQUIRE(doc1.capacity() == 0);
       REQUIRE(doc2.capacity() == 4096);
