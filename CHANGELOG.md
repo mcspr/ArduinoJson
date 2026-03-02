@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v5.13.6 (2026-03-02)
+-------
 
 * `JsonObject::createNestedObject()` returns `JsonObject::invalid()` if key is null (issue #1891)
 * `JsonObject::createNestedArray()` returns `JsonArray::invalid()` if key is null
@@ -10,26 +10,26 @@ HEAD
   the variant contains a string representing a floating point number
   with a large number of digits (issue #2220)
 
-v5.13.5
+v5.13.5 (2019-03-01)
 -------
 
 * Fixed warning "unused variable" with GCC 4.4 (issue #912)
 * Fixed warning "maybe uninitialized" (issue #909)
 * Added an clear message for `StaticJsonDocument`, `DynamicJsonDocument`...
 
-v5.13.4
+v5.13.4 (2018-12-04)
 -------
 
 * Removed spurious files in the Particle library
 
-v5.13.3
+v5.13.3 (2018-10-06)
 -------
 
 * Improved float serialization when `-fsingle-precision-constant` is used
 * Fixed `JsonVariant::is<int>()` that returned true for empty strings
 * Fixed `JsonVariant::is<String>()` (closes #763)
 
-v5.13.2
+v5.13.2 (2018-06-01)
 -------
 
 * Fixed `JsonBuffer::parse()` not respecting nesting limit correctly (issue #693)
@@ -37,13 +37,13 @@ v5.13.2
 * Fixed null values that could be pass to `strcmp()` (PR #745 from Mike Karlesky)
 * Added macros `ARDUINOJSON_VERSION`, `ARDUINOJSON_VERSION_MAJOR`...
 
-v5.13.1
+v5.13.1 (2018-02-19)
 -------
 
 * Fixed `JsonVariant::operator|(int)` that returned the default value if the variant contained a double (issue #675)
 * Allowed non-quoted key to contain underscores (issue #665)
 
-v5.13.0
+v5.13.0 (2018-01-19)
 -------
 
 * Changed the rules of string duplication (issue #658)
