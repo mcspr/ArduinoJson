@@ -198,17 +198,15 @@ jobs:
   xcode:
     name: XCode
     needs: clang
-    runs-on: macos-13
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
         include:
-          - xcode: "14.1"
-          - xcode: "14.2"
-          - xcode: "14.3.1"
-          - xcode: "15.0.1"
-          - xcode: "15.1"
-          - xcode: "15.2"
+          - xcode: "26.0"
+          - xcode: "26.1"
+          - xcode: "26.2"
+          - xcode: "26.3"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
