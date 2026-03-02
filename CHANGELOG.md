@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v6.21.6 (2026-03-02)
+-------
 
 * Improve error messages when using `char` or `char*` (issue #2043)
 * Make string support even more generic (PR #2084 by @d-a-v)
