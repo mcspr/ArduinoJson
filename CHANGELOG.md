@@ -1,8 +1,8 @@
 ArduinoJson: change log
 =======================
 
-HEAD
-----
+v7.2.2 (2026-03-02)
+------
 
 * Fix support for NUL characters in `deserializeJson()`
 * Fix a buffer overrun in `as<T>()` when `T` is a numeric type and
