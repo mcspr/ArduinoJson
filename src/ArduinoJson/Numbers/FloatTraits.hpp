@@ -192,8 +192,9 @@ struct FloatTraits<T, 4 /*32bits*/> {
   }
 };
 
+// Returns m*10^e
 template <typename TFloat, typename TExponent>
-inline TFloat make_float(TFloat m, TExponent e) {
+inline TFloat multiplyByPowerOfTen(TFloat m, TExponent e) {
   using traits = FloatTraits<TFloat>;
 
   auto powersOfTen = e > 0 ? traits::positiveBinaryPowersOfTen()
