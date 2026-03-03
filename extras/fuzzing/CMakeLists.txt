@@ -64,4 +64,5 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION
 
 	add_fuzzer(json)
 	add_fuzzer(msgpack)
+	add_fuzzer(number)
 endif()
