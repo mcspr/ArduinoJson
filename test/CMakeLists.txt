@@ -2,6 +2,9 @@
 # Copyright Benoit Blanchon 2014-2023
 # MIT License
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 	add_compile_options(
 		-pedantic
@@ -26,12 +29,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wstrict-aliasing
 		-Wundef
 	)
-
-	if(NOT MINGW)
-		add_compile_options(
-			-std=c++98
-		)
-	endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
