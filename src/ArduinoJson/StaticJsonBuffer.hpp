@@ -6,6 +6,8 @@
 
 #include "JsonBufferBase.hpp"
 
+#include <cstddef>
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -13,9 +15,10 @@ class StaticJsonBufferBase : public JsonBufferBase<StaticJsonBufferBase> {
  public:
   class String {
    public:
-    String(StaticJsonBufferBase* parent) : _parent(parent) {
-      _start = parent->_buffer + parent->_size;
-    }
+    String(StaticJsonBufferBase* parent) :
+      _parent(parent),
+      _start(parent->_buffer + parent->_size)
+    {}
 
     void append(char c) {
       if (_parent->canAlloc(1)) {
@@ -30,7 +33,7 @@ class StaticJsonBufferBase : public JsonBufferBase<StaticJsonBufferBase> {
         *last = '\0';
         return _start;
       } else {
-        return NULL;
+        return nullptr;
       }
     }
 
@@ -55,8 +58,10 @@ class StaticJsonBufferBase : public JsonBufferBase<StaticJsonBufferBase> {
   // Allocates the specified amount of bytes in the buffer
   void* alloc(size_t bytes) override {
     alignNextAlloc();
-    if (!canAlloc(bytes)) return NULL;
-    return doAlloc(bytes);
+    if (canAlloc(bytes))
+      return doAlloc(bytes);
+
+    return nullptr;
   }
 
   // Resets the buffer.

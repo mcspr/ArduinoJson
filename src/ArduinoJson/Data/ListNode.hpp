@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <stddef.h>  // for NULL
-
 #include "JsonBufferAllocated.hpp"
 
 namespace ArduinoJson {
@@ -15,7 +13,7 @@ namespace Internals {
 // Used by List<T> and its iterators.
 template <typename T>
 struct ListNode : public Internals::JsonBufferAllocated {
-  ListNode() throw() : next(NULL) {}
+  ListNode() throw() : next(nullptr) {}
 
   ListNode<T> *next;
   T content;

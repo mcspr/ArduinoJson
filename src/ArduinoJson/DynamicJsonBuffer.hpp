@@ -37,7 +37,7 @@ class DynamicJsonBufferBase final
   enum { EmptyBlockSize = sizeof(EmptyBlock) };
 
   DynamicJsonBufferBase(size_t initialSize = 256)
-      : _head(NULL), _nextBlockCapacity(initialSize) {}
+      : _head(nullptr), _nextBlockCapacity(initialSize) {}
 
   ~DynamicJsonBufferBase() {
     clear();
@@ -60,7 +60,7 @@ class DynamicJsonBufferBase final
   // USE WITH CAUTION: this invalidates all previously allocated data
   void clear() {
     Block* currentBlock = _head;
-    while (currentBlock != NULL) {
+    while (currentBlock != nullptr) {
       _nextBlockCapacity = currentBlock->capacity;
       Block* nextBlock = currentBlock->next;
       _allocator.deallocate(currentBlock);
@@ -72,21 +72,10 @@ class DynamicJsonBufferBase final
   class String {
    public:
     String(DynamicJsonBufferBase* parent)
-        : _parent(parent), _start(NULL), _length(0) {}
+        : _parent(parent), _start(nullptr), _length(0) {}
 
     void append(char c) {
-      if (_parent->canAllocInHead(1)) {
-        char* end = static_cast<char*>(_parent->allocInHead(1));
-        *end = c;
-        if (_length == 0) _start = end;
-      } else {
-        char* newStart =
-            static_cast<char*>(_parent->allocInNewBlock(_length + 1));
-        if (_start && newStart) memcpy(newStart, _start, _length);
-        if (newStart) newStart[_length] = c;
-        _start = newStart;
-      }
-      _length++;
+      append(&c, 1);
     }
 
     const char* c_str() {
@@ -95,6 +84,30 @@ class DynamicJsonBufferBase final
     }
 
    private:
+    void _append(char* out, const char* begin, const char* end) {
+      for (auto it = begin; it != end; ++it, ++out) {
+        *out = *it;
+      }
+    }
+
+    void append(const char* str, size_t len) {
+      if (_parent->canAllocInHead(len)) {
+        char* end = static_cast<char*>(_parent->allocInHead(len));
+        _append(end, str, str + len);
+        if (_length == 0) _start = end;
+      } else {
+        char* newStart =
+            static_cast<char*>(_parent->allocInNewBlock(_length + len));
+        if (_start && newStart) memcpy(newStart, _start, _length);
+        if (newStart)
+          _append(newStart + _length, str, str + len);
+        else
+          len = 0;
+        _start = newStart;
+      }
+      _length += len;
+    }
+
     DynamicJsonBufferBase* _parent;
     char* _start;
     size_t _length;
@@ -110,7 +123,7 @@ class DynamicJsonBufferBase final
   }
 
   bool canAllocInHead(size_t bytes) const {
-    return _head != NULL && _head->size + bytes <= _head->capacity;
+    return _head != nullptr && _head->size + bytes <= _head->capacity;
   }
 
   void* allocInHead(size_t bytes) {
@@ -121,21 +134,29 @@ class DynamicJsonBufferBase final
 
   void* allocInNewBlock(size_t bytes) {
     size_t capacity = _nextBlockCapacity;
-    if (bytes > capacity) capacity = bytes;
-    if (!addNewBlock(capacity)) return NULL;
-    _nextBlockCapacity *= 2;
-    return allocInHead(bytes);
+    if (bytes > capacity)
+      capacity = bytes;
+
+    if (addNewBlock(capacity)) {
+      _nextBlockCapacity *= 2;
+      return allocInHead(bytes);
+    }
+
+    return nullptr;
   }
 
   bool addNewBlock(size_t capacity) {
     size_t bytes = EmptyBlockSize + capacity;
     Block* block = static_cast<Block*>(_allocator.allocate(bytes));
-    if (block == NULL) return false;
-    block->capacity = capacity;
-    block->size = 0;
-    block->next = _head;
-    _head = block;
-    return true;
+    if (block != nullptr) {
+      block->capacity = capacity;
+      block->size = 0;
+      block->next = _head;
+      _head = block;
+      return true;
+    }
+
+    return false;
   }
 
   TAllocator _allocator;

@@ -28,7 +28,7 @@ class List {
   // When buffer is invalid, the List is not able to grow and success() returns
   // false. This is used to identify bad memory allocations and parsing
   // failures.
-  explicit List(JsonBuffer *buffer) : _buffer(buffer), _firstNode(NULL) {}
+  explicit List(JsonBuffer *buffer) : _buffer(buffer), _firstNode(nullptr) {}
 
   // Returns true if the object is valid
   // Would return false in the following situation:
@@ -66,14 +66,14 @@ class List {
     return iterator(_firstNode);
   }
   iterator end() {
-    return iterator(NULL);
+    return iterator(nullptr);
   }
 
   const_iterator begin() const noexcept {
     return const_iterator(_firstNode);
   }
   const_iterator end() const noexcept {
-    return const_iterator(NULL);
+    return const_iterator(nullptr);
   }
 
   void remove(iterator it) {
