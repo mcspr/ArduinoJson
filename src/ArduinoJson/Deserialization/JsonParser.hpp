@@ -25,6 +25,12 @@ class JsonParser {
         _writer(writer),
         _nestingLimit(nestingLimit) {}
 
+  JsonParser(const JsonParser &) = delete;
+  JsonParser &operator=(const JsonParser &) = delete;
+
+  JsonParser(JsonParser &&) = default;
+  JsonParser &operator=(JsonParser &&) noexcept = default;
+
   JsonArray &parseArray();
   JsonObject &parseObject();
 
@@ -35,7 +41,6 @@ class JsonParser {
   }
 
  private:
-  JsonParser &operator=(const JsonParser &);  // non-copiable
 
   static bool eat(TReader &, char charToSkip);
   FORCE_INLINE bool eat(char charToSkip) {

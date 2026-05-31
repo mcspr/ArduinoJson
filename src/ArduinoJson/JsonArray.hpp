@@ -136,7 +136,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // This object is meant to replace a NULL pointer.
   // This is used when memory allocation or JSON parsing fail.
   static JsonArray &invalid() {
-    static JsonArray instance(NULL);
+    static JsonArray instance(Internals::EmptyJsonBuffer::instance());
     return instance;
   }
 

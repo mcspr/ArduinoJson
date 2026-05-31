@@ -7,19 +7,18 @@
 #include "Configuration.hpp"
 #include "JsonVariantBase.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4522)
-#endif
-
 namespace ArduinoJson {
 namespace Internals {
 class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
  public:
-  FORCE_INLINE JsonArraySubscript(JsonArray& array, size_t index)
+  JsonArraySubscript(JsonArray& array, size_t index)
       : _array(array), _index(index) {}
 
-  FORCE_INLINE JsonArraySubscript& operator=(const JsonArraySubscript& src) {
+  JsonArraySubscript(const JsonArraySubscript &) = default;
+  JsonArraySubscript(JsonArraySubscript &&) = default;
+
+  // class copy is disallowed, interpret it as an assignment operation
+  JsonArraySubscript& operator=(const JsonArraySubscript& src) {
     _array.set(_index, src);
     return *this;
   }
@@ -84,7 +83,7 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
 
  private:
   JsonArray& _array;
-  const size_t _index;
+  size_t _index;
 };
 
 template <typename TImpl>
@@ -116,7 +115,3 @@ inline const Internals::JsonArraySubscript JsonArray::operator[](
   return Internals::JsonArraySubscript(*const_cast<JsonArray*>(this), index);
 }
 }  // namespace ArduinoJson
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

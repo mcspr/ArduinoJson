@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../JsonBuffer.hpp"
+#include "../EmptyJsonBuffer.hpp"
 #include "ListConstIterator.hpp"
 #include "ListIterator.hpp"
 
@@ -24,7 +25,7 @@ class List {
 
   // Creates an empty List<T> attached to a JsonBuffer.
   // The JsonBuffer allows to allocate new nodes.
-  // When buffer is NULL, the List is not able to grow and success() returns
+  // When buffer is invalid, the List is not able to grow and success() returns
   // false. This is used to identify bad memory allocations and parsing
   // failures.
   explicit List(JsonBuffer *buffer) : _buffer(buffer), _firstNode(NULL) {}
@@ -34,7 +35,7 @@ class List {
   // - the memory allocation failed (StaticJsonBuffer was too small)
   // - the JSON parsing failed
   bool success() const {
-    return _buffer != NULL;
+    return _buffer != EmptyJsonBuffer::instance();
   }
 
   // Returns the numbers of elements in the list.
@@ -47,6 +48,8 @@ class List {
 
   iterator add() {
     node_type *newNode = new (_buffer) node_type();
+    if (newNode == nullptr)
+      return end();
 
     if (_firstNode) {
       node_type *lastNode = _firstNode;
@@ -66,10 +69,10 @@ class List {
     return iterator(NULL);
   }
 
-  const_iterator begin() const {
+  const_iterator begin() const noexcept {
     return const_iterator(_firstNode);
   }
-  const_iterator end() const {
+  const_iterator end() const noexcept {
     return const_iterator(NULL);
   }
 

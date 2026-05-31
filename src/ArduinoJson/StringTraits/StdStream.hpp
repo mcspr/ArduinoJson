@@ -4,7 +4,13 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
+
 #if ARDUINOJSON_ENABLE_STD_STREAM
+
+#include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/IsBaseOf.hpp"
+#include "../TypeTraits/RemoveReference.hpp"
 
 #include <istream>
 
@@ -36,8 +42,6 @@ struct StdStreamTraits {
     }
 
    private:
-    Reader& operator=(const Reader&);  // Visual Studio C4512
-
     char read() {
       return _stream.eof() ? '\0' : static_cast<char>(_stream.get());
     }

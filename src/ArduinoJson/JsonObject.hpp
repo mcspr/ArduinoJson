@@ -257,7 +257,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   // This object is meant to replace a NULL pointer.
   // This is used when memory allocation or JSON parsing fail.
   static JsonObject& invalid() {
-    static JsonObject instance(NULL);
+    static JsonObject instance(Internals::EmptyJsonBuffer::instance());
     return instance;
   }
 

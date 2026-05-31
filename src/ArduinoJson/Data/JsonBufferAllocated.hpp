@@ -11,12 +11,12 @@ namespace Internals {
 
 class JsonBufferAllocated {
  public:
-  void *operator new(size_t n, JsonBuffer *jsonBuffer) throw() {
-    if (!jsonBuffer) return NULL;
+  static void *operator new(size_t n, JsonBuffer *jsonBuffer) noexcept {
     return jsonBuffer->alloc(n);
   }
 
-  void operator delete(void *, JsonBuffer *)throw();
+  // note that operator new above generally works as new w/ std::nothrow
+  // no special delete, data just thrown in here and never leaves
 };
 }  // namespace Internals
 }  // namespace ArduinoJson

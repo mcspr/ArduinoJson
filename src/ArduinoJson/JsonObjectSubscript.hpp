@@ -8,25 +8,29 @@
 #include "JsonVariantBase.hpp"
 #include "TypeTraits/EnableIf.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4522)
-#endif
-
 namespace ArduinoJson {
 namespace Internals {
 
 template <typename TStringRef>
-class JsonObjectSubscript
+class JsonObjectSubscript final
     : public JsonVariantBase<JsonObjectSubscript<TStringRef> > {
   typedef JsonObjectSubscript<TStringRef> this_type;
 
  public:
-  FORCE_INLINE JsonObjectSubscript(JsonObject& object, TStringRef key)
+  // *Always* attached to some JsonObject instance
+
+  JsonObjectSubscript() = delete;
+
+  JsonObjectSubscript(JsonObject& object, TStringRef key)
       : _object(object), _key(key) {}
 
-  FORCE_INLINE this_type& operator=(const this_type& src) {
-    _object.set(_key, src);
+  // Allow to construct the object, but disallow changes after construction
+  JsonObjectSubscript(const JsonObjectSubscript &) = default;
+  JsonObjectSubscript(JsonObjectSubscript &&) = default;
+
+  // class copy is disallowed, interpret it as an assignment operation
+  JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
+    _object.set(_key, other);
     return *this;
   }
 
@@ -104,7 +108,3 @@ inline std::ostream& operator<<(std::ostream& os,
 #endif
 }  // namespace Internals
 }  // namespace ArduinoJson
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

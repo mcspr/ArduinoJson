@@ -8,16 +8,6 @@
 
 #include <stdlib.h>
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
-#elif defined(__GNUC__)
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
-#pragma GCC diagnostic push
-#endif
-#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
-#endif
-
 namespace ArduinoJson {
 namespace Internals {
 class DefaultAllocator {
@@ -31,7 +21,7 @@ class DefaultAllocator {
 };
 
 template <typename TAllocator>
-class DynamicJsonBufferBase
+class DynamicJsonBufferBase final
     : public JsonBufferBase<DynamicJsonBufferBase<TAllocator> > {
   struct Block;
   struct EmptyBlock {
@@ -61,7 +51,7 @@ class DynamicJsonBufferBase
   }
 
   // Allocates the specified amount of bytes in the buffer
-  virtual void* alloc(size_t bytes) {
+  void* alloc(size_t bytes) override {
     alignNextAlloc();
     return canAllocInHead(bytes) ? allocInHead(bytes) : allocInNewBlock(bytes);
   }
@@ -153,14 +143,6 @@ class DynamicJsonBufferBase
   size_t _nextBlockCapacity;
 };
 }  // namespace Internals
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
-#pragma GCC diagnostic pop
-#endif
-#endif
 
 // Implements a JsonBuffer with dynamic memory allocation.
 // You are strongly encouraged to consider using StaticJsonBuffer which is much

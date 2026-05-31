@@ -53,7 +53,7 @@ class StaticJsonBufferBase : public JsonBufferBase<StaticJsonBufferBase> {
   }
 
   // Allocates the specified amount of bytes in the buffer
-  virtual void* alloc(size_t bytes) {
+  void* alloc(size_t bytes) override {
     alignNextAlloc();
     if (!canAlloc(bytes)) return NULL;
     return doAlloc(bytes);
@@ -93,34 +93,18 @@ class StaticJsonBufferBase : public JsonBufferBase<StaticJsonBufferBase> {
 };
 }  // namespace Internals
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
-#elif defined(__GNUC__)
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
-#pragma GCC diagnostic push
-#endif
-#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
-#endif
-
 // Implements a JsonBuffer with fixed memory allocation.
 // The template paramenter CAPACITY specifies the capacity of the buffer in
 // bytes.
 template <size_t CAPACITY>
-class StaticJsonBuffer : public Internals::StaticJsonBufferBase {
+class StaticJsonBuffer final : public Internals::StaticJsonBufferBase {
  public:
   explicit StaticJsonBuffer()
       : Internals::StaticJsonBufferBase(_buffer, CAPACITY) {}
+
+  ~StaticJsonBuffer() = default;
 
  private:
   char _buffer[CAPACITY];
 };
 }  // namespace ArduinoJson
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
-#pragma GCC diagnostic pop
-#endif
-#endif

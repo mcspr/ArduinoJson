@@ -10,14 +10,10 @@ namespace Internals {
 // A type that cannot be copied
 class NonCopyable {
  protected:
-  NonCopyable() {}
+  NonCopyable() = default;
 
- private:
-  // copy constructor is private
-  NonCopyable(const NonCopyable&);
-
-  // copy operator is private
-  NonCopyable& operator=(const NonCopyable&);
+  NonCopyable(const NonCopyable&) = delete;
+  NonCopyable& operator=(const NonCopyable&) = delete;
 };
 }  // namespace Internals
 }  // namespace ArduinoJson
