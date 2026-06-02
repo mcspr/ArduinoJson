@@ -179,7 +179,7 @@ inline bool ArduinoJson::Internals::JsonParser<TReader, TWriter>::parseStringTo(
     JsonVariant *destination) {
   bool hasQuotes = isQuote(_reader.current());
   const char *value = parseString();
-  if (value == NULL) return false;
+  if (value == nullptr) return false;
   if (hasQuotes) {
     *destination = value;
   } else {

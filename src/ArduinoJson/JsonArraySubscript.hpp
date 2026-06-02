@@ -28,17 +28,17 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   // operator=(const TValue&)
   // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
   //          std::string, String, JsonArray, JsonObject
-  template <typename T>
-  FORCE_INLINE JsonArraySubscript& operator=(const T& src) {
-    _array.set(_index, src);
+  template <typename TValue>
+  FORCE_INLINE JsonArraySubscript& operator=(TValue &&value) {
+    _array.set(_index, std::forward<TValue>(value));
     return *this;
   }
   //
   // operator=(TValue)
   // TValue = char*, const char*, const FlashStringHelper*
-  template <typename T>
-  FORCE_INLINE JsonArraySubscript& operator=(T* src) {
-    _array.set(_index, src);
+  template <typename TChar, size_t Size>
+  FORCE_INLINE JsonArraySubscript& operator=(TChar (&value)[Size]) {
+    _array.set(_index, &value[0]);
     return *this;
   }
 

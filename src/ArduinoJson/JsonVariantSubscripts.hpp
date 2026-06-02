@@ -41,43 +41,43 @@ class JsonVariantSubscripts {
   //
   // const JsonObjectSubscript operator[](TKey) const;
   // TKey = const std::string&, const String&
-  template <typename TString>
+  template <typename TKey>
   FORCE_INLINE
-      typename EnableIf<StringTraits<TString>::has_equals,
-                        const JsonObjectSubscript<const TString &> >::type
-      operator[](const TString &key) const {
+      typename EnableIf<StringTraits<TKey>::has_equals,
+                        const JsonObjectSubscript<TKey> >::type
+      operator[](TKey &&key) const {
+    return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
+  }
+
+  template <typename TChar, size_t Size>
+  FORCE_INLINE
+      typename EnableIf<StringTraits<TChar[Size]>::has_equals,
+                        const JsonObjectSubscript<TChar*> >::type
+      operator[](TChar (&key)[Size]) const {
     return impl()->template as<JsonObject>()[key];
   }
   //
   // const JsonObjectSubscript operator[](TKey) const;
   // TKey = const std::string&, const String&
-  template <typename TString>
-  FORCE_INLINE typename EnableIf<StringTraits<TString>::has_equals,
-                                 JsonObjectSubscript<const TString &> >::type
-  operator[](const TString &key) {
-    return impl()->template as<JsonObject>()[key];
+  template <typename TKey>
+  FORCE_INLINE typename EnableIf<StringTraits<TKey>::has_equals,
+                                 JsonObjectSubscript<TKey> >::type
+  operator[](TKey &&key) {
+    return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
   }
-  //
-  // JsonObjectSubscript operator[](TKey);
-  // TKey = const char*, const char[N], const FlashStringHelper*
-  template <typename TString>
-  FORCE_INLINE typename EnableIf<StringTraits<const TString *>::has_equals,
-                                 JsonObjectSubscript<const TString *> >::type
-  operator[](const TString *key) {
-    return impl()->template as<JsonObject>()[key];
-  }
-  //
-  // JsonObjectSubscript operator[](TKey);
-  // TKey = const char*, const char[N], const FlashStringHelper*
-  template <typename TString>
-  FORCE_INLINE
-      typename EnableIf<StringTraits<TString *>::has_equals,
-                        const JsonObjectSubscript<const TString *> >::type
-      operator[](const TString *key) const {
+
+  template <typename TChar, size_t Size>
+  FORCE_INLINE typename EnableIf<StringTraits<TChar[Size]>::has_equals,
+                                 JsonObjectSubscript<TChar*> >::type
+  operator[](TChar (&key)[Size]) {
     return impl()->template as<JsonObject>()[key];
   }
 
  private:
+  TImpl *impl() {
+    return static_cast<TImpl *>(this);
+  }
+
   const TImpl *impl() const {
     return static_cast<const TImpl *>(this);
   }

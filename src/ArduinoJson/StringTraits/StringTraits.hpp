@@ -11,24 +11,7 @@
 #include "../TypeTraits/IsChar.hpp"
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
-
-namespace ArduinoJson {
-namespace Internals {
-
-template <typename TString, typename Enable = void>
-struct StringTraits {
-  static const bool has_append = false;
-  static const bool has_equals = false;
-};
-
-template <typename TString>
-struct StringTraits<const TString, void> : StringTraits<TString> {};
-
-template <typename TString>
-struct StringTraits<TString&, void> : StringTraits<TString> {};
-}  // namespace Internals
-}  // namespace ArduinoJson
-
+#include "StringTraitsBase.hpp"
 #include "ArduinoStream.hpp"
 #include "CharPointer.hpp"
 #include "FlashString.hpp"

@@ -52,7 +52,7 @@ struct StdStreamTraits {
 };
 
 template <typename TStream>
-struct StringTraits<
+struct StringTraitsImpl<
     TStream,
     // match any type that is derived from std::istream:
     typename EnableIf<IsBaseOf<

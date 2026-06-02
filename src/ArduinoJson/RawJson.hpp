@@ -21,22 +21,23 @@ class RawJsonString {
 };
 
 template <typename String>
-struct StringTraits<RawJsonString<String>, void> {
+struct StringTraitsImpl<RawJsonString<String>, void> {
   static bool is_null(RawJsonString<String> source) {
-    return StringTraits<String>::is_null(static_cast<String>(source));
+    return StringTraits<String>::is_null(String(source));
   }
 
   typedef RawJsonString<const char*> duplicate_t;
 
   template <typename Buffer>
-  static duplicate_t duplicate(RawJsonString<String> source, Buffer* buffer) {
-    return duplicate_t(StringTraits<String>::duplicate(source, buffer));
+  static duplicate_t duplicate(const RawJsonString<String>& source, Buffer* buffer) {
+    return duplicate_t(StringTraits<String>::duplicate(String(source), buffer));
   }
 
   static const bool has_append = false;
   static const bool has_equals = false;
   static const bool should_duplicate = StringTraits<String>::should_duplicate;
 };
+
 }  // namespace Internals
 
 template <typename T>

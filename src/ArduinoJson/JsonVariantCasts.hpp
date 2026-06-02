@@ -7,6 +7,8 @@
 #include "Data/JsonVariantAs.hpp"
 #include "Polyfills/attributes.hpp"
 
+#include <cstddef>
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -49,6 +51,10 @@ class JsonVariantCasts {
   FORCE_INLINE operator T() const {
     return impl()->template as<T>();
   }
+
+  // Avoid empty T* being used as an output type
+  // Triggers substitution match earlier than through EnableIf
+  operator std::nullptr_t() const = delete;
 
  private:
   const TImpl *impl() const {

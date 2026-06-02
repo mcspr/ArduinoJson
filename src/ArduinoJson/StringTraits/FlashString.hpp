@@ -9,7 +9,7 @@
 namespace ArduinoJson {
 namespace Internals {
 template <>
-struct StringTraits<const __FlashStringHelper*, void> {
+struct StringTraitsImpl<const __FlashStringHelper*, void> {
   class Reader {
     const char* _ptr;
 

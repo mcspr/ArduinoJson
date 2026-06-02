@@ -59,63 +59,58 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // bool add(TValue);
   // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
   //          std::string, String, JsonArray, JsonObject
-  template <typename T>
-  bool add(const T &value) {
-    return add_impl<const T &>(value);
+  template <typename TValue>
+  bool add(TValue &&value) {
+    return add_impl(std::forward<TValue>(value));
   }
   //
   // bool add(TValue);
   // TValue = char*, const char*, const FlashStringHelper*
-  template <typename T>
-  bool add(T *value) {
-    return add_impl<T *>(value);
+  template <typename TChar, size_t Size>
+  bool add(TChar (&value)[Size]) {
+    return add_impl(&value[0]);
   }
-  //
-  // bool add(TValue value, uint8_t decimals);
-  // TValue = float, double
-  template <typename T>
-  DEPRECATED("Second argument is not supported anymore")
-  bool add(T value, uint8_t) {
-    return add_impl<const JsonVariant &>(JsonVariant(value));
-  }
+  bool add(std::nullptr_t) = delete;
 
   // Sets the value at specified index.
   //
   // bool add(size_t index, const TValue&);
   // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
   //          std::string, String, JsonArray, JsonObject
-  template <typename T>
-  bool set(size_t index, const T &value) {
-    return set_impl<const T &>(index, value);
+  template <typename TValue>
+  bool set(size_t index, TValue &&value) {
+    return set_impl(index, std::forward<TValue>(value));
   }
   //
   // bool add(size_t index, TValue);
   // TValue = char*, const char*, const FlashStringHelper*
-  template <typename T>
-  bool set(size_t index, T *value) {
-    return set_impl<T *>(index, value);
+  template <typename TChar, size_t Size>
+  bool set(size_t index, TChar (&value)[Size]) {
+    return set_impl(index, &value[0]);
   }
+  bool set(size_t, std::nullptr_t) = delete;
+
   //
   // bool set(size_t index, TValue value, uint8_t decimals);
   // TValue = float, double
   template <typename T>
   typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value, bool>::type
   set(size_t index, T value, uint8_t decimals) {
-    return set_impl<const JsonVariant &>(index, JsonVariant(value, decimals));
+    return set_impl(index, JsonVariant(value, decimals));
   }
 
   // Gets the value at the specified index.
   template <typename T>
   typename Internals::JsonVariantAs<T>::type get(size_t index) const {
-    const_iterator it = begin() += index;
+    const_iterator it = begin() + index;
     return it != end() ? it->as<T>() : Internals::JsonVariantDefault<T>::get();
   }
 
   // Check the type of the value at specified index.
   template <typename T>
   bool is(size_t index) const {
-    const_iterator it = begin() += index;
-    return it != end() ? it->is<T>() : false;
+    const_iterator it = begin() + index;
+    return it != end() ? it->is<typename Internals::JsonVariantAs<T>::type>() : false;
   }
 
   // Creates a JsonArray and adds a reference at the end of the array.
@@ -128,13 +123,13 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   // Removes element at specified index.
   void remove(size_t index) {
-    remove(begin() += index);
+    remove(begin() + index);
   }
   using Internals::List<JsonVariant>::remove;
 
   // Returns a reference an invalid JsonArray.
-  // This object is meant to replace a NULL pointer.
-  // This is used when memory allocation or JSON parsing fail.
+  // This object is meant to replace `_buffer(nullptr)`
+  // when memory allocation or JSON parsing fail.
   static JsonArray &invalid() {
     static JsonArray instance(Internals::EmptyJsonBuffer::instance());
     return instance;
@@ -193,26 +188,26 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
     }
   }
 
-#if ARDUINOJSON_ENABLE_DEPRECATED
-  DEPRECATED("use remove() instead")
-  FORCE_INLINE void removeAt(size_t index) {
-    return remove(index);
-  }
-#endif
-
  private:
-  template <typename TValueRef>
-  bool set_impl(size_t index, TValueRef value) {
-    iterator it = begin() += index;
-    if (it == end()) return false;
-    return Internals::ValueSaver<TValueRef>::save(_buffer, *it, value);
+  template <typename TValue>
+  bool set_impl(size_t index, TValue &&value) {
+    iterator it = begin() + index;
+    if (it != end())
+      return Internals::ValueSaver<TValue>::save(
+        _buffer, *it, std::forward<TValue>(value));
+
+    return false;
   }
 
-  template <typename TValueRef>
-  bool add_impl(TValueRef value) {
+  template <typename TValue>
+  bool add_impl(TValue &&value) {
     iterator it = Internals::List<JsonVariant>::add();
-    if (it == end()) return false;
-    return Internals::ValueSaver<TValueRef>::save(_buffer, *it, value);
+    if (it != end()) {
+      return Internals::ValueSaver<TValue>::save(
+          _buffer, *it, std::forward<TValue>(value));
+    }
+
+    return false;
   }
 };
 

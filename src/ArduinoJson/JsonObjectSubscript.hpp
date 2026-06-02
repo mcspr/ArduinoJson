@@ -5,104 +5,96 @@
 #pragma once
 
 #include "Configuration.hpp"
+
 #include "JsonVariantBase.hpp"
+#include "JsonObjectSubscriptKey.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
+#include "TypeTraits/IsArray.hpp"
+#include "TypeTraits/RemoveReference.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
-template <typename TStringRef>
+template <typename TKey>
 class JsonObjectSubscript final
-    : public JsonVariantBase<JsonObjectSubscript<TStringRef> > {
-  typedef JsonObjectSubscript<TStringRef> this_type;
+    : public JsonVariantBase<JsonObjectSubscript<TKey> > {
 
  public:
   // *Always* attached to some JsonObject instance
 
-  JsonObjectSubscript() = delete;
+  JsonObjectSubscript() :
+    _object(JsonObject::invalid()),
+    _key()
+  {}
 
-  JsonObjectSubscript(JsonObject& object, TStringRef key)
-      : _object(object), _key(key) {}
+  template <typename TKeyRef>
+  JsonObjectSubscript(JsonObject& object, TKeyRef&& key) :
+    _object(object),
+    _key(std::forward<TKeyRef>(key))
+  {}
 
   // Allow to construct the object, but disallow changes after construction
+
   JsonObjectSubscript(const JsonObjectSubscript &) = default;
   JsonObjectSubscript(JsonObjectSubscript &&) = default;
 
+  // TValue = bool, char, long, int, short, float, double,
+  //          char*, char[], std::string, String, JsonArray, JsonObject
+  template <typename TValue>
+  JsonObjectSubscript& operator=(TValue&& src) {
+    _object.set(_key.get(), std::forward<TValue>(src));
+    return *this;
+  }
+
+  template <typename TChar, size_t Size>
+  JsonObjectSubscript& operator=(TChar (&src)[Size]) {
+    _object.set(_key.get(), src);
+    return *this;
+  }
+
   // class copy is disallowed, interpret it as an assignment operation
   JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
-    _object.set(_key, other);
+    _object.set(_key.get(), other);
     return *this;
   }
 
-  // Set the specified value
-  //
-  // operator=(const TValue&);
-  // TValue = bool, char, long, int, short, float, double,
-  //          std::string, String, JsonArray, JsonObject
-  template <typename TValue>
-  FORCE_INLINE typename EnableIf<!IsArray<TValue>::value, this_type&>::type
-  operator=(const TValue& src) {
-    _object.set(_key, src);
-    return *this;
-  }
-  //
-  // operator=(TValue);
-  // TValue = char*, const char*, const FlashStringHelper*
-  template <typename TValue>
-  FORCE_INLINE this_type& operator=(TValue* src) {
-    _object.set(_key, src);
-    return *this;
-  }
-
-  FORCE_INLINE bool success() const {
-    return _object.containsKey(_key);
+  bool success() const {
+    return _object.containsKey(_key.get());
   }
 
   template <typename TValue>
   FORCE_INLINE typename JsonVariantAs<TValue>::type as() const {
-    return _object.get<TValue>(_key);
+    return _object.get<TValue>(_key.get());
   }
 
   template <typename TValue>
-  FORCE_INLINE bool is() const {
-    return _object.is<TValue>(_key);
+  FORCE_INLINE
+  bool is() const {
+    return _object.is<typename JsonVariantAs<TValue>::type>(_key.get());
   }
 
-  // Sets the specified value.
-  //
-  // bool set(const TValue&);
   // TValue = bool, char, long, int, short, float, double, RawJson, JsonVariant,
-  //          std::string, String, JsonArray, JsonObject
+  //          char*, char[], const __FlashStringHelper*, std::string, String, JsonArray, JsonObject
   template <typename TValue>
-  FORCE_INLINE typename EnableIf<!IsArray<TValue>::value, bool>::type set(
-      const TValue& value) {
-    return _object.set(_key, value);
+  FORCE_INLINE bool set(TValue&& value) {
+    return _object.set(_key.get(), std::forward<TValue>(value));
   }
-  //
-  // bool set(TValue);
-  // TValue = char*, const char, const FlashStringHelper*
-  template <typename TValue>
-  FORCE_INLINE bool set(const TValue* value) {
-    return _object.set(_key, value);
-  }
-  //
-  // bool set(TValue, uint8_t decimals);
-  // TValue = float, double
-  template <typename TValue>
-  DEPRECATED("Second argument is not supported anymore")
-  FORCE_INLINE bool set(const TValue& value, uint8_t) {
-    return _object.set(_key, value);
+
+  template <typename TChar, size_t Size>
+  FORCE_INLINE bool set(TChar (&value)[Size]) {
+    return _object.set(_key.get(), value);
   }
 
  private:
   JsonObject& _object;
-  TStringRef _key;
+  JsonObjectSubscriptKey<TKey> _key;
 };
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
-template <typename TStringRef>
+template <typename TKey>
 inline std::ostream& operator<<(std::ostream& os,
-                                const JsonObjectSubscript<TStringRef>& source) {
+                                const JsonObjectSubscript<TKey>& source) {
   return source.printTo(os);
 }
 #endif

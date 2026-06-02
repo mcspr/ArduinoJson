@@ -49,7 +49,7 @@ struct ArduinoStreamTraits {
 };
 
 template <typename TStream>
-struct StringTraits<
+struct StringTraitsImpl<
     TStream,
     // match any type that is derived from Stream:
     typename EnableIf<

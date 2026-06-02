@@ -4,6 +4,11 @@
 
 #pragma once
 
+#include "../TypeTraits/IsConst.hpp"
+
+#include <cstddef>
+#include <cstdio>
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -42,12 +47,22 @@ struct CharPointerTraits {
   typedef const char* duplicate_t;
 
   template <typename Buffer>
-  static duplicate_t duplicate(const TChar* str, Buffer* buffer) {
-    if (!str) return NULL;
-    size_t size = strlen(reinterpret_cast<const char*>(str)) + 1;
-    void* dup = buffer->alloc(size);
-    if (dup != NULL) memcpy(dup, str, size);
+  static duplicate_t duplicate(const TChar* str, Buffer* buffer, size_t size) {
+    void* dup = nullptr;
+    if (!is_null(str)) {
+      dup = buffer->alloc(size + 1);
+      if (dup != nullptr) {
+        memcpy(dup, str, size);
+        reinterpret_cast<TChar *>(dup)[size] = '\0';
+      }
+    }
+
     return static_cast<duplicate_t>(dup);
+  }
+
+  template <typename Buffer>
+  static duplicate_t duplicate(const TChar* str, Buffer* buffer) {
+    return duplicate(str, buffer, strlen(reinterpret_cast<const char *>(str)));
   }
 
   static const bool has_append = false;
@@ -58,7 +73,21 @@ struct CharPointerTraits {
 // char*, unsigned char*, signed char*
 // const char*, const unsigned char*, const signed char*
 template <typename TChar>
-struct StringTraits<TChar*, typename EnableIf<IsChar<TChar>::value>::type>
+struct StringTraitsImpl<TChar*, typename EnableIf<IsChar<TChar>::value>::type>
     : CharPointerTraits<TChar> {};
+
+// char[], unsigned char[], signed char[]
+// const char[], const unsigned char[], const signed char[]
+template <typename TChar, size_t Size>
+struct StringTraitsImpl<TChar[Size], typename EnableIf<IsChar<TChar>::value>::type>
+    : CharPointerTraits<TChar> {
+
+  template <typename Buffer>
+  static typename CharPointerTraits<TChar>::duplicate_t
+  duplicate(const TChar* str, Buffer* buffer) {
+    return CharPointerTraits<TChar>::template duplicate(str, buffer, Size - 1);
+  }
+};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

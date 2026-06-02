@@ -4,6 +4,13 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
+
+#include "StringTraitsBase.hpp"
+#include "CharPointer.hpp"
+
+#include <cstddef>
+
 #if ARDUINOJSON_ENABLE_STD_STRING || ARDUINOJSON_ENABLE_ARDUINO_STRING
 
 #if ARDUINOJSON_ENABLE_ARDUINO_STRING
@@ -36,7 +43,9 @@ struct StdStringTraits {
   }
 
   struct Reader : CharPointerTraits<char>::Reader {
-    Reader(const TString& str) : CharPointerTraits<char>::Reader(str.c_str()) {}
+    Reader(const TString& str) :
+      CharPointerTraits<char>::Reader(str.c_str())
+    {}
   };
 
   static bool equals(const TString& str, const char* expected) {
@@ -61,15 +70,24 @@ struct StdStringTraits {
 
 #if ARDUINOJSON_ENABLE_ARDUINO_STRING
 template <>
-struct StringTraits<String, void> : StdStringTraits<String> {};
+struct StringTraitsImpl<String, void> : StdStringTraits<String> {};
 template <>
-struct StringTraits<StringSumHelper, void> : StdStringTraits<StringSumHelper> {
+struct StringTraitsImpl<const String, void> : StdStringTraits<String> {};
+
+template <>
+struct StringTraitsImpl<StringSumHelper, void> : StdStringTraits<StringSumHelper> {
+};
+template <>
+struct StringTraitsImpl<const StringSumHelper, void> : StdStringTraits<StringSumHelper> {
 };
 #endif
 
 #if ARDUINOJSON_ENABLE_STD_STRING
 template <>
-struct StringTraits<std::string, void> : StdStringTraits<std::string> {};
+struct StringTraitsImpl<std::string, void> : StdStringTraits<std::string> {};
+
+template <>
+struct StringTraitsImpl<const std::string, void> : StringTraitsImpl<std::string, void> {};
 #endif
 }  // namespace Internals
 }  // namespace ArduinoJson

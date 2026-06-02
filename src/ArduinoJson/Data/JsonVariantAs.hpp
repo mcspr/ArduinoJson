@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -15,7 +17,27 @@ struct JsonVariantAs {
 };
 
 template <>
+struct JsonVariantAs<const char*> {
+  typedef const char* type;
+};
+
+template <>
 struct JsonVariantAs<char*> {
+  typedef const char* type;
+};
+
+template <>
+struct JsonVariantAs<unsigned char*> {
+  typedef const char* type;
+};
+
+template <>
+struct JsonVariantAs<const unsigned char*> {
+  typedef const char* type;
+};
+
+template <typename TChar, size_t Size>
+struct JsonVariantAs<TChar[Size]> {
   typedef const char* type;
 };
 
