@@ -254,24 +254,40 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
     if (Internals::StringTraits<TKey>::is_null(key))
       return false;
 
-    // search a matching key
-    iterator it = findKey(key);
+    // when creating a key, prune failed list entry before returning
+    bool out = false;
+
+    // search for existing or add another kv object
+    auto it = findKey(key);
     if (it == end()) {
-      // or add the key
       it = add();
       if (it == end())
         return false;
-      const auto key_saved = Internals::ValueSaver<TKey>::save(
-        _buffer, it->key, std::forward<TKey>(key));
-      if (!key_saved)
+
+      if (!Internals::ValueSaver<TKey>::save(
+        _buffer, it->key, std::forward<TKey>(key)))
+      {
+        remove(it);
         return false;
+      }
+
+      out = true;
     }
 
-    if (it != end())
-      return Internals::ValueSaver<TValue>::save(
-        _buffer, it->value, std::forward<TValue>(value));
+    if (it != end()) {
+      if (!Internals::ValueSaver<TValue>::save(
+        _buffer, it->value, std::forward<TValue>(value)))
+      {
+        if (out)
+          remove(it);
 
-    return false;
+        return false;
+      }
+
+      out = true;
+    }
+
+    return out;
   }
 
   template <typename TValue, typename TKey>

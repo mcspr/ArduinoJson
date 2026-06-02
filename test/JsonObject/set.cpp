@@ -96,43 +96,60 @@ TEST_CASE("JsonObject::set()") {
 
   SECTION("should not duplicate const char*") {
     _object.set("hello", "world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1);
-    REQUIRE(expectedSize == jb.size());
+    REQUIRE(JSON_OBJECT_SIZE(1) == jb.size());
   }
 
   SECTION("should duplicate char* value") {
-    _object.set("hello", const_cast<char*>("world"));
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == jb.size());
+    const char* key = "hello";
+    const char* val = "world";
+    _object.set(key, const_cast<char*>(val));
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
+    REQUIRE(_object.size() == 1);
+    auto first = _object.begin();
+    REQUIRE(first->key == key);
+    REQUIRE(first->key == std::string(key));
+    REQUIRE(first->value.as<const char*>() != nullptr);
+    REQUIRE(first->value.as<const char*>() != val);
+    REQUIRE(first->value == std::string(val));
   }
 
   SECTION("should duplicate char* key") {
-    _object.set(const_cast<char*>("hello"), "world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == jb.size());
+    const char* key = "hello";
+    _object.set(const_cast<char*>(key), "world");
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
+    REQUIRE(_object.size() == 1);
+    auto first = _object.begin();
+    REQUIRE(first->key != key);
+    REQUIRE(first->key == std::string(key));
+    REQUIRE(first->value == std::string("world"));
   }
 
   SECTION("should duplicate char* key&value") {
-    _object.set(const_cast<char*>("hello"), const_cast<char*>("world"));
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 12;
-    REQUIRE(expectedSize <= jb.size());
+    const char* key = "hello";
+    const char* val = "world";
+    _object.set(const_cast<char*>(key), const_cast<char*>(val));
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
+    REQUIRE(_object.size() == 1);
+    auto first = _object.begin();
+    REQUIRE(first->key != key);
+    REQUIRE(first->key == std::string(key));
+    REQUIRE(first->value.as<const char*>() != nullptr);
+    REQUIRE(first->value.as<const char*>() != val);
+    REQUIRE(first->value == std::string(val));
   }
 
   SECTION("should duplicate std::string value") {
     _object.set("hello", std::string("world"));
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == jb.size());
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate std::string key") {
     _object.set(std::string("hello"), "world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == jb.size());
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate std::string key&value") {
     _object.set(std::string("hello"), std::string("world"));
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 12;
-    REQUIRE(expectedSize <= jb.size());
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 }

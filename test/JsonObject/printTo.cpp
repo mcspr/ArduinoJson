@@ -82,7 +82,7 @@ TEST_CASE("JsonObject::printTo()") {
   SECTION("TwoNullPtrStrings") {
     obj["a"] = static_cast<char *>(0);
     obj.set("b", static_cast<char *>(0));
-    check(obj, "{\"a\":,\"b\":}");
+    check(obj, "{}");
   }
 
   SECTION("TwoJsonNull") {

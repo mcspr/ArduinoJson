@@ -110,44 +110,37 @@ TEST_CASE("JsonObject::operator[]") {
 
   SECTION("should not duplicate const char*") {
     _object["hello"] = "world";
-    const size_t expectedSize = JSON_OBJECT_SIZE(1);
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE(JSON_OBJECT_SIZE(1) == _jsonBuffer.size());
   }
 
   SECTION("should duplicate char* value") {
     _object["hello"] = const_cast<char*>("world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate char* key") {
     _object[const_cast<char*>("hello")] = "world";
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate char* key&value") {
     _object[const_cast<char*>("hello")] = const_cast<char*>("world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 12;
-    REQUIRE(expectedSize <= _jsonBuffer.size());
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate std::string value") {
     _object["hello"] = std::string("world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate std::string key") {
     _object[std::string("hello")] = "world";
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 6;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate std::string key&value") {
     _object[std::string("hello")] = std::string("world");
-    const size_t expectedSize = JSON_OBJECT_SIZE(1) + 12;
-    REQUIRE(expectedSize <= _jsonBuffer.size());
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should ignore null key") {

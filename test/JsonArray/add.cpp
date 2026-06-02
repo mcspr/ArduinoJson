@@ -89,7 +89,7 @@ TEST_CASE("JsonArray::add()") {
   SECTION("should duplicate char*") {
     const char* data = "world";
     _array.add(const_cast<char*>(data));
-    REQUIRE(_jsonBuffer.size() >= JSON_ARRAY_SIZE(1));
+    REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
     REQUIRE(_array.size() == 1);
     REQUIRE(_array[0].as<const char*>() != data);
   }
@@ -97,7 +97,7 @@ TEST_CASE("JsonArray::add()") {
   SECTION("should duplicate std::string") {
     std::string data("world");
     _array.add(data);
-    REQUIRE(_jsonBuffer.size() >= JSON_ARRAY_SIZE(1));
+    REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
     REQUIRE(_array.size() == 1);
     REQUIRE(_array[0].as<const char*>() != data.c_str());
   }
@@ -113,7 +113,7 @@ TEST_CASE("JsonArray::add()") {
   SECTION("should duplicate RawJson(char*)") {
     const char* data = "{}";
     _array.add(RawJson(const_cast<char*>(data)));
-    REQUIRE(_jsonBuffer.size() >= JSON_ARRAY_SIZE(1));
+    REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
     REQUIRE(_array.size() == 1);
     REQUIRE(_array[0].as<const char*>() != data);
   }
