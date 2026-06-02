@@ -16,21 +16,31 @@ template <typename TChar>
 struct CharPointerTraits {
   class Reader {
     const TChar* _ptr;
+    const TChar* _end;
 
    public:
-    Reader(const TChar* ptr)
-        : _ptr(ptr ? ptr : reinterpret_cast<const TChar*>("")) {}
+    Reader(const TChar* ptr, size_t size) :
+      _ptr(ptr ? ptr : reinterpret_cast<const TChar*>("")),
+      _end(ptr ? (ptr + size) : 0)
+    {}
 
     void move() {
-      ++_ptr;
+      if (_ptr < _end)
+        ++_ptr;
     }
 
     char current() const {
-      return char(_ptr[0]);
+      if (_ptr < _end)
+        return char(_ptr[0]);
+
+      return '\0';
     }
 
     char next() const {
-      return char(_ptr[1]);
+      if ((_ptr + 1) < _end)
+        return char(_ptr[1]);
+
+      return '\0';
     }
   };
 

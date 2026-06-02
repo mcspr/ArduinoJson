@@ -6,14 +6,32 @@
 
 namespace ArduinoJson {
 namespace Internals {
-template <typename T>
-bool isNaN(T x) {
+
+inline bool isNaN(float x) {
   return x != x;
 }
 
-template <typename T>
-bool isInfinity(T x) {
-  return x != 0.0 && x * 2 == x;
+inline bool isNaN(double x) {
+  return x != x;
 }
+
+inline bool isInfinity(float x) {
+  return x != 0.0f && x * 2.0f == x;
+}
+
+inline bool isInfinity(double x) {
+  return x != 0.0 && x * 2.0 == x;
+}
+
+template <typename T>
+inline constexpr const T& Min(const T& lhs, const T& rhs) {
+  return rhs < lhs ? rhs : lhs;
+}
+
+template <typename T>
+inline constexpr const T& Max(const T& lhs, const T& rhs) {
+  return  lhs < rhs ? rhs : lhs;
+}
+
 }  // namespace Internals
 }  // namespace ArduinoJson

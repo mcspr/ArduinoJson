@@ -6,7 +6,12 @@
 
 #include "../JsonBuffer.hpp"
 #include "../JsonVariant.hpp"
+#include "../JsonSpan.hpp"
+
 #include "../TypeTraits/IsConst.hpp"
+#include "../TypeTraits/IsPointer.hpp"
+#include "../TypeTraits/RemoveConstReference.hpp"
+#include "../TypeTraits/RemovePointer.hpp"
 #include "StringWriter.hpp"
 
 namespace ArduinoJson {
@@ -73,35 +78,91 @@ class JsonParser {
   uint8_t _nestingLimit;
 };
 
-template <typename TJsonBuffer, typename TString, typename Enable = void>
+// internals set up 'writer' a bit differently, depending on the type of input
+// generic reader, always uses TJsonBuffer as backing storage when escaped characters are encountered
+template <typename TJsonBuffer, typename TJson, typename Enable = void>
 struct JsonParserBuilder {
-  typedef typename StringTraits<TString>::Reader InputReader;
-  typedef JsonParser<InputReader, TJsonBuffer &> TParser;
+  typedef typename RemoveConstReference<TJson>::type TJsonNoCref;
 
-  static TParser makeParser(TJsonBuffer *buffer, TString &json,
+  typedef typename StringTraits<TJsonNoCref>::Reader TReader;
+  typedef JsonParser<TReader, TJsonBuffer &> TParser;
+
+  static TParser makeParser(TJsonBuffer *buffer, TJson &&json,
                             uint8_t nestingLimit) {
-    return TParser(buffer, InputReader(json), *buffer, nestingLimit);
+    static_assert(!IsPointer<TJsonNoCref>::value &&
+                  !IsChar<typename RemovePointer<TJson>::type>::value,
+                  "Avoid using T* w/ unknown size");
+    return TParser(buffer, TReader(json), *buffer, nestingLimit);
   }
 };
 
-template <typename TJsonBuffer, typename TChar>
-struct JsonParserBuilder<TJsonBuffer, TChar *,
-                         typename EnableIf<!IsConst<TChar>::value>::type> {
-  typedef typename StringTraits<TChar *>::Reader TReader;
+// reuse input buffer instead of duplicating data in the TJsonBuffer. note that this causes input to be thrashed
+// only enabled when string view data pointer is not marked as const
+template <typename TJsonBuffer, typename TChar, size_t Size>
+struct JsonParserBuilder<TJsonBuffer, JsonSpan<TChar, Size>> {
+
+  static_assert(!Internals::IsConst<TChar>::value, "");
+  typedef Internals::JsonSpan<TChar, Size> TSpan;
+
+  typedef typename StringTraits<const TChar *>::Reader TReader;
   typedef StringWriter<TChar> TWriter;
+
   typedef JsonParser<TReader, TWriter> TParser;
 
-  static TParser makeParser(TJsonBuffer *buffer, TChar *json,
+  static TParser makeParser(TJsonBuffer *buffer, TSpan json,
                             uint8_t nestingLimit) {
-    return TParser(buffer, TReader(json), TWriter(json), nestingLimit);
+    return TParser(buffer,
+      TReader(json.data(), json.size()),
+      TWriter(json.data(), json.size()),
+      nestingLimit);
   }
 };
 
-template <typename TJsonBuffer, typename TString>
-inline typename JsonParserBuilder<TJsonBuffer, TString>::TParser makeParser(
-    TJsonBuffer *buffer, TString &json, uint8_t nestingLimit) {
-  return JsonParserBuilder<TJsonBuffer, TString>::makeParser(buffer, json,
-                                                             nestingLimit);
+// points to existing data when no escaped characters encountered
+template <typename TJsonBuffer, typename TChar, size_t Size>
+struct JsonParserBuilder<TJsonBuffer, JsonSpan<const TChar, Size>> {
+
+  typedef Internals::JsonSpan<const TChar, Size> TSpan;
+
+  typedef typename StringTraits<TChar *>::Reader TReader;
+  typedef JsonParser<TReader, TJsonBuffer &> TParser;
+
+  static TParser makeParser(TJsonBuffer *buffer, TSpan json, uint8_t nestingLimit) {
+    return TParser(buffer,
+      TReader(json.data(), json.size()),
+      *buffer,
+      nestingLimit);
+  }
+};
+
+template <typename TJsonBuffer, typename TJson,
+  typename TJsonNoCref = typename RemoveConstReference<TJson>::type,
+  typename TBuilder = JsonParserBuilder<TJsonBuffer, TJson>>
+inline typename TBuilder::TParser makeParser(
+    TJsonBuffer *buffer, TJson &&json, uint8_t nestingLimit) {
+  return TBuilder::makeParser(buffer, std::forward<TJson>(json), nestingLimit);
 }
+
+template <typename TJsonBuffer, typename TChar, size_t Size,
+  typename TBuilder = JsonParserBuilder<TJsonBuffer, Internals::JsonSpan<TChar, Size>>>
+inline typename TBuilder::TParser makeParser(
+    TJsonBuffer *buffer, TChar (&json)[Size], uint8_t nestingLimit) {
+  return TBuilder::makeParser(buffer, Internals::JsonSpan<TChar, Size>(json), nestingLimit);
+}
+
+template <typename TJsonBuffer, typename TChar, size_t Size,
+  typename TBuilder = JsonParserBuilder<TJsonBuffer, Internals::JsonSpan<TChar, Size>>>
+inline typename TBuilder::TParser makeParser(
+    TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, uint8_t nestingLimit) {
+  return TBuilder::makeParser(buffer, json, nestingLimit);
+}
+
+template <typename TJsonBuffer, typename TChar,
+  typename TBuilder = JsonParserBuilder<TJsonBuffer, JsonDynamicSpan<TChar>>>
+inline typename TBuilder::TParser makeParser(
+    TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, uint8_t nestingLimit) {
+  return TBuilder::makeParser(buffer, json, nestingLimit);
+}
+
 }  // namespace Internals
 }  // namespace ArduinoJson

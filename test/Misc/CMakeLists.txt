@@ -12,7 +12,6 @@ add_executable(MiscTests
 	TypeTraits.cpp
 	unsigned_char.cpp
 	version.cpp
-	vla.cpp
 )
 
 target_link_libraries(MiscTests catch)

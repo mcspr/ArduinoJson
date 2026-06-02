@@ -44,7 +44,7 @@ struct StdStringTraits {
 
   struct Reader : CharPointerTraits<char>::Reader {
     Reader(const TString& str) :
-      CharPointerTraits<char>::Reader(str.c_str())
+      CharPointerTraits<char>::Reader(str.c_str(), str.length())
     {}
   };
 

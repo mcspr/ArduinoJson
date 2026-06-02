@@ -36,27 +36,8 @@ class JsonBuffer : Internals::NonCopyable {
   // allocation fails.
   JsonObject &createObject();
 
-  // Duplicates a string
-  //
-  // const char* strdup(TValue);
-  // TValue = const std::string&, const String&,
-  template <typename TString>
-  DEPRECATED("char* are duplicated, you don't need strdup() anymore")
-  typename Internals::EnableIf<!Internals::IsArray<TString>::value,
-                               const char *>::type strdup(const TString &src) {
-    return Internals::StringTraits<TString>::duplicate(src, this);
-  }
-  //
-  // const char* strdup(TValue);
-  // TValue = char*, const char*, const FlashStringHelper*
-  template <typename TString>
-  DEPRECATED("char* are duplicated, you don't need strdup() anymore")
-  const char *strdup(TString *src) {
-    return Internals::StringTraits<TString *>::duplicate(src, this);
-  }
-
   // Allocates n bytes in the JsonBuffer.
-  // Return a pointer to the allocated memory or NULL if allocation fails.
+  // Return a pointer to the allocated memory or nullptr if allocation fails.
   virtual void *alloc(size_t size) = 0;
 
  protected:

@@ -4,38 +4,78 @@
 
 #pragma once
 
+#include "../TypeTraits/IsConst.hpp"
+
+#include <cstddef>
+
 namespace ArduinoJson {
 namespace Internals {
 
 template <typename TChar>
 class StringWriter {
+ static_assert(!Internals::IsConst<TChar>::value, "");
+
  public:
   class String {
    public:
-    String(TChar** ptr) : _writePtr(ptr), _startPtr(*ptr) {}
+    String(StringWriter &parent) :
+      _parent(parent),
+      _startPtr(parent._writePtr)
+    {}
 
     void append(char c) {
-      *(*_writePtr)++ = TChar(c);
+      _parent.append(c);
     }
 
     const char* c_str() const {
-      *(*_writePtr)++ = 0;
-      return reinterpret_cast<const char*>(_startPtr);
+      if (_parent.append(0))
+        return reinterpret_cast<const char*>(_startPtr);
+
+      return nullptr;
     }
 
    private:
-    TChar** _writePtr;
-    TChar* _startPtr;
+    StringWriter<TChar> &_parent;
+    TChar *_startPtr;
   };
 
-  StringWriter(TChar* buffer) : _ptr(buffer) {}
+  StringWriter(TChar *buffer, size_t len) :
+    _startPtr(buffer),
+    _writePtr(buffer),
+    _len(len)
+  {}
 
   String startString() {
-    return String(&_ptr);
+    return String(*this);
   }
 
  private:
-  TChar* _ptr;
+  void move() {
+    if (writable())
+      ++_writePtr;
+  }
+
+  bool append(char c) {
+    bool out = false;
+
+    if (writable()) {
+      *_writePtr = TChar(c);
+      out = true;
+    }
+
+    move();
+
+    return out;
+  }
+
+  bool writable() const {
+    return _writePtr < _startPtr + _len;
+  }
+
+  TChar *_startPtr;
+  TChar *_writePtr;
+
+  size_t _len;
 };
 }  // namespace Internals
 }  // namespace ArduinoJson
