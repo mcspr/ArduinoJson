@@ -35,12 +35,24 @@ class ListConstIterator {
     return *this;
   }
 
+  ListConstIterator<T> operator++(int) const {
+    ListConstIterator<T> out(*this);
+    ++out;
+    return out;
+  }
+
   ListConstIterator<T> &operator+=(size_t distance) {
     while (_node && distance) {
       _node = _node->next;
       --distance;
     }
     return *this;
+  }
+
+  ListConstIterator<T> operator+(size_t distance) const {
+    ListConstIterator<T> out(*this);
+    out += distance;
+    return out;
   }
 
  private:
