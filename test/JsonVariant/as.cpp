@@ -6,8 +6,6 @@
 #include <stdint.h>
 #include <catch.hpp>
 
-static const char* null = 0;
-
 TEST_CASE("JsonVariant::as()") {
   SECTION("DoubleAsBool") {
     JsonVariant variant = 4.2;
@@ -115,22 +113,22 @@ TEST_CASE("JsonVariant::as()") {
   }
 
   SECTION("NullAsBool") {
-    JsonVariant variant = null;
+    JsonVariant variant = JsonNull{};
     REQUIRE_FALSE(variant.as<bool>());
   }
 
   SECTION("NullAsDouble") {
-    JsonVariant variant = null;
+    JsonVariant variant = JsonNull{};
     REQUIRE(0.0 == variant.as<double>());
   }
 
   SECTION("NullAsLong") {
-    JsonVariant variant = null;
+    JsonVariant variant = JsonNull{};
     REQUIRE(0L == variant.as<long>());
   }
 
   SECTION("NullAsString") {
-    JsonVariant variant = null;
+    JsonVariant variant = JsonNull{};
     REQUIRE(std::string("null") == variant.as<std::string>());
   }
 

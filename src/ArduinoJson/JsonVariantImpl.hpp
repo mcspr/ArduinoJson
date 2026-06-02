@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "ArduinoJson/Data/JsonVariantContent.hpp"
 #include "Configuration.hpp"
 #include "JsonArray.hpp"
 #include "JsonObject.hpp"
@@ -17,25 +18,15 @@
 
 namespace ArduinoJson {
 
-inline JsonVariant::JsonVariant(const JsonArray &array) {
-  if (array.success()) {
-    _type = Internals::JSON_ARRAY;
-    _content.asArray = const_cast<JsonArray *>(&array);
-  } else {
-    _type = Internals::JSON_UNDEFINED;
-    _content.asArray = 0;  // <- prevent warning 'maybe-uninitialized'
-  }
-}
+inline JsonVariant::JsonVariant(const JsonArray &array) :
+  _type(Internals::JSON_ARRAY),
+  _content(const_cast<JsonArray *>(std::addressof(array)))
+{}
 
-inline JsonVariant::JsonVariant(const JsonObject &object) {
-  if (object.success()) {
-    _type = Internals::JSON_OBJECT;
-    _content.asObject = const_cast<JsonObject *>(&object);
-  } else {
-    _type = Internals::JSON_UNDEFINED;
-    _content.asObject = 0;  // <- prevent warning 'maybe-uninitialized'
-  }
-}
+inline JsonVariant::JsonVariant(const JsonObject &object) :
+  _type(Internals::JSON_OBJECT),
+  _content(const_cast<JsonObject *>(std::addressof(object)))
+{}
 
 inline JsonArray &JsonVariant::variantAsArray() const {
   if (_type == Internals::JSON_ARRAY) return *_content.asArray;
@@ -52,6 +43,7 @@ inline T JsonVariant::variantAsInteger() const {
   using namespace Internals;
   switch (_type) {
     case JSON_UNDEFINED:
+    case JSON_NULL:
       return 0;
     case JSON_POSITIVE_INTEGER:
     case JSON_BOOLEAN:
@@ -70,9 +62,12 @@ inline const char *JsonVariant::variantAsString() const {
   using namespace Internals;
   if (_type == JSON_UNPARSED && _content.asString &&
       !strcmp("null", _content.asString))
-    return NULL;
-  if (_type == JSON_STRING || _type == JSON_UNPARSED) return _content.asString;
-  return NULL;
+    return nullptr;
+
+  if (_type == JSON_STRING || _type == JSON_UNPARSED)
+    return _content.asString;
+
+  return nullptr;
 }
 
 template <typename T>
@@ -80,6 +75,7 @@ inline T JsonVariant::variantAsFloat() const {
   using namespace Internals;
   switch (_type) {
     case JSON_UNDEFINED:
+    case JSON_NULL:
       return 0;
     case JSON_POSITIVE_INTEGER:
     case JSON_BOOLEAN:
@@ -88,10 +84,13 @@ inline T JsonVariant::variantAsFloat() const {
       return -static_cast<T>(_content.asInteger);
     case JSON_STRING:
     case JSON_UNPARSED:
-      return parseFloat<T>(_content.asString);
+      if (_content.asString)
+        return parseFloat<T>(_content.asString);
     default:
-      return static_cast<T>(_content.asFloat);
+      break;
   }
+
+  return static_cast<T>(_content.asFloat);
 }
 
 inline bool JsonVariant::variantIsBoolean() const {
@@ -117,6 +116,21 @@ inline bool JsonVariant::variantIsFloat() const {
   return _type == JSON_FLOAT || _type == JSON_POSITIVE_INTEGER ||
          _type == JSON_NEGATIVE_INTEGER ||
          (_type == JSON_UNPARSED && isFloat(_content.asString));
+}
+
+inline bool JsonVariant::success() const {
+  switch (_type) {
+    case Internals::JSON_ARRAY:
+      return _content.asArray->success();
+
+    case Internals::JSON_OBJECT:
+      return _content.asObject->success();
+
+    default:
+      break;
+  }
+
+  return _type != Internals::JSON_UNDEFINED;
 }
 
 #if ARDUINOJSON_ENABLE_STD_STREAM

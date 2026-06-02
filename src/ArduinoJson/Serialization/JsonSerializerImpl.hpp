@@ -82,6 +82,10 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
       writer.writeString(variant._content.asString);
       return;
 
+    case JSON_NULL:
+      writer.writeNull();
+      return;
+
     case JSON_UNPARSED:
       writer.writeRaw(variant._content.asString);
       return;

@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include <stdint.h>
 #include "../Data/Encoding.hpp"
 #include "../Data/JsonInteger.hpp"
 #include "../Polyfills/attributes.hpp"
 #include "../Serialization/FloatParts.hpp"
+
+#include <cstdint>
 
 namespace ArduinoJson {
 namespace Internals {
@@ -57,10 +58,12 @@ class JsonWriter {
     writeRaw(value ? "true" : "false");
   }
 
+  void writeNull() {
+    writeRaw("null");
+  }
+
   void writeString(const char *value) {
-    if (!value) {
-      writeRaw("null");
-    } else {
+    if (value) {
       writeRaw('\"');
       while (*value) writeChar(*value++);
       writeRaw('\"');

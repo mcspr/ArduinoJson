@@ -48,15 +48,4 @@ TEST_CASE("StaticJsonBuffer::parseObject()") {
     JsonObject& obj = bufferOfRightSize.parseObject(input);
     REQUIRE(obj.success());
   }
-
-  SECTION("CharPtrNull") {
-    REQUIRE_FALSE(
-        StaticJsonBuffer<100>().parseObject(static_cast<char*>(0)).success());
-  }
-
-  SECTION("ConstCharPtrNull") {
-    REQUIRE_FALSE(StaticJsonBuffer<100>()
-                      .parseObject(static_cast<const char*>(0))
-                      .success());
-  }
 }

@@ -20,7 +20,7 @@ void check(const char* input, std::string expected) {
 
 TEST_CASE("JsonWriter::writeString()") {
   SECTION("Null") {
-    check(0, "null");
+    check(0, "");
   }
 
   SECTION("EmptyString") {

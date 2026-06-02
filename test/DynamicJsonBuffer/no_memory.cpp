@@ -9,17 +9,18 @@ using namespace ArduinoJson::Internals;
 
 struct NoMemoryAllocator {
   void* allocate(size_t) {
-    return NULL;
+    return nullptr;
   }
-  void deallocate(void*) {}
+
+  void deallocate(void*) {
+  }
 };
 
 TEST_CASE("DynamicJsonBuffer no memory") {
   DynamicJsonBufferBase<NoMemoryAllocator> _jsonBuffer;
 
   SECTION("FixCodeCoverage") {
-    // call this function to fix code coverage
-    NoMemoryAllocator().deallocate(NULL);
+    NoMemoryAllocator().deallocate(nullptr);
   }
 
   SECTION("createArray()") {
@@ -44,6 +45,6 @@ TEST_CASE("DynamicJsonBuffer no memory") {
     DynamicJsonBufferBase<NoMemoryAllocator>::String str =
         _jsonBuffer.startString();
     str.append('!');
-    REQUIRE(0 == str.c_str());
+    REQUIRE(nullptr == str.c_str());
   }
 }

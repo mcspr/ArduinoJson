@@ -14,6 +14,7 @@ namespace Internals {
 // The value determines which member of JsonVariantContent is used.
 enum JsonVariantType {
   JSON_UNDEFINED,         // JsonVariant has not been initialized
+  JSON_NULL,              // JsonVariant contains a null
   JSON_UNPARSED,          // JsonVariant contains an unparsed string
   JSON_STRING,            // JsonVariant stores a const char*
   JSON_BOOLEAN,           // JsonVariant stores a bool

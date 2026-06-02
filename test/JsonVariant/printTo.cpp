@@ -19,7 +19,11 @@ TEST_CASE("JsonVariant::printTo()") {
   }
 
   SECTION("Null") {
-    check(static_cast<char *>(0), "null");
+    check(JsonNull{}, "null");
+  }
+
+  SECTION("Empty string") {
+    check("", "\"\"");
   }
 
   SECTION("String") {

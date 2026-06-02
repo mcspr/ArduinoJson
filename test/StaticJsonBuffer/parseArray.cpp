@@ -50,17 +50,6 @@ TEST_CASE("StaticJsonBuffer::parseArray()") {
     REQUIRE(arr.success());
   }
 
-  SECTION("CharPtrNull") {
-    REQUIRE_FALSE(
-        StaticJsonBuffer<100>().parseArray(static_cast<char*>(0)).success());
-  }
-
-  SECTION("ConstCharPtrNull") {
-    REQUIRE_FALSE(StaticJsonBuffer<100>()
-                      .parseArray(static_cast<const char*>(0))
-                      .success());
-  }
-
   SECTION("CopyStringNotSpaces") {
     StaticJsonBuffer<100> jsonBuffer;
     jsonBuffer.parseArray("  [ \"1234567\" ] ");

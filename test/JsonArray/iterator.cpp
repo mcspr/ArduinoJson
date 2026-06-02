@@ -12,6 +12,9 @@ static void run_iterator_test() {
   JsonArray &array = jsonBuffer.createArray();
   array.add(12);
   array.add(34);
+  array.add(static_cast<const char*>(0));
+
+  REQUIRE(2 == array.size());
 
   TIterator it = array.begin();
   TIterator end = array.end();

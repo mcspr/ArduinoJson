@@ -79,9 +79,15 @@ TEST_CASE("JsonObject::printTo()") {
     check(obj, "{\"a\":12.34,\"b\":56.78}");
   }
 
-  SECTION("TwoNull") {
+  SECTION("TwoNullPtrStrings") {
     obj["a"] = static_cast<char *>(0);
     obj.set("b", static_cast<char *>(0));
+    check(obj, "{\"a\":,\"b\":}");
+  }
+
+  SECTION("TwoJsonNull") {
+    obj["a"] = JsonNull{};
+    obj.set("b", JsonNull{});
     check(obj, "{\"a\":null,\"b\":null}");
   }
 

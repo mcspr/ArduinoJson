@@ -22,8 +22,14 @@ TEST_CASE("JsonArray::printTo()") {
     check(array, "[]");
   }
 
-  SECTION("Null") {
+  SECTION("NullPtr") {
     array.add(static_cast<char *>(0));
+
+    check(array, "[]");
+  }
+
+  SECTION("Null") {
+    array.add(JsonNull{});
 
     check(array, "[null]");
   }
