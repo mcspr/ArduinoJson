@@ -95,7 +95,7 @@ struct StringTraitsImpl<TChar[Size], typename EnableIf<IsChar<TChar>::value>::ty
   template <typename Buffer>
   static typename CharPointerTraits<TChar>::duplicate_t
   duplicate(const TChar* str, Buffer* buffer) {
-    return CharPointerTraits<TChar>::template duplicate(str, buffer, Size - 1);
+    return CharPointerTraits<TChar>::duplicate(str, buffer, Size - 1);
   }
 };
 
