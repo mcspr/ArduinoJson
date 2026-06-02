@@ -9,12 +9,32 @@
 #include "JsonVariantBase.hpp"
 #include "JsonObjectSubscriptKey.hpp"
 
+#include "StringTraits/StringTraits.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
-#include "TypeTraits/IsArray.hpp"
+#include "TypeTraits/IsPointer.hpp"
 #include "TypeTraits/RemoveReference.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+
+// strip useless qualifiers before attempting to create a key type
+
+template <typename TKey, typename = void>
+struct JsonObjectSubscriptHelper {
+  typedef TKey raw_key_type;
+  typedef TKey key_type;
+  typedef JsonObjectSubscriptKey<key_type> subscript_key_type;
+};
+
+template <typename TKey>
+struct JsonObjectSubscriptHelper<TKey,
+  typename EnableIf<IsPointer<typename RemoveReference<TKey>::type>::value, void>::type> {
+
+  typedef TKey raw_key_type;
+  typedef typename RemoveConstReference<TKey>::type key_type;
+  typedef JsonObjectSubscriptKey<key_type> subscript_key_type;
+};
 
 template <typename TKey>
 class JsonObjectSubscript final
@@ -87,8 +107,10 @@ class JsonObjectSubscript final
   }
 
  private:
+  typedef typename JsonObjectSubscriptHelper<TKey>::subscript_key_type TKeyType;
+
   JsonObject& _object;
-  JsonObjectSubscriptKey<TKey> _key;
+  TKeyType _key;
 };
 
 #if ARDUINOJSON_ENABLE_STD_STREAM

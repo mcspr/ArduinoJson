@@ -46,41 +46,20 @@ class JsonObjectSubscriptKey<const TString&> {
   {}
 
   const TString& get() const {
-    return *_ref;
+    return _ref;
   }
 
  private:
-  const TString* _ref;
+  const TString& _ref;
 };
 
 // literals, stack or globals
-
-template <typename TChar, size_t Size>
-class JsonObjectSubscriptKey<TChar[Size]> {
- public:
-  JsonObjectSubscriptKey() = default;
-  explicit JsonObjectSubscriptKey(TChar (&str)[Size]) :
-    _str(&str[0])
-  {}
-
-  TChar *get() const {
-    return _str;
-  }
-
- private:
-  TChar *_str{};
-};
-
-template <typename TChar, size_t Size>
-class JsonObjectSubscriptKey<TChar(&)[Size]> :
-  public JsonObjectSubscriptKey<TChar[Size]> {
-};
 
 template <typename TChar>
 class JsonObjectSubscriptKey<TChar*> {
  public:
   JsonObjectSubscriptKey() = default;
-  explicit JsonObjectSubscriptKey(TChar *str) :
+  explicit JsonObjectSubscriptKey(TChar* str) :
     _str(str)
   {}
 
@@ -92,41 +71,19 @@ class JsonObjectSubscriptKey<TChar*> {
   TChar *_str{};
 };
 
-// stack or globals, passed by value
+template <typename TChar, size_t Size>
+class JsonObjectSubscriptKey<TChar[Size]> :
+  public JsonObjectSubscriptKey<TChar*> {
 
-template <typename TChar>
-class JsonObjectSubscriptKey<TChar*&> {
  public:
   JsonObjectSubscriptKey() = default;
-  explicit JsonObjectSubscriptKey(TChar *&str) :
-    _str(str)
+  explicit JsonObjectSubscriptKey(TChar (&str)[Size]) :
+    JsonObjectSubscriptKey<TChar *>(&str[0])
   {}
-
-  TChar *get() const {
-    return _str;
-  }
-
- private:
-  TChar *_str{};
 };
 
-template <typename TChar>
-class JsonObjectSubscriptKey<const TChar*&> {
- public:
-  JsonObjectSubscriptKey() = default;
-  explicit JsonObjectSubscriptKey(const TChar *&str) :
-    _str(str)
-  {}
-
-  const TChar *get() const {
-    return _str;
-  }
-
- private:
-  const TChar *_str{};
-};
-
-// TODO clever templating?
+template <typename T>
+class JsonObjectSubscriptKey<T[]>;
 
 }  // namespace Internals
 }  // namespace ArduinoJson

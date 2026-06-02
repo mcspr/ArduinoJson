@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -20,5 +22,6 @@ template <typename T, size_t N>
 struct IsArray<T[N]> {
   static const bool value = true;
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

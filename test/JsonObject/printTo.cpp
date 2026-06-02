@@ -15,6 +15,9 @@ void check(const JsonObject &obj, const std::string &expected) {
   REQUIRE(expected.size() == actualLen);
   REQUIRE(expected.size() == measuredLen);
 }
+
+static constexpr const char* const_char_nullptr = nullptr;
+
 TEST_CASE("JsonObject::printTo()") {
   DynamicJsonBuffer _jsonBuffer;
   JsonObject &obj = _jsonBuffer.createObject();
@@ -79,9 +82,15 @@ TEST_CASE("JsonObject::printTo()") {
     check(obj, "{\"a\":12.34,\"b\":56.78}");
   }
 
-  SECTION("TwoNullPtrStrings") {
-    obj["a"] = static_cast<char *>(0);
-    obj.set("b", static_cast<char *>(0));
+  SECTION("TwoNullConstCharPtrStrings") {
+    obj["a"] = const_char_nullptr;
+    obj.set("b", const_char_nullptr);
+    check(obj, "{}");
+  }
+
+  SECTION("TwoNullCharPtrStrings") {
+    obj["a"] = const_cast<char *>(const_char_nullptr);
+    obj.set("b", const_cast<char *>(const_char_nullptr));
     check(obj, "{}");
   }
 

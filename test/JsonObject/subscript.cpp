@@ -108,8 +108,15 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(42 == _object[key]);
   }
 
-  SECTION("should not duplicate const char*") {
+  SECTION("should not duplicate const char[]") {
     _object["hello"] = "world";
+    REQUIRE(JSON_OBJECT_SIZE(1) == _jsonBuffer.size());
+  }
+
+  SECTION("should not duplicate const char*") {
+    const char* key = "hello";
+    const char* val = "world";
+    _object[key] = val;
     REQUIRE(JSON_OBJECT_SIZE(1) == _jsonBuffer.size());
   }
 
@@ -128,6 +135,13 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
+  SECTION("should duplicate char[] key&value") {
+    char key[] = "hello";
+    char val[] = "world";
+    _object[key] = val;
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
+  }
+
   SECTION("should duplicate std::string value") {
     _object["hello"] = std::string("world");
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
@@ -140,6 +154,13 @@ TEST_CASE("JsonObject::operator[]") {
 
   SECTION("should duplicate std::string key&value") {
     _object[std::string("hello")] = std::string("world");
+    REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate const std::string& key&value") {
+    const auto key = std::string("hello");
+    const auto val = std::string("world");
+    _object[key] = val;
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
