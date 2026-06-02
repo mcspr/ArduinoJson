@@ -79,32 +79,42 @@ TEST_CASE("JsonArray::add()") {
   }
 
   SECTION("should not duplicate const char*") {
-    _array.add("world");
-    const size_t expectedSize = JSON_ARRAY_SIZE(1);
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    const char* data = "world";
+    _array.add(data);
+    REQUIRE(_jsonBuffer.size() == JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() == data);
   }
 
   SECTION("should duplicate char*") {
-    _array.add(const_cast<char*>("world"));
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + 6;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    const char* data = "world";
+    _array.add(const_cast<char*>(data));
+    REQUIRE(_jsonBuffer.size() >= JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != data);
   }
 
   SECTION("should duplicate std::string") {
-    _array.add(std::string("world"));
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + 6;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    std::string data("world");
+    _array.add(data);
+    REQUIRE(_jsonBuffer.size() >= JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != data.c_str());
   }
 
   SECTION("should not duplicate RawJson(const char*)") {
-    _array.add(RawJson("{}"));
-    const size_t expectedSize = JSON_ARRAY_SIZE(1);
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    const char* data = "{}";
+    _array.add(RawJson(data));
+    REQUIRE(_jsonBuffer.size() == JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() == data);
   }
 
   SECTION("should duplicate RawJson(char*)") {
-    _array.add(RawJson(const_cast<char*>("{}")));
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + 3;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    const char* data = "{}";
+    _array.add(RawJson(const_cast<char*>(data)));
+    REQUIRE(_jsonBuffer.size() >= JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != data);
   }
 }

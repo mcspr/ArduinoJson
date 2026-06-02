@@ -201,10 +201,14 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   template <typename TValue>
   bool add_impl(TValue &&value) {
-    iterator it = Internals::List<JsonVariant>::add();
-    if (it != end()) {
-      return Internals::ValueSaver<TValue>::save(
-          _buffer, *it, std::forward<TValue>(value));
+    JsonVariant tmp;
+    if (Internals::ValueSaver<TValue>::save(
+        _buffer, tmp, std::forward<TValue>(value))) {
+      iterator it = Internals::List<JsonVariant>::add();
+      if (it != end()) {
+        *it = std::move(tmp);
+        return true;
+      }
     }
 
     return false;
