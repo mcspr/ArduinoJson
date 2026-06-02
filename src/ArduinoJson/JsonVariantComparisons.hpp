@@ -12,75 +12,96 @@ namespace ArduinoJson {
 namespace Internals {
 
 template <typename TImpl>
+class JsonVariantComparisons;
+
+struct JsonVariantComparisonsHelper {
+  template <typename TFirst, typename TSecond>
+  static bool equals(const JsonVariantComparisons<TFirst>&,
+                     const JsonVariantComparisons<TSecond>&);
+};
+
+template <typename TImpl>
 class JsonVariantComparisons {
  public:
-  template <typename TComparand>
+  template <typename TOther>
   friend bool operator==(const JsonVariantComparisons &variant,
-                         TComparand comparand) {
+                         const JsonVariantComparisons<TOther> &comparand) {
     return variant.equals(comparand);
   }
 
   template <typename TComparand>
   friend typename EnableIf<!IsVariant<TComparand>::value, bool>::type
-  operator==(TComparand comparand, const JsonVariantComparisons &variant) {
+  operator==(const JsonVariantComparisons &variant, const TComparand &comparand) {
     return variant.equals(comparand);
   }
 
   template <typename TComparand>
+  friend typename EnableIf<!IsVariant<TComparand>::value, bool>::type
+  operator==(const TComparand &comparand, const JsonVariantComparisons &variant) {
+    return variant.equals(comparand);
+  }
+
+  template <typename TOther>
   friend bool operator!=(const JsonVariantComparisons &variant,
-                         TComparand comparand) {
+                         const JsonVariantComparisons<TOther> &comparand) {
     return !variant.equals(comparand);
   }
 
   template <typename TComparand>
   friend typename EnableIf<!IsVariant<TComparand>::value, bool>::type
-  operator!=(TComparand comparand, const JsonVariantComparisons &variant) {
+  operator!=(const JsonVariantComparisons &variant, const TComparand &comparand) {
     return !variant.equals(comparand);
   }
 
   template <typename TComparand>
-  friend bool operator<=(const JsonVariantComparisons &left, TComparand right) {
+  friend typename EnableIf<!IsVariant<TComparand>::value, bool>::type
+  operator!=(const TComparand &comparand, const JsonVariantComparisons &variant) {
+    return !variant.equals(comparand);
+  }
+
+  template <typename TComparand>
+  friend bool operator<=(const JsonVariantComparisons &left, const TComparand &right) {
     return left.as<TComparand>() <= right;
   }
 
   template <typename TComparand>
-  friend bool operator<=(TComparand comparand,
+  friend bool operator<=(const TComparand &comparand,
                          const JsonVariantComparisons &variant) {
     return comparand <= variant.as<TComparand>();
   }
 
   template <typename TComparand>
   friend bool operator>=(const JsonVariantComparisons &variant,
-                         TComparand comparand) {
+                         const TComparand &comparand) {
     return variant.as<TComparand>() >= comparand;
   }
 
   template <typename TComparand>
-  friend bool operator>=(TComparand comparand,
+  friend bool operator>=(const TComparand &comparand,
                          const JsonVariantComparisons &variant) {
     return comparand >= variant.as<TComparand>();
   }
 
   template <typename TComparand>
   friend bool operator<(const JsonVariantComparisons &varian,
-                        TComparand comparand) {
+                        const TComparand &comparand) {
     return varian.as<TComparand>() < comparand;
   }
 
   template <typename TComparand>
-  friend bool operator<(TComparand comparand,
+  friend bool operator<(const TComparand &comparand,
                         const JsonVariantComparisons &variant) {
     return comparand < variant.as<TComparand>();
   }
 
   template <typename TComparand>
   friend bool operator>(const JsonVariantComparisons &variant,
-                        TComparand comparand) {
+                        const TComparand &comparand) {
     return variant.as<TComparand>() > comparand;
   }
 
   template <typename TComparand>
-  friend bool operator>(TComparand comparand,
+  friend bool operator>(const TComparand &comparand,
                         const JsonVariantComparisons &variant) {
     return comparand > variant.as<TComparand>();
   }
@@ -91,20 +112,19 @@ class JsonVariantComparisons {
   }
 
   template <typename T>
-  const typename JsonVariantAs<T>::type as() const {
+  typename JsonVariantAs<T>::type as() const {
     return impl()->template as<T>();
   }
 
   template <typename T>
   bool is() const {
-    return impl()->template is<T>();
+    return impl()->template is<typename JsonVariantAs<T>::type>();
   }
 
   template <typename TString>
   typename EnableIf<StringTraits<TString>::has_equals, bool>::type equals(
       const TString &comparand) const {
-    const char *value = as<const char *>();
-    return StringTraits<TString>::equals(comparand, value);
+    return StringTraits<TString>::equals(comparand, as<const char *>());
   }
 
   template <typename TComparand>
@@ -117,23 +137,34 @@ class JsonVariantComparisons {
 
   template <typename TVariant2>
   bool equals(const JsonVariantComparisons<TVariant2> &right) const {
+    return JsonVariantComparisonsHelper::equals(*this, right);
+  }
+
+  friend struct JsonVariantComparisonsHelper;
+};
+
+template <typename TFirst, typename TSecond>
+inline bool JsonVariantComparisonsHelper::equals(
+    const JsonVariantComparisons<TFirst>& left,
+    const JsonVariantComparisons<TSecond>& right)
+{
     using namespace Internals;
-    if (is<bool>() && right.template is<bool>())
-      return as<bool>() == right.template as<bool>();
-    if (is<JsonInteger>() && right.template is<JsonInteger>())
-      return as<JsonInteger>() == right.template as<JsonInteger>();
-    if (is<JsonFloat>() && right.template is<JsonFloat>())
-      return as<JsonFloat>() == right.template as<JsonFloat>();
-    if (is<JsonArray>() && right.template is<JsonArray>())
-      return as<JsonArray>() == right.template as<JsonArray>();
-    if (is<JsonObject>() && right.template is<JsonObject>())
-      return as<JsonObject>() == right.template as<JsonObject>();
-    if (is<char *>() && right.template is<char *>())
-      return StringTraits<const char *>::equals(as<char *>(),
-                                                right.template as<char *>());
+    if (left.template is<bool>() && right.template is<bool>())
+      return left.template as<bool>() == right.template as<bool>();
+    if (left.template is<JsonInteger>() && right.template is<JsonInteger>())
+      return left.template as<JsonInteger>() == right.template as<JsonInteger>();
+    if (left.template is<JsonFloat>() && right.template is<JsonFloat>())
+      return left.template as<JsonFloat>() == right.template as<JsonFloat>();
+    if (left.template is<JsonArray>() && right.template is<JsonArray>())
+      return left.template as<JsonArray>() == right.template as<JsonArray>();
+    if (left.template is<JsonObject>() && right.template is<JsonObject>())
+      return left.template as<JsonObject>() == right.template as<JsonObject>();
+    if (left.template is<const char *>() && right.template is<const char *>())
+      return StringTraits<const char *>::equals(left.template as<const char *>(),
+                                                right.template as<const char *>());
 
     return false;
-  }
-};
+}
+
 }  // namespace Internals
 }  // namespace ArduinoJson
