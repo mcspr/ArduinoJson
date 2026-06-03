@@ -108,7 +108,7 @@ void setup() {
   while (!Serial) continue;
 
   // Initialize SD library
-  while (!SD.begin()) {
+  while (!SD.begin(4)) {
     Serial.println(F("Failed to initialize SD library"));
     delay(1000);
   }
