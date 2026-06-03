@@ -29,8 +29,8 @@ template <>
 struct ExtentImpl<JsonSpanDynamicExtent> {
   ExtentImpl() = delete;
 
-  constexpr ExtentImpl(size_t size) :
-    _size(size)
+  constexpr ExtentImpl(size_t extent_size) :
+    _size(extent_size)
   {}
 
   constexpr size_t size() const {
@@ -54,8 +54,8 @@ struct JsonSpan {
     JsonSpan(nullptr)
   {}
 
-  constexpr explicit JsonSpan(T* data) :
-    _data(data)
+  constexpr explicit JsonSpan(T* span_data) :
+    _data(span_data)
   {}
 
   constexpr explicit JsonSpan(std::nullptr_t, size_t) :
@@ -63,9 +63,9 @@ struct JsonSpan {
     _extent(0)
   {}
 
-  constexpr explicit JsonSpan(T* data, size_t size) :
-    _data(data),
-    _extent(size)
+  constexpr explicit JsonSpan(T* span_data, size_t extent_size) :
+    _data(span_data),
+    _extent(extent_size)
   {}
 
   constexpr T* data() const {
@@ -104,10 +104,10 @@ struct JsonSpan {
     return _data[size() ? size() - 1 : 0];
   }
 
-  constexpr JsonSpan<T> slice(size_t index, size_t size) const {
+  constexpr JsonSpan<T> slice(size_t index, size_t extent_size) const {
     return JsonSpan(
       _data + Min(index, this->size()),
-      Min(size, this->size() - index));
+      Min(extent_size, this->size() - index));
   }
 
   constexpr JsonSpan<T> slice(size_t index) const {
