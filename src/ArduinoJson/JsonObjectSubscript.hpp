@@ -7,13 +7,12 @@
 #include "Configuration.hpp"
 
 #include "JsonVariantBase.hpp"
-#include "JsonObjectSubscriptKey.hpp"
-
-#include "StringTraits/StringTraits.hpp"
 
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsPointer.hpp"
 #include "TypeTraits/RemoveReference.hpp"
+
+#include "Data/StringRef.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -24,7 +23,7 @@ template <typename TKey, typename = void>
 struct JsonObjectSubscriptHelper {
   typedef TKey raw_key_type;
   typedef TKey key_type;
-  typedef JsonObjectSubscriptKey<key_type> subscript_key_type;
+  typedef StringRefWrapper<key_type> subscript_key_type;
 };
 
 template <typename TKey>
@@ -33,7 +32,7 @@ struct JsonObjectSubscriptHelper<TKey,
 
   typedef TKey raw_key_type;
   typedef typename RemoveConstReference<TKey>::type key_type;
-  typedef JsonObjectSubscriptKey<key_type> subscript_key_type;
+  typedef StringRefWrapper<key_type> subscript_key_type;
 };
 
 template <typename TKey>
@@ -107,7 +106,7 @@ class JsonObjectSubscript final
   }
 
  private:
-  typedef typename JsonObjectSubscriptHelper<TKey>::subscript_key_type TKeyType;
+  typedef typename StringRefWrapperHelper<TKey>::wrapper_type TKeyType;
 
   JsonObject& _object;
   TKeyType _key;

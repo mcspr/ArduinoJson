@@ -112,7 +112,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // Create a JsonVariant containing an unparsed string
   JsonVariant(Internals::RawJsonString<const char *> value) :
     _type(Internals::JSON_UNPARSED),
-    _content(value)
+    _content(value.get())
   {}
 
   // Create a JsonVariant containing a reference to an array.

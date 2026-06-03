@@ -34,6 +34,17 @@ TEST_CASE("JsonObject::prettyPrintTo()") {
           "}");
   }
 
+  SECTION("RawJsonString") {
+    auto raw = std::string("{\"is\":\"formatted\"}");
+    obj["key"] = RawJson(raw);
+    check(obj,
+          "{\r\n"
+          "  \"key\": {\r\n"
+          "    \"is\": \"formatted\"\r\n"
+          "  }\r\n"
+          "}");
+  }
+
   SECTION("TwoMembers") {
     obj["key1"] = "value1";
     obj["key2"] = "value2";
