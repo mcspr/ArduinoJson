@@ -20,9 +20,9 @@ jobs:
             archive: focal
             cxxflags: -funsigned-char # Issue #1715
           - gcc: "14"
-            test: true
+            test: "ppa:ubuntu-toolchain-r/test"
           - gcc: "16"
-            test: true
+            test: "ppa:ubuntu-toolchain-r/test"
     steps:
       - name: Workaround for actions/runner-images#9491
         run: sudo sysctl vm.mmap_rnd_bits=28
