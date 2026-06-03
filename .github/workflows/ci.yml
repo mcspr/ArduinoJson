@@ -39,7 +39,7 @@ jobs:
         timeout-minutes: 1
 
       - name: Configure
-        if: matrix.gcc != "latest"
+        if: matrix.gcc != 'latest'
         run: cmake -DCMAKE_BUILD_TYPE=Debug .
         env:
           CC: gcc-${{ matrix.gcc }}
@@ -48,7 +48,7 @@ jobs:
         timeout-minutes: 1
 
       - name: Configure
-        if: matrix.gcc == "latest"
+        if: matrix.gcc == 'latest'
         run: cmake -DCMAKE_BUILD_TYPE=Debug .
         env:
           CXXFLAGS: ${{ matrix.cxxflags }}
