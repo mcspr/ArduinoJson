@@ -95,15 +95,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - core: esp8266:esp8266
+          - name: esp8266
+            core: esp8266:esp8266
             board: esp8266:esp8266:d1_mini
             opts: --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
-          - core: esp32:esp32
+          - name: esp32
+            core: esp32:esp32
             board: esp32:esp32:esp32
             libraries: Ethernet
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - uses: actions/cache@v5
+        with:
+          key: arduino-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('**/*.ino', '**/library.properties') }}
+          path: |
+            ~/.arduino15
+            ~/.cache/arduino
+            ~/Arduino/libraries
 
       - name: Install arduino-cli
         run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
