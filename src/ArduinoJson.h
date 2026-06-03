@@ -8,7 +8,16 @@
 
 #include "ArduinoJson.hpp"
 
-using namespace ArduinoJson;
+using ArduinoJson::JsonArray;
+using ArduinoJson::JsonNull;
+using ArduinoJson::JsonObject;
+using ArduinoJson::JsonVariant;
+using ArduinoJson::JsonSpan;
+
+using ArduinoJson::DynamicJsonBuffer;
+using ArduinoJson::StaticJsonBuffer;
+
+using ArduinoJson::RawJson;
 
 #else
 
