@@ -29,7 +29,7 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
   //          std::string, String, JsonArray, JsonObject
   template <typename TValue>
-  FORCE_INLINE JsonArraySubscript& operator=(TValue &&value) {
+  ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(TValue &&value) {
     _array.set(_index, std::forward<TValue>(value));
     return *this;
   }
@@ -37,22 +37,22 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   // operator=(TValue)
   // TValue = char*, const char*, const FlashStringHelper*
   template <typename TChar, size_t Size>
-  FORCE_INLINE JsonArraySubscript& operator=(TChar (&value)[Size]) {
+  ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(TChar (&value)[Size]) {
     _array.set(_index, &value[0]);
     return *this;
   }
 
-  FORCE_INLINE bool success() const {
+  ARDUINOJSON_FORCE_INLINE bool success() const {
     return _index < _array.size();
   }
 
   template <typename T>
-  FORCE_INLINE typename JsonVariantAs<T>::type as() const {
+  ARDUINOJSON_FORCE_INLINE typename JsonVariantAs<T>::type as() const {
     return _array.get<T>(_index);
   }
 
   template <typename T>
-  FORCE_INLINE bool is() const {
+  ARDUINOJSON_FORCE_INLINE bool is() const {
     return _array.is<T>(_index);
   }
 
@@ -62,22 +62,14 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
   //          std::string, String, JsonArray, JsonObject
   template <typename TValue>
-  FORCE_INLINE bool set(const TValue& value) {
+  ARDUINOJSON_FORCE_INLINE bool set(const TValue& value) {
     return _array.set(_index, value);
   }
   //
   // bool set(TValue)
   // TValue = char*, const char*, const FlashStringHelper*
   template <typename TValue>
-  FORCE_INLINE bool set(TValue* value) {
-    return _array.set(_index, value);
-  }
-  //
-  // bool set(TValue, uint8_t decimals);
-  // TValue = float, double
-  template <typename TValue>
-  DEPRECATED("Second argument is not supported anymore")
-  FORCE_INLINE bool set(const TValue& value, uint8_t) {
+  ARDUINOJSON_FORCE_INLINE bool set(TValue* value) {
     return _array.set(_index, value);
   }
 

@@ -83,12 +83,12 @@ class JsonObjectSubscript final
   }
 
   template <typename TValue>
-  FORCE_INLINE typename JsonVariantAs<TValue>::type as() const {
+  ARDUINOJSON_FORCE_INLINE typename JsonVariantAs<TValue>::type as() const {
     return _object.get<TValue>(_key.get());
   }
 
   template <typename TValue>
-  FORCE_INLINE
+  ARDUINOJSON_FORCE_INLINE
   bool is() const {
     return _object.is<typename JsonVariantAs<TValue>::type>(_key.get());
   }
@@ -96,12 +96,12 @@ class JsonObjectSubscript final
   // TValue = bool, char, long, int, short, float, double, RawJson, JsonVariant,
   //          char*, char[], const __FlashStringHelper*, std::string, String, JsonArray, JsonObject
   template <typename TValue>
-  FORCE_INLINE bool set(TValue&& value) {
+  ARDUINOJSON_FORCE_INLINE bool set(TValue&& value) {
     return _object.set(_key.get(), std::forward<TValue>(value));
   }
 
   template <typename TChar, size_t Size>
-  FORCE_INLINE bool set(TChar (&value)[Size]) {
+  ARDUINOJSON_FORCE_INLINE bool set(TChar (&value)[Size]) {
     return _object.set(_key.get(), value);
   }
 

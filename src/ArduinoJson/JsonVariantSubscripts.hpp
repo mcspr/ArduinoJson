@@ -31,8 +31,8 @@ class JsonVariantSubscripts {
   // Mimics an array.
   // Returns the element at specified index if the variant is an array.
   // Returns JsonVariant::invalid() if the variant is not an array.
-  FORCE_INLINE const JsonArraySubscript operator[](size_t index) const;
-  FORCE_INLINE JsonArraySubscript operator[](size_t index);
+  ARDUINOJSON_FORCE_INLINE const JsonArraySubscript operator[](size_t index) const;
+  ARDUINOJSON_FORCE_INLINE JsonArraySubscript operator[](size_t index);
 
   // Mimics an object.
   // Returns the value associated with the specified key if the variant is
@@ -42,7 +42,7 @@ class JsonVariantSubscripts {
   // const JsonObjectSubscript operator[](TKey) const;
   // TKey = const std::string&, const String&
   template <typename TKey>
-  FORCE_INLINE
+  ARDUINOJSON_FORCE_INLINE
       typename EnableIf<StringTraits<TKey>::has_equals,
                         const JsonObjectSubscript<TKey> >::type
       operator[](TKey &&key) const {
@@ -50,7 +50,7 @@ class JsonVariantSubscripts {
   }
 
   template <typename TChar, size_t Size>
-  FORCE_INLINE
+  ARDUINOJSON_FORCE_INLINE
       typename EnableIf<StringTraits<TChar[Size]>::has_equals,
                         const JsonObjectSubscript<TChar*> >::type
       operator[](TChar (&key)[Size]) const {
@@ -60,14 +60,14 @@ class JsonVariantSubscripts {
   // const JsonObjectSubscript operator[](TKey) const;
   // TKey = const std::string&, const String&
   template <typename TKey>
-  FORCE_INLINE typename EnableIf<StringTraits<TKey>::has_equals,
+  ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TKey>::has_equals,
                                  JsonObjectSubscript<TKey> >::type
   operator[](TKey &&key) {
     return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
   }
 
   template <typename TChar, size_t Size>
-  FORCE_INLINE typename EnableIf<StringTraits<TChar[Size]>::has_equals,
+  ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TChar[Size]>::has_equals,
                                  JsonObjectSubscript<TChar*> >::type
   operator[](TChar (&key)[Size]) {
     return impl()->template as<JsonObject>()[key];

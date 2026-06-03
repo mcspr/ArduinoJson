@@ -48,7 +48,7 @@ class JsonParser {
  private:
 
   static bool eat(TReader &, char charToSkip);
-  FORCE_INLINE bool eat(char charToSkip) {
+  ARDUINOJSON_FORCE_INLINE bool eat(char charToSkip) {
     return eat(_reader, charToSkip);
   }
 

@@ -47,7 +47,7 @@ class JsonBuffer : Internals::NonCopyable {
   ~JsonBuffer() {}
 
   // Preserve aligment if necessary
-  static FORCE_INLINE size_t round_size_up(size_t bytes) {
+  static ARDUINOJSON_FORCE_INLINE size_t round_size_up(size_t bytes) {
 #if ARDUINOJSON_ENABLE_ALIGNMENT
     const size_t x = sizeof(void *) - 1;
     return (bytes + x) & ~x;
