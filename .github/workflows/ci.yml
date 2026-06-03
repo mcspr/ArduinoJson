@@ -98,6 +98,7 @@ jobs:
             board: esp8266:esp8266:d1_mini
           - core: esp32:esp32
             board: esp32:esp32:esp32
+            libraries: Ethernet
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,6 +109,10 @@ jobs:
       - name: Update core index
         if: matrix.core == 'esp8266:esp8266'
         run: arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+      - name: Install libraries
+        if: matrix.libraries
+        run: arduino-cli lib install ${{ matrix.libraries }}
 
       - name: Install core
         run: arduino-cli core install ${{ matrix.core }}
