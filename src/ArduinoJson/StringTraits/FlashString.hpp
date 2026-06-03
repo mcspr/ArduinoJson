@@ -11,6 +11,8 @@
 #include "StringTraitsBase.hpp"
 #include "CharPointer.hpp"
 
+class __FlashStringHelper;
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -28,20 +30,20 @@ struct StringTraitsImpl<const __FlashStringHelper*, void> {
  public:
   typedef Traits::ReaderBase<ReaderImpl> Reader;
 
-  static bool equals(const __FlashStringHelper* str, const char* expected) {
+  static bool equals(const void* str, const char* expected) {
     const char* actual = reinterpret_cast<const char*>(str);
     if (!actual || !expected) return actual == expected;
     return strcmp_P(expected, actual) == 0;
   }
 
-  static bool is_null(const __FlashStringHelper* str) {
-    return !str;
+  static bool is_null(const void*) {
+    return false;
   }
 
   typedef Traits::duplicate_t duplicate_t;
 
   template <typename Buffer>
-  static duplicate_t duplicate(const __FlashStringHelper* str, Buffer* buffer) {
+  static duplicate_t duplicate(const void* str, Buffer* buffer) {
     void* dup = nullptr;
     if (!is_null(str)) {
       const char* ptr = reinterpret_cast<duplicate_t>(str);
