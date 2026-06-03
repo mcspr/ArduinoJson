@@ -19,7 +19,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wformat=2
 		-Winit-self
 		-Wmissing-include-dirs
-		-Wnon-virtual-dtor
 		-Wold-style-cast
 		-Woverloaded-virtual
 		-Wparentheses
@@ -50,6 +49,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	   CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
 		# avoid false positive with GCC 4.7
 		add_compile_options(-Wno-maybe-uninitialized)
+	endif()
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.0)
+		# avoid false positive with < GCC 5.0
+		# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62232
+		add_compile_options(-Wnon-virtual-dtor)
 	endif()
 
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
