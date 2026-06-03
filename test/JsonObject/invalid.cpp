@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace Catch::Matchers;
+using Catch::Matchers::Equals;
 
 TEST_CASE("JsonObject::invalid()") {
   JsonObject& obj = JsonObject::invalid();

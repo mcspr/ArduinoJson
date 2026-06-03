@@ -5,7 +5,10 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+#include <string>
+
+using ArduinoJson::Internals::StringTraits;
+using ArduinoJson::Internals::RawJsonString;
 
 template <typename String>
 bool should_duplicate() {
@@ -16,7 +19,13 @@ TEST_CASE("StringTraits") {
   SECTION("should_duplicate") {
     REQUIRE(false == should_duplicate<const char*>());
     REQUIRE(true == should_duplicate<char*>());
+    REQUIRE(true == should_duplicate<std::string>());
+    REQUIRE(true == should_duplicate<std::string&>());
+    REQUIRE(true == should_duplicate<const std::string&>());
     REQUIRE(true == should_duplicate<RawJsonString<char*> >());
     REQUIRE(false == should_duplicate<RawJsonString<const char*> >());
+    REQUIRE(true == should_duplicate<RawJsonString<std::string> >());
+    REQUIRE(true == should_duplicate<RawJsonString<std::string&> >());
+    REQUIRE(true == should_duplicate<RawJsonString<const std::string&> >());
   }
 }

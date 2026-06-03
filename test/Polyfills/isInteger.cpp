@@ -5,7 +5,7 @@
 #include <ArduinoJson/Polyfills/isInteger.hpp>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+using ArduinoJson::Internals::isInteger;
 
 TEST_CASE("isInteger()") {
   SECTION("Null") {

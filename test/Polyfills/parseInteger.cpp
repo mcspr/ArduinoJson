@@ -2,11 +2,12 @@
 // Copyright Benoit Blanchon 2014-2023
 // MIT License
 
-#include <stdint.h>
 #include <ArduinoJson/Polyfills/parseInteger.hpp>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+#include <cstdint>
+
+using ArduinoJson::Internals::parseInteger;
 
 template <typename T>
 void check(const char* input, T expected) {

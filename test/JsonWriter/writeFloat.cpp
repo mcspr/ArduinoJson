@@ -9,7 +9,8 @@
 #include <ArduinoJson/Serialization/DynamicStringBuilder.hpp>
 #include <ArduinoJson/Serialization/JsonWriter.hpp>
 
-using namespace ArduinoJson::Internals;
+using ArduinoJson::Internals::DynamicStringBuilder;
+using ArduinoJson::Internals::JsonWriter;
 
 template <typename TFloat>
 void check(TFloat input, const std::string& expected) {

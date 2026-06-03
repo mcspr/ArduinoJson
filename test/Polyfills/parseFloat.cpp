@@ -5,7 +5,7 @@
 #include <ArduinoJson/Polyfills/parseFloat.hpp>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+using ArduinoJson::Internals::parseFloat;
 
 template <typename T>
 void check(const char* input, T expected) {

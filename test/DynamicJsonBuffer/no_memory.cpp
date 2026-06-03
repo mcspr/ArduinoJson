@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+using ArduinoJson::Internals::DynamicJsonBufferBase;
 
 struct NoMemoryAllocator {
   void* allocate(size_t) {

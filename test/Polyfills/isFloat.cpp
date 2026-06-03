@@ -5,7 +5,7 @@
 #include <ArduinoJson/Polyfills/isFloat.hpp>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+using ArduinoJson::Internals::isFloat;
 
 TEST_CASE("isFloat()") {
   SECTION("Input is NULL") {

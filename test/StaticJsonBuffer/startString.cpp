@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+using ArduinoJson::Internals::StaticJsonBufferBase;
 
 TEST_CASE("StaticJsonBuffer::startString()") {
   SECTION("WorksWhenBufferIsBigEnough") {

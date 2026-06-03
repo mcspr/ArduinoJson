@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace Catch::Matchers;
+using Catch::Matchers::Equals;
 
 TEST_CASE("JsonObject::begin()/end()") {
   StaticJsonBuffer<JSON_OBJECT_SIZE(2)> jb;

@@ -2,10 +2,13 @@
 // Copyright Benoit Blanchon 2014-2023
 // MIT License
 
-#include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+#include <ArduinoJson/Serialization/StaticStringBuilder.hpp>
+#include <ArduinoJson/Serialization/DynamicStringBuilder.hpp>
+
+using ArduinoJson::Internals::StaticStringBuilder;
+using ArduinoJson::Internals::DynamicStringBuilder;
 
 template <typename StringBuilder, typename String>
 void common_tests(StringBuilder& sb, const String& output) {

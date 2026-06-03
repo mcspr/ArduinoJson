@@ -5,7 +5,20 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using namespace ArduinoJson::Internals;
+#include <ArduinoJson/TypeTraits/IsBaseOf.hpp>
+#include <ArduinoJson/TypeTraits/IsArray.hpp>
+#include <ArduinoJson/TypeTraits/IsPointer.hpp>
+#include <ArduinoJson/TypeTraits/IsConst.hpp>
+#include <ArduinoJson/TypeTraits/IsVariant.hpp>
+
+using ArduinoJson::Internals::IsBaseOf;
+using ArduinoJson::Internals::IsArray;
+using ArduinoJson::Internals::IsPointer;
+using ArduinoJson::Internals::IsConst;
+using ArduinoJson::Internals::IsVariant;
+
+using ArduinoJson::Internals::JsonObjectSubscript;
+using ArduinoJson::Internals::JsonVariantBase;
 
 TEST_CASE("TypeTraits") {
   SECTION("IsBaseOf") {
@@ -18,8 +31,20 @@ TEST_CASE("TypeTraits") {
                  JsonObjectSubscript<const char*> >::value));
   }
 
+  SECTION("IsPointer") {
+    REQUIRE_FALSE((IsPointer<char[]>::value));
+    REQUIRE_FALSE((IsPointer<const char[]>::value));
+    REQUIRE_FALSE((IsPointer<const char[10]>::value));
+    REQUIRE_FALSE((IsPointer<const char*&>::value));
+    REQUIRE((IsPointer<char*>::value));
+    REQUIRE((IsPointer<const char*>::value));
+    REQUIRE((IsPointer<const char* const>::value));
+  }
+
   SECTION("IsArray") {
     REQUIRE_FALSE((IsArray<const char*>::value));
+    REQUIRE_FALSE((IsArray<const char*&>::value));
+    REQUIRE_FALSE((IsArray<const char(&)[10]>::value));
     REQUIRE((IsArray<const char[]>::value));
     REQUIRE((IsArray<const char[10]>::value));
   }
