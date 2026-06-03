@@ -2,6 +2,8 @@
 # Copyright Benoit Blanchon 2014-2019
 # MIT License
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_library(catch
 	catch.hpp
 	catch.cpp
