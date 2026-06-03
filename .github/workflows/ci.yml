@@ -19,17 +19,28 @@ jobs:
           - gcc: "10"
             archive: focal
             cxxflags: -funsigned-char # Issue #1715
-          - gcc: "latest"
+          - gcc: "14"
+            test: true
+          - gcc: "16"
+            test: true
     steps:
       - name: Workaround for actions/runner-images#9491
         run: sudo sysctl vm.mmap_rnd_bits=28
 
-      - name: Install
+      - name: Install archived toolchain
         if: matrix.archive
         run: |
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 3B4FE6ACC0B21F32
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} main'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} universe'
+          sudo apt-get update -y
+          sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+        timeout-minutes: 5
+
+      - name: Install toolchain test build
+        if: matrix.test
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update -y
           sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
         timeout-minutes: 5
@@ -44,13 +55,6 @@ jobs:
         env:
           CC: gcc-${{ matrix.gcc }}
           CXX: g++-${{ matrix.gcc }}
-          CXXFLAGS: ${{ matrix.cxxflags }}
-        timeout-minutes: 1
-
-      - name: Configure
-        if: matrix.gcc == 'latest'
-        run: cmake -DCMAKE_BUILD_TYPE=Debug .
-        env:
           CXXFLAGS: ${{ matrix.cxxflags }}
         timeout-minutes: 1
 
