@@ -58,8 +58,7 @@ class JsonObjectSubscript final
   JsonObjectSubscript(const JsonObjectSubscript &) = default;
   JsonObjectSubscript(JsonObjectSubscript &&) = default;
 
-  // TValue = bool, char, long, int, short, float, double,
-  //          char*, char[], std::string, String, JsonArray, JsonObject
+  // Everything else is interpreted as object assignment w/ the key attached to the subscript object
   template <typename TValue>
   JsonObjectSubscript& operator=(TValue&& src) {
     _object.set(_key.get(), std::forward<TValue>(src));
@@ -93,8 +92,6 @@ class JsonObjectSubscript final
     return _object.is<typename JsonVariantAs<TValue>::type>(_key.get());
   }
 
-  // TValue = bool, char, long, int, short, float, double, RawJson, JsonVariant,
-  //          char*, char[], const __FlashStringHelper*, std::string, String, JsonArray, JsonObject
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE bool set(TValue&& value) {
     return _object.set(_key.get(), std::forward<TValue>(value));

@@ -32,9 +32,10 @@ class JsonObject;
 // A variant that can be a any value serializable to a JSON value.
 //
 // It can be set to:
+// - a null
 // - a boolean
-// - a char, short, int or a long (signed or unsigned)
-// - a string (const char*)
+// - a char, short, int, long or long long (signed or unsigned)
+// - a string (const char*, std::string, String, const __FlashStringHelper*)
 // - a reference to a JsonArray or JsonObject
 class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename Print>
@@ -61,8 +62,8 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   {}
 
   // Create a JsonVariant containing a floating point value.
-  // JsonVariant(double value);
   // JsonVariant(float value);
+  // JsonVariant(double value);
   template <typename T>
   JsonVariant(T value, typename Internals::EnableIf<
                            Internals::IsFloatingPoint<T>::value>::type * = 0) :
@@ -72,10 +73,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
 
   // Create a JsonVariant containing an integer value.
   // JsonVariant(char)
+  // JsonVariant(signed char)
   // JsonVariant(signed short)
   // JsonVariant(signed int)
   // JsonVariant(signed long)
-  // JsonVariant(signed char)
+  // JsonVariant(signed long long)
   template <typename T>
   JsonVariant(
       T value,
@@ -88,6 +90,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(unsigned short)
   // JsonVariant(unsigned int)
   // JsonVariant(unsigned long)
+  // JsonVariant(unsigned long long)
   template <typename T>
   JsonVariant(T value,
               typename Internals::EnableIf<
@@ -97,6 +100,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   {}
 
   // Create a JsonVariant containing a string.
+  // CAUTION: variant only stores the pointer, it does not manage its lifetime
   // JsonVariant(const char*);
   // JsonVariant(const signed char*);
   // JsonVariant(const unsigned char*);
@@ -132,10 +136,12 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // signed short as<signed short>() const;
   // signed int as<signed int>() const;
   // signed long as<signed long>() const;
+  // signed long long as<signed long long>() const;
   // unsigned char as<unsigned char>() const;
   // unsigned short as<unsigned short>() const;
   // unsigned int as<unsigned int>() const;
   // unsigned long as<unsigned long>() const;
+  // unsigned long long as<unsigned long long>() const;
   template <typename T>
   const typename Internals::EnableIf<Internals::IsIntegral<T>::value, T>::type
   as() const {
@@ -166,9 +172,8 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   as() const {
     return variantAsString();
   }
-  //
-  // std::string as<std::string>() const;
-  // String as<String>() const;
+
+  // Any string type that is implemented in Internals::StringTraits and provides has_append flag
   template <typename T>
   typename Internals::EnableIf<Internals::StringTraits<T>::has_append, T>::type
   as() const {
@@ -276,9 +281,10 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
     return variantIsBoolean();
   }
   //
-  // bool is<const char*>() const;
   // bool is<char*>() const;
-  // bool is<std::string>() const;
+  // bool is<const char*>() const;
+  //
+  // Also supports any other string type that is implemented in Internals::StringTraits and provides has_append flag
   template <typename T>
   typename Internals::EnableIf<Internals::IsSame<T, const char *>::value ||
                                    Internals::IsSame<T, char *>::value ||

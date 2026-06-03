@@ -12,9 +12,7 @@
 #include "Serialization/JsonPrintable.hpp"
 #include "StringTraits/StringTraits.hpp"
 #include "TypeTraits/EnableIf.hpp"
-#include "TypeTraits/IsArray.hpp"
-#include "TypeTraits/IsFloatingPoint.hpp"
-#include "TypeTraits/IsSame.hpp"
+#include "TypeTraits/IsChar.hpp"
 
 // Returns the size (in bytes) of an object with n elements.
 // Can be very handy to determine the size of a StaticJsonBuffer.
@@ -50,10 +48,6 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
       : Internals::List<JsonPair>(buffer) {}
 
   // Gets or sets the value associated with the specified key.
-  //
-  // JsonObjectSubscript operator[](TKey)
-  // TKey = char*, const char*, char[], const char[N], const FlashStringHelper*
-  // TKey = const std::string&, const String&
   template <typename TKey>
   Internals::JsonObjectSubscript<TKey> operator[](
       TKey&& key) {
@@ -65,9 +59,6 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
       TChar (&)[Size]);
 
   // Gets the value associated with the specified key.
-  //
-  // const JsonObjectSubscript operator[](TKey) const;
-  // TKey = const std::string&, const String&
   template <typename TKey>
   const Internals::JsonObjectSubscript<TKey> operator[](
       TKey&& key) const {
@@ -75,19 +66,12 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
         *const_cast<JsonObject*>(this), std::forward<TKey>(key));
   }
 
-  //
-  // const JsonObjectSubscript operator[](TKey) const;
-  // TKey = const char*, const char[N], const FlashStringHelper*
   template <typename TChar, size_t Size>
   const Internals::JsonObjectSubscript<TChar*> operator[](
       TChar (&key)[Size]) const;
 
   // Sets the specified key with the specified value.
-  //
-  // bool set(TKey, TValue);
-  // TKey = const std::string&, const String&
-  // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
-  //          std::string, String, JsonArray, JsonObject
+  // Both TKey and TValue allow for arbitrary string types.
   template <typename TValue, typename TKey>
   bool set(TKey&& key, TValue&& value) {
     return set_impl(std::forward<TKey>(key), std::forward<TValue>(value));
@@ -113,11 +97,6 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   }
 
   // Gets the value associated with the specified key.
-  //
-  // TValue get<TValue>(TKey) const;
-  // TKey = const std::string&, const String&
-  // TValue = bool, char, long, int, short, float, double,
-  //          std::string, String, JsonArray, JsonObject
   template <typename TValue, typename TKey>
   typename Internals::JsonVariantAs<TValue>::type get(
       TKey&& key) const {
@@ -130,85 +109,56 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
       std::nullptr_t) const = delete;
 
   // Checks the type of the value associated with the specified key.
-  //
-  //
-  // bool is<TValue>(TKey) const;
-  // TKey = const std::string&, const String&
-  // TValue = bool, char, long, int, short, float, double,
-  //          std::string, String, JsonArray, JsonObject
   template <typename TValue, typename TKey>
   bool is(TKey&& key) const {
     return is_impl<typename Internals::JsonVariantAs<TValue>::type>(
             std::forward<TKey>(key));
   }
-  //
-  // bool is<TValue>(TKey) const;
-  // TKey = char*, const char*, const FlashStringHelper*
-  // TValue = bool, char, long, int, short, float, double,
-  //          std::string, String, JsonArray, JsonObject
+
   template <typename TValue, typename TChar, size_t Size>
   bool is(TChar (&key)[Size]) const {
     return is_impl<typename Internals::JsonVariantAs<TValue>::type>(&key[0]);
   }
 
-  // Creates and adds a JsonArray.
-  //
-  // JsonArray& createNestedArray(TKey);
-  // TKey = const std::string&, const String&
+  // Creates and adds an object entry containing JsonArray.
   template <typename TKey>
   JsonArray& createNestedArray(TKey&& key) {
     return createNestedArray_impl(std::forward<TKey>(key));
   }
-  // JsonArray& createNestedArray(TKey);
-  // TKey = char*, const char*, char[], const char[], const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   JsonArray& createNestedArray(TChar (&key)[Size]) {
     return createNestedArray_impl(&key[0]);
   }
 
-  // Creates and adds a JsonObject.
-  //
-  // JsonObject& createNestedObject(TKey);
-  // TKey = const std::string&, const String&
+  // Creates and adds an object entry containing JsonObject.
   template <typename TKey>
   JsonObject& createNestedObject(TKey&& key) {
     return createNestedObject_impl(std::forward<TKey>(key));
   }
-  //
-  // JsonObject& createNestedObject(TKey);
-  // TKey = char*, const char*, char[], const char[], const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   JsonObject& createNestedObject(TChar (&key)[Size]) {
     return createNestedObject_impl(&key[0]);
   }
 
   // Tells weither the specified key is present and associated with a value.
-  //
-  // bool containsKey(TKey);
-  // TKey = const std::string&, const String&
   template <typename TKey>
   bool containsKey(TKey&& key) const {
     return findKey(std::forward<TKey>(key)) != end();
   }
-  //
-  // bool containsKey(TKey);
-  // TKey = char*, const char*, char[], const char[], const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   bool containsKey(TChar (&key)[Size]) const {
     return findKey(&key[0]) != end();
   }
 
   // Removes the specified key and the associated value.
-  //
-  // void remove(TKey);
-  // TKey = const std::string&, const String&
   template <typename TKey>
   void remove(TKey&& key) {
     remove(findKey(std::forward<TKey>(key)));
   }
-  //
-  // void remove(TKey);
-  // TKey = char*, const char*, char[], const char[], const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   void remove(TChar (&key)[Size]) {
     remove(findKey(&key[0]));

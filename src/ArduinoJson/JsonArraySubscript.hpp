@@ -11,31 +11,35 @@ namespace ArduinoJson {
 namespace Internals {
 class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
  public:
-  JsonArraySubscript(JsonArray& array, size_t index)
-      : _array(array), _index(index) {}
+  // *Always* attached to some JsonArray instance
+
+  JsonArraySubscript() :
+    _array(JsonArray::invalid()),
+    _index()
+  {}
+
+  JsonArraySubscript(JsonArray& array, size_t index) :
+    _array(array),
+    _index(index)
+  {}
+
+  // Allow to construct the object, but disallow changes after construction
 
   JsonArraySubscript(const JsonArraySubscript &) = default;
   JsonArraySubscript(JsonArraySubscript &&) = default;
 
-  // class copy is disallowed, interpret it as an assignment operation
+  // Everything else is interpreted as array assignment w/ the index attached to the subscript object
   JsonArraySubscript& operator=(const JsonArraySubscript& src) {
     _array.set(_index, src);
     return *this;
   }
 
-  // Replaces the value
-  //
-  // operator=(const TValue&)
-  // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
-  //          std::string, String, JsonArray, JsonObject
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(TValue &&value) {
     _array.set(_index, std::forward<TValue>(value));
     return *this;
   }
-  //
-  // operator=(TValue)
-  // TValue = char*, const char*, const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(TChar (&value)[Size]) {
     _array.set(_index, &value[0]);
@@ -57,19 +61,13 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   }
 
   // Replaces the value
-  //
-  // bool set(const TValue&)
-  // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
-  //          std::string, String, JsonArray, JsonObject
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE bool set(const TValue& value) {
-    return _array.set(_index, value);
+  ARDUINOJSON_FORCE_INLINE bool set(TValue&& value) {
+    return _array.set(_index, std::forward<TValue>(value));
   }
-  //
-  // bool set(TValue)
-  // TValue = char*, const char*, const FlashStringHelper*
-  template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE bool set(TValue* value) {
+
+  template <typename TChar, size_t Size>
+  ARDUINOJSON_FORCE_INLINE bool set(TChar (&value)[Size]) {
     return _array.set(_index, value);
   }
 

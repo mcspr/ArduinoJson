@@ -55,17 +55,11 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   Internals::JsonArraySubscript operator[](size_t index);
 
   // Adds the specified value at the end of the array.
-  //
-  // bool add(TValue);
-  // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
-  //          std::string, String, JsonArray, JsonObject
   template <typename TValue>
   bool add(TValue &&value) {
     return add_impl(std::forward<TValue>(value));
   }
-  //
-  // bool add(TValue);
-  // TValue = char*, const char*, const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   bool add(TChar (&value)[Size]) {
     return add_impl(&value[0]);
@@ -73,26 +67,17 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   bool add(std::nullptr_t) = delete;
 
   // Sets the value at specified index.
-  //
-  // bool add(size_t index, const TValue&);
-  // TValue = bool, long, int, short, float, double, RawJson, JsonVariant,
-  //          std::string, String, JsonArray, JsonObject
   template <typename TValue>
   bool set(size_t index, TValue &&value) {
     return set_impl(index, std::forward<TValue>(value));
   }
-  //
-  // bool add(size_t index, TValue);
-  // TValue = char*, const char*, const FlashStringHelper*
+
   template <typename TChar, size_t Size>
   bool set(size_t index, TChar (&value)[Size]) {
     return set_impl(index, &value[0]);
   }
   bool set(size_t, std::nullptr_t) = delete;
 
-  //
-  // bool set(size_t index, TValue value, uint8_t decimals);
-  // TValue = float, double
   template <typename T>
   typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value, bool>::type
   set(size_t index, T value, uint8_t decimals) {

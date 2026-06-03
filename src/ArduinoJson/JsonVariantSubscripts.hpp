@@ -35,12 +35,8 @@ class JsonVariantSubscripts {
   ARDUINOJSON_FORCE_INLINE JsonArraySubscript operator[](size_t index);
 
   // Mimics an object.
-  // Returns the value associated with the specified key if the variant is
-  // an object.
+  // Returns the value associated with the specified key if the variant is an object.
   // Return JsonVariant::invalid() if the variant is not an object.
-  //
-  // const JsonObjectSubscript operator[](TKey) const;
-  // TKey = const std::string&, const String&
   template <typename TKey>
   ARDUINOJSON_FORCE_INLINE
       typename EnableIf<StringTraits<TKey>::has_equals,
@@ -56,9 +52,7 @@ class JsonVariantSubscripts {
       operator[](TChar (&key)[Size]) const {
     return impl()->template as<JsonObject>()[key];
   }
-  //
-  // const JsonObjectSubscript operator[](TKey) const;
-  // TKey = const std::string&, const String&
+
   template <typename TKey>
   ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TKey>::has_equals,
                                  JsonObjectSubscript<TKey> >::type
