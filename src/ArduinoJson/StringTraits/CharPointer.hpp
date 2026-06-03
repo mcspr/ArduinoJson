@@ -4,22 +4,36 @@
 
 #pragma once
 
+#include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/IsChar.hpp"
 #include "../TypeTraits/IsConst.hpp"
 
+#include "StringTraitsBase.hpp"
+
 #include <cstddef>
-#include <cstdio>
+#include <cstring>
 
 namespace ArduinoJson {
 namespace Internals {
 
 template <typename TChar>
 struct CharPointerTraits {
-  class Reader {
+ private:
+  struct ReaderImpl {
+    static char read(const void* ptr) {
+      return *reinterpret_cast<const char *>(ptr);
+    }
+  };
+
+ public:
+  template <typename TImpl>
+  struct ReaderBase {
+   private:
     const TChar* _ptr;
     const TChar* _end;
 
    public:
-    Reader(const TChar* ptr, size_t size) :
+    ReaderBase(const TChar* ptr, size_t size) :
       _ptr(ptr ? ptr : reinterpret_cast<const TChar*>("")),
       _end(ptr ? (ptr + size) : 0)
     {}
@@ -31,18 +45,20 @@ struct CharPointerTraits {
 
     char current() const {
       if (_ptr < _end)
-        return char(_ptr[0]);
+        return TImpl::read(_ptr);
 
       return '\0';
     }
 
     char next() const {
       if ((_ptr + 1) < _end)
-        return char(_ptr[1]);
+        return TImpl::read(_ptr + 1);
 
       return '\0';
     }
   };
+
+  typedef ReaderBase<ReaderImpl> Reader;
 
   static bool equals(const TChar* str, const char* expected) {
     const char* actual = reinterpret_cast<const char*>(str);

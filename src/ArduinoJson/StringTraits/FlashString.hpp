@@ -4,31 +4,29 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
+
 #if ARDUINOJSON_ENABLE_PROGMEM
+
+#include "StringTraitsBase.hpp"
+#include "CharPointer.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+
 template <>
 struct StringTraitsImpl<const __FlashStringHelper*, void> {
-  class Reader {
-    const char* _ptr;
-
-   public:
-    Reader(const __FlashStringHelper* ptr)
-        : _ptr(reinterpret_cast<const char*>(ptr)) {}
-
-    void move() {
-      _ptr++;
-    }
-
-    char current() const {
-      return pgm_read_byte_near(_ptr);
-    }
-
-    char next() const {
-      return pgm_read_byte_near(_ptr + 1);
+ private:
+  struct ReaderImpl {
+    static char read(const void* ptr) {
+      return pgm_read_byte_near(ptr);
     }
   };
+
+  typedef CharPointerTraits<char> Traits;
+
+ public:
+  typedef Traits::ReaderBase<ReaderImpl> Reader;
 
   static bool equals(const __FlashStringHelper* str, const char* expected) {
     const char* actual = reinterpret_cast<const char*>(str);
@@ -40,14 +38,21 @@ struct StringTraitsImpl<const __FlashStringHelper*, void> {
     return !str;
   }
 
-  typedef const char* duplicate_t;
+  typedef Traits::duplicate_t duplicate_t;
 
   template <typename Buffer>
   static duplicate_t duplicate(const __FlashStringHelper* str, Buffer* buffer) {
-    if (!str) return NULL;
-    size_t size = strlen_P((const char*)str) + 1;
-    void* dup = buffer->alloc(size);
-    if (dup != NULL) memcpy_P(dup, (const char*)str, size);
+    void* dup = nullptr;
+    if (!is_null(str)) {
+      const char* ptr = reinterpret_cast<duplicate_t>(str);
+      size_t size = strlen_P(ptr);
+      dup = buffer->alloc(size + 1);
+      if (dup != nullptr) {
+        memcpy_P(dup, ptr, size);
+        reinterpret_cast<char *>(dup)[size] = '\0';
+      }
+    }
+
     return static_cast<duplicate_t>(dup);
   }
 
