@@ -58,19 +58,24 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	endif()
 
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
-	    add_compile_options(
-            -fsanitize=address,undefined
-        )
-        add_link_options(
-            -fsanitize=address,undefined
-        )
-    endif()
+		add_compile_options(
+			-fsanitize=address,undefined
+		)
+		add_link_options(
+			-fsanitize=address,undefined
+		)
+	endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	add_compile_options(
 		-Wc++11-compat
 		-Wdeprecated-register
+		-Wnon-virtual-dtor
+		-fsanitize=address,undefined
+	)
+	add_link_options(
+		-fsanitize=address,undefined
 	)
 endif()
 
