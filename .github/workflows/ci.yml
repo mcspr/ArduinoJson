@@ -16,7 +16,7 @@ jobs:
         include:
           - gcc: "4.8"
             archive: bionic
-          - gcc: "10.3"
+          - gcc: "10"
             archive: focal
             cxxflags: -funsigned-char # Issue #1715
           - gcc: "latest"
@@ -28,9 +28,9 @@ jobs:
         if: matrix.archive
         run: |
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 3B4FE6ACC0B21F32
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive}} main'
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix }} universe'
-          sudo apt-get update
+          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} main'
+          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} universe'
+          sudo apt-get update -y
           sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
         timeout-minutes: 5
 
