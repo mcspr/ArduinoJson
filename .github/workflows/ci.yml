@@ -50,8 +50,7 @@ jobs:
         timeout-minutes: 1
 
       - name: Configure
-        if: matrix.gcc != 'latest'
-        run: cmake -DCMAKE_BUILD_TYPE=Debug .
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -B build
         env:
           CC: gcc-${{ matrix.gcc }}
           CXX: g++-${{ matrix.gcc }}
@@ -59,11 +58,11 @@ jobs:
         timeout-minutes: 1
 
       - name: Build
-        run: cmake --build .
+        run: cmake --build build
         timeout-minutes: 10
 
       - name: Test
-        run: ctest --output-on-failure -C Debug .
+        run: ctest --output-on-failure -C Debug --test-dir build
         env:
           UBSAN_OPTIONS: print_stacktrace=1
         timeout-minutes: 2
@@ -75,15 +74,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Configure
-        run: cmake -DCMAKE_BUILD_TYPE=Debug .
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -B build
         env:
           CC: clang
           CXX: clang++
 
       - name: Build
-        run: cmake --build .
+        run: cmake --build build
+
       - name: Test
-        run: ctest --output-on-failure -C Debug .
+        run: ctest --output-on-failure -C Debug --test-dir build
 
   arduino:
     name: Build Arduino examples
