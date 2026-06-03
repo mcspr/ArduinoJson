@@ -7,7 +7,8 @@ add_executable(IntegrationTests
 	round_trip.cpp
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+# check for >=gcc-6 due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67309
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.1)
 	target_compile_options(IntegrationTests
 		PUBLIC
 		-fsingle-precision-constant # issue 544
