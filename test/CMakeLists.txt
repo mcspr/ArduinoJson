@@ -24,7 +24,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Woverloaded-virtual
 		-Wparentheses
 		-Wredundant-decls
+		-Wreturn-type
 		-Wshadow
+		-Wsign-conversion
 		-Wsign-promo
 		-Wstrict-aliasing
 		-Wundef
@@ -49,6 +51,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 		# avoid false positive with GCC 4.7
 		add_compile_options(-Wno-maybe-uninitialized)
 	endif()
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+	    add_compile_options(
+            -fsanitize=address,undefined
+        )
+        add_link_options(
+            -fsanitize=address,undefined
+        )
+    endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
