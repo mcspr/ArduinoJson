@@ -5,19 +5,21 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using ArduinoJson::Internals::DynamicJsonBufferBase;
-
-struct NoMemoryAllocator {
-  void* allocate(size_t) {
+struct NoMemoryAllocator : ArduinoJson::Allocator {
+  void* allocate(size_t) override {
     return nullptr;
   }
 
-  void deallocate(void*) {
+  void deallocate(void*) override {
+  }
+
+  virtual ~NoMemoryAllocator() {
   }
 };
 
 TEST_CASE("DynamicJsonBuffer no memory") {
-  DynamicJsonBufferBase<NoMemoryAllocator> _jsonBuffer;
+  NoMemoryAllocator allocator;
+  DynamicJsonBuffer _jsonBuffer(&allocator);
 
   SECTION("FixCodeCoverage") {
     NoMemoryAllocator().deallocate(nullptr);
@@ -42,8 +44,7 @@ TEST_CASE("DynamicJsonBuffer no memory") {
   }
 
   SECTION("startString()") {
-    DynamicJsonBufferBase<NoMemoryAllocator>::String str =
-        _jsonBuffer.startString();
+    auto str = _jsonBuffer.startString();
     str.append('!');
     REQUIRE(nullptr == str.c_str());
   }

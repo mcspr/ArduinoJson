@@ -6,29 +6,44 @@
 #include <catch.hpp>
 #include <sstream>
 
-using ArduinoJson::Internals::DefaultAllocator;
-using ArduinoJson::Internals::DynamicJsonBufferBase;
-
 static bool isAligned(void* ptr) {
   const size_t mask = sizeof(void*) - 1;
   size_t addr = reinterpret_cast<size_t>(ptr);
   return (addr & mask) == 0;
 }
 
-std::stringstream allocatorLog;
+struct SpyingAllocator : ArduinoJson::Allocator {
+  void* allocate(size_t n) override {
+    log << "A" << (n - DynamicJsonBuffer::EmptyBlockSize);
+    return parent->allocate(n);
+  }
+  void deallocate(void* p) override {
+    log << "F";
+    return parent->deallocate(p);
+  }
 
-struct SpyingAllocator : DefaultAllocator {
-  void* allocate(size_t n) {
-    allocatorLog << "A" << (n - DynamicJsonBuffer::EmptyBlockSize);
-    return DefaultAllocator::allocate(n);
+  virtual ~SpyingAllocator() {
   }
-  void deallocate(void* p) {
-    allocatorLog << "F";
-    return DefaultAllocator::deallocate(p);
+
+  template <typename T>
+  static void str(T&& str) {
+    log.str(std::forward<T>(str));
   }
+
+  static std::string str() {
+    return log.str();
+  }
+
+  static std::stringstream log;
+  static Allocator* parent;
 };
 
+std::stringstream SpyingAllocator::log;
+ArduinoJson::Allocator* SpyingAllocator::parent = ArduinoJson::DefaultAllocator::instance();
+
 TEST_CASE("DynamicJsonBuffer::alloc()") {
+  SpyingAllocator allocator;
+
   SECTION("Returns different pointers") {
     DynamicJsonBuffer buffer;
     void* p1 = buffer.alloc(1);
@@ -37,34 +52,34 @@ TEST_CASE("DynamicJsonBuffer::alloc()") {
   }
 
   SECTION("Doubles allocation size when full") {
-    allocatorLog.str("");
+    SpyingAllocator::str("");
     {
-      DynamicJsonBufferBase<SpyingAllocator> buffer(1);
+      DynamicJsonBuffer buffer(&allocator, 1);
       buffer.alloc(1);
       buffer.alloc(1);
     }
-    REQUIRE(allocatorLog.str() == "A1A2FF");
+    REQUIRE(SpyingAllocator::str() == "A1A2FF");
   }
 
   SECTION("Resets allocation size after clear()") {
-    allocatorLog.str("");
+    SpyingAllocator::str("");
     {
-      DynamicJsonBufferBase<SpyingAllocator> buffer(1);
+      DynamicJsonBuffer buffer(&allocator, 1);
       buffer.alloc(1);
       buffer.alloc(1);
       buffer.clear();
       buffer.alloc(1);
     }
-    REQUIRE(allocatorLog.str() == "A1A2FFA1F");
+    REQUIRE(SpyingAllocator::str() == "A1A2FFA1F");
   }
 
   SECTION("Makes a big allocation when needed") {
-    allocatorLog.str("");
+    SpyingAllocator::str("");
     {
-      DynamicJsonBufferBase<SpyingAllocator> buffer(1);
+      DynamicJsonBuffer buffer(&allocator, 1);
       buffer.alloc(42);
     }
-    REQUIRE(allocatorLog.str() == "A42F");
+    REQUIRE(SpyingAllocator::str() == "A42F");
   }
 
   SECTION("Alignment") {

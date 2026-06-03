@@ -5,24 +5,16 @@
 #pragma once
 
 #include "JsonBufferBase.hpp"
+#include "Allocator.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace ArduinoJson {
 namespace Internals {
-class DefaultAllocator {
- public:
-  void* allocate(size_t size) {
-    return malloc(size);
-  }
-  void deallocate(void* pointer) {
-    free(pointer);
-  }
-};
 
-template <typename TAllocator>
-class DynamicJsonBufferBase final
-    : public JsonBufferBase<DynamicJsonBufferBase<TAllocator> > {
+class DynamicJsonBufferBase final :
+  public JsonBufferBase<DynamicJsonBufferBase> {
+
   struct Block;
   struct EmptyBlock {
     Block* next;
@@ -36,8 +28,20 @@ class DynamicJsonBufferBase final
  public:
   enum { EmptyBlockSize = sizeof(EmptyBlock) };
 
-  DynamicJsonBufferBase(size_t initialSize = 256)
-      : _head(nullptr), _nextBlockCapacity(initialSize) {}
+  DynamicJsonBufferBase() = default;
+
+  explicit DynamicJsonBufferBase(Allocator* allocator) :
+    _allocator(allocator)
+  {}
+
+  explicit DynamicJsonBufferBase(size_t initialSize) :
+    _nextBlockCapacity(initialSize)
+  {}
+
+  DynamicJsonBufferBase(Allocator* allocator, size_t initialSize) :
+    _allocator(allocator),
+    _nextBlockCapacity(initialSize)
+  {}
 
   ~DynamicJsonBufferBase() {
     clear();
@@ -63,7 +67,7 @@ class DynamicJsonBufferBase final
     while (currentBlock != nullptr) {
       _nextBlockCapacity = currentBlock->capacity;
       Block* nextBlock = currentBlock->next;
-      _allocator.deallocate(currentBlock);
+      _allocator->deallocate(currentBlock);
       currentBlock = nextBlock;
     }
     _head = 0;
@@ -147,7 +151,7 @@ class DynamicJsonBufferBase final
 
   bool addNewBlock(size_t capacity) {
     size_t bytes = EmptyBlockSize + capacity;
-    Block* block = static_cast<Block*>(_allocator.allocate(bytes));
+    Block* block = static_cast<Block*>(_allocator->allocate(bytes));
     if (block != nullptr) {
       block->capacity = capacity;
       block->size = 0;
@@ -159,15 +163,15 @@ class DynamicJsonBufferBase final
     return false;
   }
 
-  TAllocator _allocator;
-  Block* _head;
-  size_t _nextBlockCapacity;
+  Allocator* _allocator = DefaultAllocator::instance();
+  Block* _head = nullptr;
+  size_t _nextBlockCapacity = 256;
 };
 }  // namespace Internals
 
 // Implements a JsonBuffer with dynamic memory allocation.
 // You are strongly encouraged to consider using StaticJsonBuffer which is much
 // more suitable for embedded systems.
-typedef Internals::DynamicJsonBufferBase<Internals::DefaultAllocator>
-    DynamicJsonBuffer;
+typedef Internals::DynamicJsonBufferBase DynamicJsonBuffer;
+
 }  // namespace ArduinoJson
