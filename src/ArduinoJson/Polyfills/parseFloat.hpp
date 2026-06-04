@@ -5,11 +5,17 @@
 #pragma once
 
 #include "../TypeTraits/FloatTraits.hpp"
-#include "./ctype.hpp"
-#include "./math.hpp"
+#include "ctype.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+
+template <typename T, typename TMantissa, typename TExponent>
+static constexpr bool floatWithinRange(TMantissa mantissa, TExponent exponent) {
+   return (exponent >= FloatTraits<T>::exponent_min) &&
+          (exponent <= FloatTraits<T>::exponent_max) &&
+          (mantissa <= FloatTraits<T>::mantissa_max);
+}
 
 template <typename T>
 inline T parseFloat(const char* s) {
@@ -82,9 +88,12 @@ inline T parseFloat(const char* s) {
   }
   exponent += exponent_offset;
 
-  T result = traits::make_float(static_cast<T>(mantissa), exponent);
+  if (floatWithinRange<T>(static_cast<T>(mantissa), exponent)) {
+    T result = traits::make_float(static_cast<T>(mantissa), exponent);
+    return negative_result ? -result : result;
+  }
 
-  return negative_result ? -result : result;
+  return traits::nan();
 }
 }  // namespace Internals
 }  // namespace ArduinoJson

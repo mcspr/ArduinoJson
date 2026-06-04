@@ -4,11 +4,14 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>  // for size_t
-#include "../Configuration.hpp"
 #include "../Polyfills/bit_cast.hpp"
-#include "../Polyfills/math.hpp"
+
+#include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/IsSignedIntegral.hpp"
+#include "../TypeTraits/IsUnsignedIntegral.hpp"
+
+#include <cstdint>
+#include <cstddef>
 
 namespace ArduinoJson {
 namespace Internals {
@@ -24,6 +27,7 @@ struct FloatTraits<T, 8 /*64bits*/> {
       (static_cast<mantissa_type>(1) << mantissa_bits) - 1;
 
   typedef int16_t exponent_type;
+  static const exponent_type exponent_min = -323;
   static const exponent_type exponent_max = 308;
 
   template <typename TExponent>
@@ -106,6 +110,22 @@ struct FloatTraits<T, 8 /*64bits*/> {
   static T forge(uint32_t msb, uint32_t lsb) {
     return bit_cast<T>((uint64_t(msb) << 32) | lsb);
   }
+
+  template <typename TOut>  // int64_t
+  static T highest_for(
+      typename EnableIf<
+        IsSignedIntegral<TOut>::value &&
+        sizeof(TOut) == 8, signed>::type* = nullptr) {
+    return forge(0x43DFFFFF, 0xFFFFFFFF);  //  9.2233720368547748e+18
+  }
+
+  template <typename TOut>  // uint64_t
+  static T highest_for(
+      typename EnableIf<
+        IsUnsignedIntegral<TOut>::value &&
+        sizeof(TOut) == 8, unsigned>::type* = nullptr) {
+    return forge(0x43EFFFFF, 0xFFFFFFFF);  //  1.8446744073709549568e+19
+  }
 };
 
 template <typename T>
@@ -116,6 +136,7 @@ struct FloatTraits<T, 4 /*32bits*/> {
       (static_cast<mantissa_type>(1) << mantissa_bits) - 1;
 
   typedef int8_t exponent_type;
+  static const exponent_type exponent_min = -45;
   static const exponent_type exponent_max = 38;
 
   template <typename TExponent>
@@ -164,6 +185,38 @@ struct FloatTraits<T, 4 /*32bits*/> {
 
   static T inf() {
     return forge(0x7f800000);
+  }
+
+  template <typename TOut>  // int32_t
+  static T highest_for(
+      typename EnableIf<
+        IsSignedIntegral<TOut>::value &&
+        sizeof(TOut) == 4, signed>::type* = nullptr) {
+    return forge(0x4EFFFFFF);  // 2.14748352E9
+  }
+
+  template <typename TOut>  // uint32_t
+  static T highest_for(
+      typename EnableIf<
+        IsUnsignedIntegral<TOut>::value &&
+        sizeof(TOut) == 4, unsigned>::type* = nullptr) {
+    return forge(0x4F7FFFFF);  // 4.29496704E9
+  }
+
+  template <typename TOut>  // int64_t
+  static T highest_for(
+      typename EnableIf<
+        IsSignedIntegral<TOut>::value &&
+        sizeof(TOut) == 8, signed>::type* = nullptr) {
+    return forge(0x5EFFFFFF);  // 9.22337148709896192E18
+  }
+
+  template <typename TOut>  // uint64_t
+  static T highest_for(
+      typename EnableIf<
+        IsUnsignedIntegral<TOut>::value &&
+        sizeof(TOut) == 8, unsigned>::type* = nullptr) {
+    return forge(0x5F7FFFFF);  // 1.844674297419792384E19
   }
 };
 }  // namespace Internals
