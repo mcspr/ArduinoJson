@@ -16,5 +16,6 @@ template <typename T>
 struct RemoveReference<T&> {
   typedef T type;
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

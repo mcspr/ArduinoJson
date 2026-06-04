@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Constant.hpp"
 #include "IsSame.hpp"
 
 namespace ArduinoJson {
@@ -11,8 +12,10 @@ namespace Internals {
 
 // A meta-function that returns true if T is a floating point type
 template <typename T>
-struct IsFloatingPoint {
-  static const bool value = IsSame<T, float>::value || IsSame<T, double>::value;
+struct IsFloatingPoint : IntegralConstant<bool,
+    IsSame<T, float>::value ||
+    IsSame<T, double>::value> {
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

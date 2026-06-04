@@ -2,29 +2,28 @@
 
 #pragma once
 
+#include "Constant.hpp"
+
 #include <cstddef>
 
 namespace ArduinoJson {
 namespace Internals {
 
 template <typename T>
-struct IsPointer {
-  static const bool value = false;
+struct IsPointer : FalseType {
 };
 
 template <typename T>
-struct IsPointer<T*> {
-  static const bool value = true;
+struct IsPointer<T*> : TrueType {
 };
 
 template <typename T>
-struct IsPointer<T* const> {
-  static const bool value = true;
+struct IsPointer<T* const> : TrueType {
 };
 
 template <>
-struct IsPointer<std::nullptr_t> {
-  static const bool value = true;
+struct IsPointer<std::nullptr_t> : TrueType {
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

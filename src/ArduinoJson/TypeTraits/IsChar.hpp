@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Constant.hpp"
 #include "IsSame.hpp"
 
 namespace ArduinoJson {
@@ -11,13 +12,14 @@ namespace Internals {
 
 // A meta-function that returns true if T is a charater
 template <typename T>
-struct IsChar {
-  static const bool value = IsSame<T, char>::value ||
-                            IsSame<T, signed char>::value ||
-                            IsSame<T, unsigned char>::value;
+struct IsChar : IntegralConstant<bool,
+    IsSame<T, char>::value ||
+    IsSame<T, signed char>::value ||
+    IsSame<T, unsigned char> ::value> {
 };
 
 template <typename T>
-struct IsChar<const T> : IsChar<T> {};
+struct IsChar<const T> : IsChar<T> {
+};
 }  // namespace Internals
 }  // namespace ArduinoJson

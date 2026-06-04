@@ -4,24 +4,29 @@
 
 #pragma once
 
+#include "Constant.hpp"
+#include "RemoveReference.hpp"
+
 namespace ArduinoJson {
 namespace Internals {
+namespace IsBaseOfImpl {
 
-// A meta-function that returns true if Derived inherits from TBase is an
-// integral type.
 template <typename TBase, typename TDerived>
-class IsBaseOf {
- protected:  // <- to avoid GCC's "all member functions in class are private"
-  typedef char Yes[1];
-  typedef char No[2];
-
-  static Yes &probe(const TBase *);
-  static No &probe(...);
-
- public:
-  enum {
-    value = sizeof(probe(reinterpret_cast<TDerived *>(0))) == sizeof(Yes)
-  };
+struct Probe {
+  static TrueType probe(const TBase *);
+  static FalseType probe(...);
 };
+
+template <typename TBase, typename TDerived>
+using ProbeImpl = decltype(Probe<TBase, TDerived>::probe(
+    static_cast<typename RemoveReference<TDerived>::type *>(nullptr)));
+
+}
+
+// A meta-function that returns true if TDerived inherits from TBase
+template <typename TBase, typename TDerived>
+struct IsBaseOf : IsBaseOfImpl::ProbeImpl<TBase, TDerived>::type {
+};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

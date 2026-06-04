@@ -4,18 +4,19 @@
 
 #pragma once
 
+#include "Constant.hpp"
+
 namespace ArduinoJson {
 namespace Internals {
 
-// A meta-function that return the type T without the const modifier
+// A meta-function that checks for the const qualifier of T
 template <typename T>
-struct IsConst {
-  static const bool value = false;
+struct IsConst : FalseType {
 };
 
 template <typename T>
-struct IsConst<const T> {
-  static const bool value = true;
+struct IsConst<const T> : TrueType {
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson
