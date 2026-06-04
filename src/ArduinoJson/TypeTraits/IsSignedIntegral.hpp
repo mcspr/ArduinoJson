@@ -8,22 +8,25 @@
 
 #include "Constant.hpp"
 #include "IsSame.hpp"
+#include "Or.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
 // A meta-function that returns true if T is an integral type.
 template <typename T>
-struct IsSignedIntegral : IntegralConstant<bool,
-    IsSame<T, signed char>::value || IsSame<T, signed short>::value ||
-    IsSame<T, signed int>::value || IsSame<T, signed long>::value ||
+struct IsSignedIntegral : Or<
+    IsSame<T, signed char>,
+    IsSame<T, signed short>,
+    IsSame<T, signed int>,
+    IsSame<T, signed long>,
 #if ARDUINOJSON_USE_LONG_LONG
-    IsSame<T, signed long long>::value ||
+    IsSame<T, signed long long>,
 #endif
 #if ARDUINOJSON_USE_INT64
-    IsSame<T, signed __int64>::value ||
+    IsSame<T, signed __int64>,
 #endif
-    false> {
+    FalseType>::type {
 };
 
 }  // namespace Internals

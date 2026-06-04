@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include "../TypeTraits/Constant.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsChar.hpp"
 #include "../TypeTraits/IsConst.hpp"
+#include "../TypeTraits/Not.hpp"
 
 #include "StringTraitsBase.hpp"
 
@@ -91,9 +93,9 @@ struct CharPointerTraits {
     return duplicate(str, buffer, strlen(reinterpret_cast<const char *>(str)));
   }
 
-  static const bool has_append = false;
-  static const bool has_equals = true;
-  static const bool should_duplicate = !IsConst<TChar>::value;
+  typedef FalseType has_append;
+  typedef TrueType has_equals;
+  typedef Not<IsConst<TChar>> should_duplicate;
 };
 
 // char*, unsigned char*, signed char*

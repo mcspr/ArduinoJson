@@ -7,12 +7,11 @@
 
 #include <string>
 
-using ArduinoJson::Internals::StringTraits;
 using ArduinoJson::Internals::RawJsonString;
 
 template <typename String>
-bool should_duplicate() {
-  return StringTraits<String>::should_duplicate;
+constexpr bool should_duplicate() {
+  return ArduinoJson::Internals::StringTraits<String>::should_duplicate::value;
 }
 
 TEST_CASE("StringTraits") {

@@ -8,6 +8,8 @@
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
 
+#include "StringTraitsBase.hpp"
+
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsBaseOf.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
@@ -47,8 +49,8 @@ struct StdStreamTraits {
     }
   };
 
-  static const bool has_append = false;
-  static const bool has_equals = false;
+  typedef FalseType has_append;
+  typedef FalseType has_equals;
 };
 
 template <typename TStream>

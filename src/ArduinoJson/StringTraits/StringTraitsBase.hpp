@@ -5,14 +5,15 @@
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsArray.hpp"
+#include "../TypeTraits/Constant.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
 template <typename TString, typename = void>
 struct StringTraitsImpl {
-  static const bool has_append = false;
-  static const bool has_equals = false;
+  typedef FalseType has_append;
+  typedef FalseType has_equals;
 };
 
 // helper type to generalize impl type bindings to just `const T` or `T`

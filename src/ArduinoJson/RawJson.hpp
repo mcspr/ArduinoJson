@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "TypeTraits/Constant.hpp"
 #include "StringTraits/StringTraitsBase.hpp"
 #include "Data/StringRef.hpp"
 
@@ -38,9 +39,9 @@ struct StringTraitsImpl<RawJsonString<String>, void> {
     return duplicate_t(StringTraits<ref_type>::duplicate(source.get(), buffer));
   }
 
-  static const bool has_append = false;
-  static const bool has_equals = false;
-  static const bool should_duplicate = StringTraits<ref_type>::should_duplicate;
+  typedef FalseType has_append;
+  typedef FalseType has_equals;
+  typedef typename StringTraits<ref_type>::should_duplicate should_duplicate;
 };
 
 }  // namespace Internals

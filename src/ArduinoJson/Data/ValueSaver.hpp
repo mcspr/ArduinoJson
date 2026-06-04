@@ -40,7 +40,7 @@ struct ValueStringDuplicate<Internals::RawJsonString<T>> {
 // source and destination are strings (i.e. should_duplicate present from specialization)
 template <typename Source>
 struct ValueSaverImpl<
-    Source, typename EnableIf<StringTraits<Source>::should_duplicate>::type> {
+    Source, typename EnableIf<StringTraits<Source>::should_duplicate::value>::type> {
 
   template <typename Destination>
   static bool save(JsonBuffer* buffer, Destination& dst, const Source& src) {
@@ -60,7 +60,7 @@ struct ValueSaverImpl<
 // const char[], const signed char[], const unsigned char[]
 template <typename Source>
 struct ValueSaverImpl<
-    Source, typename EnableIf<!StringTraits<Source>::should_duplicate>::type> {
+    Source, typename EnableIf<!StringTraits<Source>::should_duplicate::value>::type> {
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {

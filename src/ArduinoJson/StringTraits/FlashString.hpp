@@ -8,6 +8,8 @@
 
 #if ARDUINOJSON_ENABLE_PROGMEM
 
+#include "../TypeTraits/Constant.hpp"
+
 #include "StringTraitsBase.hpp"
 #include "CharPointer.hpp"
 
@@ -58,9 +60,9 @@ struct StringTraitsImpl<const __FlashStringHelper*, void> {
     return static_cast<duplicate_t>(dup);
   }
 
-  static const bool has_append = false;
-  static const bool has_equals = true;
-  static const bool should_duplicate = true;
+  typedef FalseType has_append;
+  typedef TrueType has_equals;
+  typedef TrueType should_duplicate;
 };
 }  // namespace Internals
 }  // namespace ArduinoJson

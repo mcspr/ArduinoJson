@@ -39,7 +39,7 @@ class JsonVariantSubscripts {
   // Return JsonVariant::invalid() if the variant is not an object.
   template <typename TKey>
   ARDUINOJSON_FORCE_INLINE
-      typename EnableIf<StringTraits<TKey>::has_equals,
+      typename EnableIf<StringTraits<TKey>::has_equals::value,
                         const JsonObjectSubscript<TKey> >::type
       operator[](TKey &&key) const {
     return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
@@ -47,21 +47,21 @@ class JsonVariantSubscripts {
 
   template <typename TChar, size_t Size>
   ARDUINOJSON_FORCE_INLINE
-      typename EnableIf<StringTraits<TChar[Size]>::has_equals,
+      typename EnableIf<StringTraits<TChar[Size]>::has_equals::value,
                         const JsonObjectSubscript<TChar*> >::type
       operator[](TChar (&key)[Size]) const {
     return impl()->template as<JsonObject>()[key];
   }
 
   template <typename TKey>
-  ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TKey>::has_equals,
+  ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TKey>::has_equals::value,
                                  JsonObjectSubscript<TKey> >::type
   operator[](TKey &&key) {
     return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
   }
 
   template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TChar[Size]>::has_equals,
+  ARDUINOJSON_FORCE_INLINE typename EnableIf<StringTraits<TChar[Size]>::has_equals::value,
                                  JsonObjectSubscript<TChar*> >::type
   operator[](TChar (&key)[Size]) {
     return impl()->template as<JsonObject>()[key];

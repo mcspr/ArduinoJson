@@ -63,9 +63,9 @@ struct StdStringTraits {
     str += s;
   }
 
-  static const bool has_append = true;
-  static const bool has_equals = true;
-  static const bool should_duplicate = true;
+  typedef TrueType has_append;
+  typedef TrueType has_equals;
+  typedef TrueType should_duplicate;
 };
 
 #if ARDUINOJSON_ENABLE_ARDUINO_STRING

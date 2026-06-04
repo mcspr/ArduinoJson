@@ -5,8 +5,12 @@
 #pragma once
 
 #include "StringTraits/StringTraits.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsVariant.hpp"
+
+#include "TypeTraits/And.hpp"
+#include "TypeTraits/Not.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -122,15 +126,16 @@ class JsonVariantComparisons {
   }
 
   template <typename TString>
-  typename EnableIf<StringTraits<TString>::has_equals, bool>::type equals(
+  typename EnableIf<StringTraits<TString>::has_equals::value, bool>::type equals(
       const TString &comparand) const {
     return StringTraits<TString>::equals(comparand, as<const char *>());
   }
 
   template <typename TComparand>
-  typename EnableIf<!IsVariant<TComparand>::value &&
-                        !StringTraits<TComparand>::has_equals,
-                    bool>::type
+  typename EnableIf<
+    And<Not<IsVariant<TComparand>>,
+        Not<typename StringTraits<TComparand>::has_equals>>::value,
+  bool>::type
   equals(const TComparand &comparand) const {
     return as<TComparand>() == comparand;
   }

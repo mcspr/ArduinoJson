@@ -13,6 +13,7 @@
 #include "JsonVariantBase.hpp"
 #include "RawJson.hpp"
 #include "Serialization/JsonPrintable.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsChar.hpp"
 #include "TypeTraits/IsFloatingPoint.hpp"
@@ -22,6 +23,8 @@
 #include "TypeTraits/IsUnsignedIntegral.hpp"
 #include "TypeTraits/RemoveConst.hpp"
 #include "TypeTraits/RemoveReference.hpp"
+
+#include "TypeTraits/Or.hpp"
 
 namespace ArduinoJson {
 
@@ -65,8 +68,10 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(float value);
   // JsonVariant(double value);
   template <typename T>
-  JsonVariant(T value, typename Internals::EnableIf<
-                           Internals::IsFloatingPoint<T>::value>::type * = 0) :
+  JsonVariant(T value,
+              typename Internals::EnableIf<
+                Internals::IsFloatingPoint<T>::value>::type * = 0) :
+
     _type(Internals::JSON_FLOAT),
     _content(static_cast<Internals::JsonFloat>(value))
   {}
@@ -81,9 +86,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   JsonVariant(
       T value,
-      typename Internals::EnableIf<Internals::IsSignedIntegral<T>::value ||
-                                   Internals::IsSame<T, char>::value>::type * =
-          0) :
+      typename Internals::EnableIf<
+        Internals::Or<
+          Internals::IsSignedIntegral<T>,
+          Internals::IsSame<T, char>>::value>::type * = 0) :
+
     _type((value >= 0) ? Internals::JSON_POSITIVE_INTEGER : Internals::JSON_NEGATIVE_INTEGER),
     _content(static_cast<Internals::JsonUInt>((value >= 0) ? value : -value))
   {}
@@ -95,6 +102,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   JsonVariant(T value,
               typename Internals::EnableIf<
                   Internals::IsUnsignedIntegral<T>::value>::type * = 0) :
+
     _type(Internals::JSON_POSITIVE_INTEGER),
     _content(static_cast<Internals::JsonUInt>(value))
   {}
@@ -107,8 +115,8 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename TChar>
   JsonVariant(
       const TChar *value,
-      typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type * =
-          0) :
+      typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type * = 0) :
+
     _type(Internals::JSON_STRING),
     _content(reinterpret_cast<const char *>(value))
  {}
@@ -166,16 +174,17 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // const char* as<const char*>() const;
   // const char* as<char*>() const;
   template <typename T>
-  typename Internals::EnableIf<Internals::IsSame<T, const char *>::value ||
-                                   Internals::IsSame<T, char *>::value,
-                               const char *>::type
+  typename Internals::EnableIf<
+    Internals::Or<Internals::IsSame<T, const char *>,
+                  Internals::IsSame<T, char *>>::value,
+  const char *>::type
   as() const {
     return variantAsString();
   }
 
   // Any string type that is implemented in Internals::StringTraits and provides has_append flag
   template <typename T>
-  typename Internals::EnableIf<Internals::StringTraits<T>::has_append, T>::type
+  typename Internals::EnableIf<Internals::StringTraits<T>::has_append::value, T>::type
   as() const {
     const char *cstr = variantAsString();
     if (cstr) return T(cstr);
@@ -286,10 +295,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   //
   // Also supports any other string type that is implemented in Internals::StringTraits and provides has_append flag
   template <typename T>
-  typename Internals::EnableIf<Internals::IsSame<T, const char *>::value ||
-                                   Internals::IsSame<T, char *>::value ||
-                                   Internals::StringTraits<T>::has_append,
-                               bool>::type
+  typename Internals::EnableIf<
+    Internals::Or<Internals::IsSame<T, const char *>,
+                  Internals::IsSame<T, char *>,
+                  typename Internals::StringTraits<T>::has_append>::value,
+  bool>::type
   is() const {
     return variantIsString();
   }

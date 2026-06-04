@@ -4,7 +4,13 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
+
 #if ARDUINOJSON_ENABLE_ARDUINO_STREAM
+
+#include "StringTraitsBase.hpp"
+
+#include "../TypeTraits/Constant.hpp"
 
 #include <Stream.h>
 
@@ -44,8 +50,8 @@ struct ArduinoStreamTraits {
     }
   };
 
-  static const bool has_append = false;
-  static const bool has_equals = false;
+  typedef FalseType has_append;
+  typedef FalseType has_equals;
 };
 
 template <typename TStream>
