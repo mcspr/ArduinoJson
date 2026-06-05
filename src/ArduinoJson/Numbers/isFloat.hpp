@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
+
 #include "parseNumber.hpp"
 
 #include <cstddef>
@@ -19,7 +21,9 @@ inline bool isFloat(const char *s, size_t len) {
     case NumberType::SignedInteger:
     case NumberType::UnsignedInteger:
     case NumberType::Float:
+#if ARDUINOJSON_USE_DOUBLE
     case NumberType::Double:
+#endif
       return true;
 
     default:
