@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>  // for uint8_t
-
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/JsonVariantType.hpp"
@@ -26,6 +23,8 @@
 
 #include "TypeTraits/Or.hpp"
 
+#include <cstddef>
+
 namespace ArduinoJson {
 
 // Forward declarations.
@@ -38,11 +37,17 @@ class JsonObject;
 // - a null
 // - a boolean
 // - a char, short, int, long or long long (signed or unsigned)
-// - a string (const char*, std::string, String, const __FlashStringHelper*)
+// - a const char* string, either typed as raw or plain string
 // - a reference to a JsonArray or JsonObject
 class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename Print>
   friend class Internals::JsonSerializer;
+
+  // The current type of the variant
+  Internals::JsonVariantType _type;
+
+  // The various alternatives for the value of the variant.
+  Internals::JsonVariantContent _content;
 
  public:
   // Creates an empty variant by default
@@ -260,10 +265,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   typename Internals::EnableIf<Internals::IsSame<T, JsonNull>::value, bool>::type
   is() const {
-    return (_type == Internals::JsonVariantType::JSON_NULL ||
-          ((_type == Internals::JsonVariantType::JSON_UNPARSED) &&
-           _content.asString &&
-           (0 == strcmp("null", _content.asString))));
+    return variantIsNull();
   }
 
   // Returns true if the variant has type type T, false otherwise.
@@ -366,6 +368,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   T variantAsInteger() const;
 
+  bool variantIsUndefined() const {
+    return _type == Internals::JsonVariantType::JSON_UNDEFINED;
+  }
+
+  bool variantIsNull() const;
   bool variantIsBoolean() const;
   bool variantIsFloat() const;
   bool variantIsInteger() const;
@@ -381,12 +388,6 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
     return _type == Internals::JsonVariantType::JSON_STRING ||
            _type == Internals::JsonVariantType::JSON_UNPARSED;
   }
-
-  // The current type of the variant
-  Internals::JsonVariantType _type;
-
-  // The various alternatives for the value of the variant.
-  Internals::JsonVariantContent _content;
 };
 
 }  // namespace ArduinoJson

@@ -157,21 +157,19 @@ inline T JsonVariant::variantAsFloat() const {
   return T(0);
 }
 
+inline bool JsonVariant::variantIsNull() const {
+  return (_type == Internals::JsonVariantType::JSON_NULL ||
+        ((_type == Internals::JsonVariantType::JSON_UNPARSED) &&
+         _content.asString &&
+         (0 == strcmp("null", _content.asString))));
+}
+
 inline bool JsonVariant::variantIsBoolean() const {
-  using Internals::JsonVariantType;
-
-  if (_type == JsonVariantType::JSON_BOOLEAN)
-    return true;
-
-  if ((_type == JsonVariantType::JSON_UNPARSED ||
-       _type == JsonVariantType::JSON_STRING) &&
-      _content.asString != nullptr)
-  {
-    return (strcmp(_content.asString, "true") == 0) ||
-           (strcmp(_content.asString, "false") == 0);
-  }
-
-  return false;
+  return (_type == Internals::JsonVariantType::JSON_BOOLEAN ||
+        ((_type == Internals::JsonVariantType::JSON_UNPARSED) &&
+         _content.asString &&
+         ((0 == strcmp("true", _content.asString)) ||
+          (0 == strcmp("false", _content.asString)))));
 }
 
 inline bool JsonVariant::variantIsInteger() const {
@@ -207,7 +205,7 @@ inline bool JsonVariant::success() const {
       break;
   }
 
-  return _type != Internals::JsonVariantType::JSON_UNDEFINED;
+  return !variantIsUndefined();
 }
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
