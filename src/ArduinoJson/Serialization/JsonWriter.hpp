@@ -117,11 +117,11 @@ class JsonWriter {
   }
 
   void writeString(const char *value) {
+    writeRaw('\"');
     if (value) {
-      writeRaw('\"');
       while (*value) writeChar(*value++);
-      writeRaw('\"');
     }
+    writeRaw('\"');
   }
 
   void writeChar(char c) {
