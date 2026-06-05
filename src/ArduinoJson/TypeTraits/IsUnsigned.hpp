@@ -4,17 +4,22 @@
 
 #pragma once
 
-#include "IsIntegral.hpp"
 #include "IsSigned.hpp"
-
-#include "And.hpp"
+#include "Not.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+namespace TypeTraitsImpl {
 
-// A meta-function that returns true if T is an integral type.
 template <typename T>
-struct IsSignedIntegral : And<IsIntegral<T>, IsSigned<T>>::type {
+struct IsUnsigned : Not<IsSigned<T>>::type {
+};
+
+}
+
+// A meta-function that returns true if T is an unsigned type.
+template <typename T>
+struct IsUnsigned : TypeTraitsImpl::IsUnsigned<T>::type {
 };
 
 }  // namespace Internals

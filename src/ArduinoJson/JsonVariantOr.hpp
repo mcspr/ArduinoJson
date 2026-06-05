@@ -5,9 +5,16 @@
 #pragma once
 
 #include "Data/JsonVariantAs.hpp"
+#include "Data/JsonFloat.hpp"
+
 #include "Polyfills/attributes.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsIntegral.hpp"
+#include "TypeTraits/IsSame.hpp"
+
+#include "TypeTraits/And.hpp"
+#include "TypeTraits/Not.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -33,12 +40,22 @@ class JsonVariantOr {
   }
 
   // Returns the default value if the JsonVariant is undefined of incompatible
-  // Special case for integers: we also accept double
-  template <typename Integer>
-  typename EnableIf<IsIntegral<Integer>::value, Integer>::type operator|(
-      const Integer &defaultValue) const {
-    if (impl()->template is<double>())
-      return impl()->template as<Integer>();
+  // Special case for integers: we also accept floating point
+  template <typename Integral>
+  typename EnableIf<And<IsIntegral<Integral>,
+                    Not<IsSame<Integral, bool>>>::value, Integral>::type
+    operator|(const Integral &defaultValue) const {
+    if (impl()->template is<Internals::JsonFloat>())
+      return impl()->template as<Integral>();
+    else
+      return defaultValue;
+  }
+
+  template <typename T>
+  typename EnableIf<IsSame<T, bool>::value, bool>::type operator|(
+      T defaultValue) const {
+    if (impl()->template is<bool>())
+      return impl()->template as<bool>();
     else
       return defaultValue;
   }

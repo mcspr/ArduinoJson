@@ -151,7 +151,10 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // unsigned long as<unsigned long>() const;
   // unsigned long long as<unsigned long long>() const;
   template <typename T>
-  const typename Internals::EnableIf<Internals::IsIntegral<T>::value, T>::type
+  const typename Internals::EnableIf<
+        Internals::And<typename Internals::IsIntegral<T>,
+                       typename Internals::Not<Internals::IsSame<T, bool>>>::value,
+        T>::type
   as() const {
     return variantAsInteger<T>();
   }
@@ -265,13 +268,18 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // bool is<signed short>() const;
   // bool is<signed int>() const;
   // bool is<signed long>() const;
+  // bool is<signed long long>() const;
   // bool is<unsigned char>() const;
   // bool is<unsigned short>() const;
   // bool is<unsigned int>() const;
   // bool is<unsigned long>() const;
+  // bool is<unsigned long long>() const;
   template <typename T>
-  typename Internals::EnableIf<Internals::IsIntegral<T>::value, bool>::type is()
-      const {
+  typename Internals::EnableIf<
+        Internals::And<typename Internals::IsIntegral<T>,
+                       typename Internals::Not<Internals::IsSame<T, bool>>>::value,
+  bool>::type
+  is() const {
     return variantIsInteger();
   }
   //

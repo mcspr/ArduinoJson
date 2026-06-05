@@ -9,23 +9,23 @@
 
 namespace ArduinoJson {
 namespace Internals {
-namespace IsBaseOfImpl {
+namespace TypeTraitsImpl {
 
 template <typename TBase, typename TDerived>
-struct Probe {
+struct IsBaseOfProbe {
   static TrueType probe(const TBase *);
   static FalseType probe(...);
 };
 
 template <typename TBase, typename TDerived>
-using ProbeImpl = decltype(Probe<TBase, TDerived>::probe(
+using IsBaseOfProbeImpl = decltype(IsBaseOfProbe<TBase, TDerived>::probe(
     static_cast<typename RemoveReference<TDerived>::type *>(nullptr)));
 
 }
 
 // A meta-function that returns true if TDerived inherits from TBase
 template <typename TBase, typename TDerived>
-struct IsBaseOf : IsBaseOfImpl::ProbeImpl<TBase, TDerived>::type {
+struct IsBaseOf : TypeTraitsImpl::IsBaseOfProbeImpl<TBase, TDerived>::type {
 };
 
 }  // namespace Internals
