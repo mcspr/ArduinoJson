@@ -74,8 +74,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(double value);
   template <typename T>
   JsonVariant(T value,
-              typename Internals::EnableIf<
-                Internals::IsFloatingPoint<T>::value>::type * = 0) :
+      typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value>::type* = nullptr) :
 
     _type(Internals::JsonVariantType::JSON_FLOAT),
     _content(static_cast<Internals::JsonFloat>(value))
@@ -91,10 +90,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   JsonVariant(
       T value,
-      typename Internals::EnableIf<
-        Internals::Or<
-          Internals::IsSignedIntegral<T>,
-          Internals::IsSame<T, char>>::value>::type * = 0) :
+      typename Internals::EnableIf<Internals::IsSignedIntegral<T>::value>::type* = nullptr) :
 
     _type((value >= 0)
             ? Internals::JsonVariantType::JSON_POSITIVE_INTEGER
@@ -110,10 +106,10 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(unsigned long long)
   template <typename T>
   JsonVariant(T value,
-              typename Internals::EnableIf<
-                Internals::And<
-                  Internals::IsUnsignedIntegral<T>,
-                  Internals::Not<Internals::IsSame<T, bool>>>::value>::type * = 0) :
+      typename Internals::EnableIf<
+        Internals::And<
+          Internals::IsUnsignedIntegral<T>,
+          Internals::Not<Internals::IsSame<T, bool>>>::value>::type* = nullptr) :
 
     _type(Internals::JsonVariantType::JSON_POSITIVE_INTEGER),
     _content(static_cast<Internals::JsonUInt>(value))
@@ -127,7 +123,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename TChar>
   JsonVariant(
       const TChar *value,
-      typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type * = 0) :
+      typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type* = nullptr) :
 
     _type(Internals::JsonVariantType::JSON_STRING),
     _content(reinterpret_cast<const char *>(value))
