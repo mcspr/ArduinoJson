@@ -5,66 +5,119 @@
 #pragma once
 
 #include "ArduinoJson/Data/JsonVariantContent.hpp"
+#include "ArduinoJson/Data/JsonVariantType.hpp"
+#include "ArduinoJson/Data/JsonFloat.hpp"
+
 #include "Configuration.hpp"
+
 #include "JsonArray.hpp"
 #include "JsonObject.hpp"
 #include "JsonVariant.hpp"
-#include "Polyfills/isFloat.hpp"
-#include "Polyfills/isInteger.hpp"
-#include "Polyfills/parseFloat.hpp"
-#include "Polyfills/parseInteger.hpp"
 
-#include <string.h>  // for strcmp
+#include "Numbers/isFloat.hpp"
+#include "Numbers/parseFloat.hpp"
+
+#include "Numbers/isInteger.hpp"
+#include "Numbers/parseInteger.hpp"
+
+#include <cstring> // for strcmp
 
 namespace ArduinoJson {
 
 inline JsonVariant::JsonVariant(const JsonArray &array) :
-  _type(Internals::JSON_ARRAY),
+  _type(Internals::JsonVariantType::JSON_ARRAY),
   _content(const_cast<JsonArray *>(std::addressof(array)))
 {}
 
 inline JsonVariant::JsonVariant(const JsonObject &object) :
-  _type(Internals::JSON_OBJECT),
+  _type(Internals::JsonVariantType::JSON_OBJECT),
   _content(const_cast<JsonObject *>(std::addressof(object)))
 {}
 
 inline JsonArray &JsonVariant::variantAsArray() const {
-  if (_type == Internals::JSON_ARRAY) return *_content.asArray;
+  if (_type == Internals::JsonVariantType::JSON_ARRAY)
+    return *_content.asArray;
+
   return JsonArray::invalid();
 }
 
 inline JsonObject &JsonVariant::variantAsObject() const {
-  if (_type == Internals::JSON_OBJECT) return *_content.asObject;
+  if (_type == Internals::JsonVariantType::JSON_OBJECT)
+    return *_content.asObject;
+
   return JsonObject::invalid();
 }
 
 template <typename T>
 inline T JsonVariant::variantAsInteger() const {
-  using namespace Internals;
+  using Internals::JsonVariantType;
+
   switch (_type) {
-    case JSON_UNDEFINED:
-    case JSON_NULL:
-      return 0;
-    case JSON_POSITIVE_INTEGER:
-    case JSON_BOOLEAN:
+    case JsonVariantType::JSON_UNDEFINED:
+    case JsonVariantType::JSON_NULL:
+    case JsonVariantType::JSON_OBJECT:
+    case JsonVariantType::JSON_ARRAY:
+      break;
+
+    case JsonVariantType::JSON_BOOLEAN:
+    case JsonVariantType::JSON_POSITIVE_INTEGER:
       return T(_content.asInteger);
-    case JSON_NEGATIVE_INTEGER:
+
+    case JsonVariantType::JSON_NEGATIVE_INTEGER:
       return T(~_content.asInteger + 1);
-    case JSON_STRING:
-    case JSON_UNPARSED:
-      return parseInteger<T>(_content.asString);
-    default:
+
+    case JsonVariantType::JSON_FLOAT:
       return T(_content.asFloat);
+
+    case JsonVariantType::JSON_STRING:
+    case JsonVariantType::JSON_UNPARSED:
+      if (_content.asString) {
+        const auto converted = Internals::parseInteger<T>(_content.asString);
+        if (converted)
+          return converted.value;
+      }
+      break;
   }
+
+  return T();
+}
+
+inline bool JsonVariant::variantAsBoolean() const {
+  using Internals::JsonVariantType;
+
+  switch (_type) {
+    case JsonVariantType::JSON_UNDEFINED:
+    case JsonVariantType::JSON_NULL:
+      break;
+
+    case JsonVariantType::JSON_OBJECT:
+    case JsonVariantType::JSON_ARRAY:
+      return success();
+
+    case JsonVariantType::JSON_BOOLEAN:
+    case JsonVariantType::JSON_POSITIVE_INTEGER:
+    case JsonVariantType::JSON_NEGATIVE_INTEGER:
+      return _content.asInteger != 0;
+
+    case JsonVariantType::JSON_FLOAT:
+      return _content.asFloat != Internals::JsonFloat(0);
+
+    case JsonVariantType::JSON_STRING:
+    case JsonVariantType::JSON_UNPARSED:
+      if (!_content.asString || (strcmp(_content.asString, "false") == 0))
+        return false;
+
+      return true;
+  }
+
+  return false;
 }
 
 inline const char *JsonVariant::variantAsString() const {
-  using namespace Internals;
-  if (_type == JSON_UNPARSED && _content.asString &&
-      !strcmp("null", _content.asString))
-    return nullptr;
+  using Internals::JsonVariantType;
 
-  if (_type == JSON_STRING || _type == JSON_UNPARSED)
+  if (_type == JsonVariantType::JSON_STRING ||
+      _type == JsonVariantType::JSON_UNPARSED)
     return _content.asString;
 
   return nullptr;
@@ -72,65 +125,89 @@ inline const char *JsonVariant::variantAsString() const {
 
 template <typename T>
 inline T JsonVariant::variantAsFloat() const {
-  using namespace Internals;
+  using Internals::JsonVariantType;
+
   switch (_type) {
-    case JSON_UNDEFINED:
-    case JSON_NULL:
-      return 0;
-    case JSON_POSITIVE_INTEGER:
-    case JSON_BOOLEAN:
+    case JsonVariantType::JSON_UNDEFINED:
+    case JsonVariantType::JSON_NULL:
+    case JsonVariantType::JSON_OBJECT:
+    case JsonVariantType::JSON_ARRAY:
+      break;
+
+    case JsonVariantType::JSON_BOOLEAN:
+    case JsonVariantType::JSON_POSITIVE_INTEGER:
       return static_cast<T>(_content.asInteger);
-    case JSON_NEGATIVE_INTEGER:
+
+    case JsonVariantType::JSON_NEGATIVE_INTEGER:
       return -static_cast<T>(_content.asInteger);
-    case JSON_STRING:
-    case JSON_UNPARSED:
-      if (_content.asString)
-        return parseFloat<T>(_content.asString);
-    default:
+
+    case JsonVariantType::JSON_FLOAT:
+      return T(_content.asFloat);
+
+    case JsonVariantType::JSON_STRING:
+    case JsonVariantType::JSON_UNPARSED:
+      if (_content.asString) {
+        const auto converted = Internals::parseFloat<T>(_content.asString);
+        if (converted)
+          return converted.value;
+      }
       break;
   }
 
-  return static_cast<T>(_content.asFloat);
+  return T(0);
 }
 
 inline bool JsonVariant::variantIsBoolean() const {
-  using namespace Internals;
-  if (_type == JSON_BOOLEAN) return true;
+  using Internals::JsonVariantType;
 
-  if (_type != JSON_UNPARSED || _content.asString == NULL) return false;
+  if (_type == JsonVariantType::JSON_BOOLEAN)
+    return true;
 
-  return !strcmp(_content.asString, "true") ||
-         !strcmp(_content.asString, "false");
+  if ((_type == JsonVariantType::JSON_UNPARSED ||
+       _type == JsonVariantType::JSON_STRING) &&
+      _content.asString != nullptr)
+  {
+    return (strcmp(_content.asString, "true") == 0) ||
+           (strcmp(_content.asString, "false") == 0);
+  }
+
+  return false;
 }
 
 inline bool JsonVariant::variantIsInteger() const {
-  using namespace Internals;
+  using Internals::JsonVariantType;
 
-  return _type == JSON_POSITIVE_INTEGER || _type == JSON_NEGATIVE_INTEGER ||
-         (_type == JSON_UNPARSED && isInteger(_content.asString));
+  return _type == JsonVariantType::JSON_POSITIVE_INTEGER ||
+         _type == JsonVariantType::JSON_NEGATIVE_INTEGER ||
+         (_type == JsonVariantType::JSON_UNPARSED &&
+          _content.asString &&
+          Internals::isInteger(_content.asString));
 }
 
 inline bool JsonVariant::variantIsFloat() const {
-  using namespace Internals;
+  using Internals::JsonVariantType;
 
-  return _type == JSON_FLOAT || _type == JSON_POSITIVE_INTEGER ||
-         _type == JSON_NEGATIVE_INTEGER ||
-         (_type == JSON_UNPARSED && isFloat(_content.asString));
+  return _type == JsonVariantType::JSON_FLOAT ||
+         _type == JsonVariantType::JSON_POSITIVE_INTEGER ||
+         _type == JsonVariantType::JSON_NEGATIVE_INTEGER ||
+         (_type == JsonVariantType::JSON_UNPARSED &&
+          _content.asString &&
+          Internals::isFloat(_content.asString));
 }
 
 inline bool JsonVariant::success() const {
   switch (_type) {
-    case Internals::JSON_ARRAY:
+    case Internals::JsonVariantType::JSON_ARRAY:
       return _content.asArray->success();
 
-    case Internals::JSON_OBJECT:
+    case Internals::JsonVariantType::JSON_OBJECT:
       return _content.asObject->success();
 
     default:
       break;
   }
 
-  return _type != Internals::JSON_UNDEFINED;
+  return _type != Internals::JsonVariantType::JSON_UNDEFINED;
 }
 
 #if ARDUINOJSON_ENABLE_STD_STREAM

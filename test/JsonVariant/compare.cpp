@@ -6,7 +6,6 @@
 
 #include <catch.hpp>
 
-
 static const char* null = 0;
 
 template <typename T>

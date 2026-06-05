@@ -2,39 +2,113 @@
 // Copyright Benoit Blanchon 2014-2023
 // MIT License
 
-#include <ArduinoJson/Polyfills/parseFloat.hpp>
+#include <ArduinoJson/Numbers/parseFloat.hpp>
+#include <ArduinoJson/Polyfills/math.hpp>
 #include <catch.hpp>
 
+#include <cmath>
+
+using ArduinoJson::Internals::JsonNumberParser;
 using ArduinoJson::Internals::parseFloat;
 
+using ArduinoJson::Internals::isNaN;
+using ArduinoJson::Internals::isInfinity;
+
 template <typename T>
-void check(const char* input, T expected) {
+void check(const char *input, size_t len, T expected) { 
   CAPTURE(input);
-  REQUIRE(parseFloat<T>(input) == Approx(expected));
+  const auto result = parseFloat<T>(&input[0], len);
+  REQUIRE(result.ok());
+  REQUIRE(result.value == Approx(expected));
 }
 
 template <typename T>
-void checkNaN(const char* input) {
+inline void check(const char *input, T expected) { 
+  check(input, strlen(input), expected);
+}
+
+template <typename T>
+void checkSigned(const char *input, size_t len, T expected, bool negative) {
   CAPTURE(input);
-  T result = parseFloat<T>(input);
-  REQUIRE(result != result);
+  const auto result = parseFloat<T>(&input[0], len);
+  REQUIRE(result.ok());
+  REQUIRE(std::signbit(result.value) == negative);
+  REQUIRE(result.value == Approx(expected));
+}
+
+template <typename T>
+inline void checkSigned(const char *input, T expected, bool negative) {
+  checkSigned(input, strlen(input), expected, negative);
+}
+
+template <typename T>
+void checkFail(const char *input, size_t len) {
+  CAPTURE(input);
+  const auto result = parseFloat<T>(&input[0], len);
+  REQUIRE_FALSE(result.ok());
+}
+
+template <typename T>
+inline void checkFail(const char *input) {
+  checkFail<T>(input, strlen(input));
+}
+
+template <typename T>
+void checkConvertFail(const char *input, size_t len) {
+  CAPTURE(input);
+  const auto parse = JsonNumberParser::parse(&input[0], len);
+  REQUIRE(parse);
+  const auto convert = parse.value.template convertTo<T>();
+  REQUIRE_FALSE(convert);
+}
+
+template <typename T>
+inline void checkConvertFail(const char *input) {
+  checkConvertFail<T>(input, strlen(input));
+}
+
+template <typename T>
+void checkNaN(const char *input, size_t len) {
+  CAPTURE(input);
+  //const auto result = parseFloat<T>(&input[0], len);
+  const auto parse = JsonNumberParser::parse(&input[0], len);
+  REQUIRE(parse.ok());
+  const auto convert = parse.convertTo<T>();
+  REQUIRE(convert.ok());
+  REQUIRE(isNaN(convert.value));
+  //REQUIRE(result);
+  //REQUIRE(isNaN(result.value));
+}
+
+template <typename T>
+inline void checkNaN(const char *input) {
+  checkNaN<T>(input, strlen(input));
 }
 
 template <typename T>
 void checkInf(const char* input, bool negative) {
   CAPTURE(input);
-  T x = parseFloat<T>(input);
-  if (negative)
-    REQUIRE(x < 0);
-  else
-    REQUIRE(x > 0);
-  REQUIRE(x == x);      // not a NaN
-  REQUIRE(x * 2 == x);  // a property of infinity
+  const auto result = parseFloat<T>(input);
+  REQUIRE(result.ok());
+
+  REQUIRE(std::signbit(result.value) == negative);
+  REQUIRE_FALSE(isNaN(result.value));
+  REQUIRE(isInfinity(result.value));
 }
 
 TEST_CASE("parseFloat<float>()") {
-  SECTION("Null") {
-    check<float>(NULL, 0);
+  SECTION("Empty") {
+    checkFail<float>("");
+  }
+
+  SECTION("Zero") {
+    check<float>("0", 0.0f);
+    check<float>("0.", 0.0f);
+    checkSigned<float>("+0.", 0.0f, false);
+    checkSigned<float>("-0.", 0.0f, true);
+    check<float>("0.0", 0.0f);
+    checkSigned<float>("+0.0", 0.0f, false);
+    checkSigned<float>("-0.0", -0.0f, true);
   }
 
   SECTION("Float_Short_NoExponent") {
@@ -80,7 +154,11 @@ TEST_CASE("parseFloat<float>()") {
 
   SECTION("ExponentTooBig") {
     checkInf<float>("1e39", false);
+    check<float>("1e38", 1e38f);
     checkInf<float>("-1e39", true);
+    check<float>("-1e38", -1e38f);
+    check<float>("1e-45", 1e-45f);
+    check<float>("1e-46", 0.0f);
     checkInf<float>("1e255", false);
     check<float>("1e-255", 0.0f);
   }
@@ -100,12 +178,12 @@ TEST_CASE("parseFloat<float>()") {
   }
 
   SECTION("Boolean") {
-    check<float>("false", 0.0f);
-    check<float>("true", 1.0f);
+    checkFail<float>("false");
+    checkFail<float>("true");
   }
 
   SECTION("Overflow exponent with decimal part") {  // Issue #2220
-    checkNaN<float>(
+    checkFail<float>(
         "0.000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
@@ -118,7 +196,7 @@ TEST_CASE("parseFloat<float>()") {
   }
 
   SECTION("Overflow exponent with integral part") {
-    checkNaN<float>(
+    checkFail<float>(
         "10000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
@@ -132,8 +210,18 @@ TEST_CASE("parseFloat<float>()") {
 }
 
 TEST_CASE("parseFloat<double>()") {
-  SECTION("Null") {
-    check<double>(NULL, 0);
+  SECTION("Empty") {
+    checkFail<double>("");
+  }
+
+  SECTION("Zero") {
+    check<double>("0", 0.0);
+    check<double>("0.", 0.0);
+    checkSigned<double>("+0.", 0.0, false);
+    checkSigned<double>("-0.", 0.0, true);
+    check<double>("0.0", 0.0);
+    checkSigned<double>("+0.0", 0.0, false);
+    checkSigned<double>("-0.0", -0.0, true);
   }
 
   SECTION("Short_NoExponent") {
@@ -185,24 +273,32 @@ TEST_CASE("parseFloat<double>()") {
   }
 
   SECTION("ExponentTooBig") {
-    checkInf<double>("1e309", false);
-    checkInf<double>("-1e309", true);
-    checkInf<double>("1e65535", false);
-    check<double>("1e-65535", 0.0);
+    check<double>("-1e308", -1e308);
+    checkFail<double>("-1e309");
+    check<double>("1e308", 1e308);
+    checkFail<double>("1e309");
+    check<double>("1e-323", 1e-323);
+    checkFail<double>("1e-324");
+    checkFail<double>("1e65535");
+    checkFail<double>("1e-65535");
   }
 
   SECTION("NaN") {
     checkNaN<double>("NaN");
     checkNaN<double>("nan");
+    checkNaN<double>("-NaN");
+    checkNaN<double>("+NaN");
+    checkNaN<double>("-nan");
+    checkNaN<double>("+nan");
   }
 
   SECTION("Boolean") {
-    check<double>("false", 0.0);
-    check<double>("true", 1.0);
+    checkFail<double>("false");
+    checkFail<double>("true");
   }
 
   SECTION("Overflow exponent with decimal part") {  // Issue #2220
-    checkNaN<double>(
+    checkFail<double>(
         "0.000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
@@ -217,7 +313,7 @@ TEST_CASE("parseFloat<double>()") {
   }
 
   SECTION("Overflow exponent with integral part") {
-    checkNaN<double>(
+    checkFail<double>(
         "10000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000"

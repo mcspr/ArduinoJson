@@ -9,7 +9,7 @@
 void check(JsonVariant variant, const std::string &expected) {
   char buffer[256] = "";
   size_t returnValue = variant.printTo(buffer, sizeof(buffer));
-  REQUIRE(expected == buffer);
+  REQUIRE(expected == std::string(buffer, returnValue));
   REQUIRE(expected.size() == returnValue);
 }
 
@@ -20,6 +20,10 @@ TEST_CASE("JsonVariant::printTo()") {
 
   SECTION("Null") {
     check(JsonNull{}, "null");
+  }
+
+  SECTION("Raw string") {
+    check(RawJson("whatever"), "whatever");
   }
 
   SECTION("Empty string") {
@@ -56,15 +60,15 @@ TEST_CASE("JsonVariant::printTo()") {
 
 #if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
   SECTION("NegativeInt64") {
-    check(-9223372036854775807 - 1, "-9223372036854775808");
+    check(-9223372036854775807LL - 1LL, "-9223372036854775808");
   }
 
   SECTION("PositiveInt64") {
-    check(9223372036854775807, "9223372036854775807");
+    check(9223372036854775807LL, "9223372036854775807");
   }
 
   SECTION("UInt64") {
-    check(18446744073709551615U, "18446744073709551615");
+    check(18446744073709551615ULL, "18446744073709551615");
   }
 #endif
 }

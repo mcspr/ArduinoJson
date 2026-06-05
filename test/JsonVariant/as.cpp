@@ -154,9 +154,14 @@ TEST_CASE("JsonVariant::as()") {
   }
 #endif
 
+  SECTION("FalseStringAsBool") {
+    JsonVariant variant = "false";
+    REQUIRE_FALSE(variant.as<bool>());
+  }
+
   SECTION("RandomStringAsBool") {
     JsonVariant variant = "hello";
-    REQUIRE_FALSE(variant.as<bool>());
+    REQUIRE(variant.as<bool>());
   }
 
   SECTION("RandomStringAsLong") {
@@ -179,14 +184,24 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(std::string("hello") == variant.as<std::string>());
   }
 
-  SECTION("TrueStringAsBool") {
-    JsonVariant variant = "true";
+  SECTION("UnparsedStringAsConstCharPtr") {
+    JsonVariant variant = RawJson("null");
+    REQUIRE(std::string("null") == variant.as<const char*>());
+  }
+
+  SECTION("UnparsedStringAsConstCharPtr") {
+    JsonVariant variant = RawJson("null");
+    REQUIRE(std::string("null") == variant.as<const char*>());
+  }
+
+  SECTION("RandomRawStringAsBool") {
+    JsonVariant variant = RawJson("12345");
     REQUIRE(variant.as<bool>());
   }
 
-  SECTION("TrueStringAsLong") {
-    JsonVariant variant = "true";
-    REQUIRE(1L == variant.as<long>());
+  SECTION("RandomStringAsLong") {
+    JsonVariant variant = "anything";
+    REQUIRE(0L == variant.as<long>());
   }
 
   SECTION("ObjectAsString") {

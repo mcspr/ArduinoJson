@@ -12,7 +12,7 @@ namespace Internals {
 
 // Enumerated type to know the current type of a JsonVariant.
 // The value determines which member of JsonVariantContent is used.
-enum JsonVariantType {
+enum class JsonVariantType {
   JSON_UNDEFINED,         // JsonVariant has not been initialized
   JSON_NULL,              // JsonVariant contains a null
   JSON_UNPARSED,          // JsonVariant contains an unparsed string

@@ -2,16 +2,12 @@
 // Copyright Benoit Blanchon 2014-2023
 // MIT License
 
-#include <ArduinoJson/Polyfills/isFloat.hpp>
+#include <ArduinoJson/Numbers/isFloat.hpp>
 #include <catch.hpp>
 
 using ArduinoJson::Internals::isFloat;
 
 TEST_CASE("isFloat()") {
-  SECTION("Input is NULL") {
-    REQUIRE(isFloat(NULL) == false);
-  }
-
   SECTION("NoExponent") {
     REQUIRE(isFloat("3.14"));
     REQUIRE(isFloat("-3.14"));
@@ -58,19 +54,27 @@ TEST_CASE("isFloat()") {
   }
 
   SECTION("NaN") {
-    REQUIRE(isFloat("NaN"));
     REQUIRE_FALSE(isFloat("n"));
-    REQUIRE_FALSE(isFloat("N"));
-    REQUIRE_FALSE(isFloat("nan"));
-    REQUIRE_FALSE(isFloat("-NaN"));
-    REQUIRE_FALSE(isFloat("+NaN"));
+    REQUIRE_FALSE(isFloat("Na"));
+    REQUIRE_FALSE(isFloat("NAN"));
+    REQUIRE_FALSE(isFloat("nAn"));
+    REQUIRE_FALSE(isFloat("nNaNn"));
+    REQUIRE(isFloat("NaN"));
+    REQUIRE(isFloat("nan"));
+    REQUIRE(isFloat("-NaN"));
+    REQUIRE(isFloat("+NaN"));
   }
 
   SECTION("Infinity") {
+    REQUIRE(isFloat("inf"));
+    REQUIRE(isFloat("-inf"));
+    REQUIRE(isFloat("+inf"));
     REQUIRE(isFloat("Infinity"));
     REQUIRE(isFloat("+Infinity"));
     REQUIRE(isFloat("-Infinity"));
     REQUIRE_FALSE(isFloat("infinity"));
-    REQUIRE_FALSE(isFloat("Inf"));
+    REQUIRE_FALSE(isFloat("inF"));
+    REQUIRE_FALSE(isFloat("infinityy"));
+    REQUIRE_FALSE(isFloat("iinfinityy"));
   }
 }

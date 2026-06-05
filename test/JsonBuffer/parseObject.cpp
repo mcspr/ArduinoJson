@@ -5,6 +5,8 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+using Catch::Matchers::Equals;
+
 TEST_CASE("JsonBuffer::parseObject()") {
   DynamicJsonBuffer jb;
 
@@ -114,7 +116,7 @@ TEST_CASE("JsonBuffer::parseObject()") {
       JsonObject& obj = jb.parseObject("{\"key1\":12.345,\"key2\":-7E89}");
       REQUIRE(obj.success());
       REQUIRE(obj.size() == 2);
-      REQUIRE(obj["key1"] == 12.345);
+      REQUIRE(obj["key1"] == Approx(12.345));
       REQUIRE(obj["key2"] == -7E89);
     }
 

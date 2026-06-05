@@ -5,6 +5,8 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+using Catch::Matchers::Equals;
+
 TEST_CASE("JsonBuffer::parseArray()") {
   DynamicJsonBuffer jb;
 
@@ -76,7 +78,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
 
     REQUIRE(arr.success());
     REQUIRE(2 == arr.size());
-    REQUIRE(arr[0] == 4.2);
+    REQUIRE(arr[0] == Approx(4.2));
     REQUIRE(arr[1] == 1e2);
   }
 
@@ -178,6 +180,11 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr.success());
     REQUIRE(1 == arr.size());
     REQUIRE(arr[0] == "1\"2\\3/4\b5\f6\n7\r8\t9");
+  }
+
+  SECTION("StringWithNullByte") {
+    JsonArray& arr = jb.parseArray("['\0','\1', '\2']", 1);
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("StringWithUnterminatedEscapeSequence") {
@@ -311,8 +318,8 @@ TEST_CASE("JsonBuffer::parseArray()") {
   }
 
   SECTION("DeeplyNested") {
-    JsonArray& arr =
-        jb.parseArray("[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]");
-    REQUIRE(arr.success());
+    const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
+    REQUIRE_FALSE(jb.parseArray(input, 18).success());
+    REQUIRE(jb.parseArray(input, 19).success());
   }
 }

@@ -66,42 +66,42 @@ template <typename Writer>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
     const JsonVariant& variant, Writer& writer) {
   switch (variant._type) {
-    case JSON_FLOAT:
+    case JsonVariantType::JSON_FLOAT:
       writer.writeFloat(variant._content.asFloat);
       return;
 
-    case JSON_ARRAY:
+    case JsonVariantType::JSON_ARRAY:
       serialize(*variant._content.asArray, writer);
       return;
 
-    case JSON_OBJECT:
+    case JsonVariantType::JSON_OBJECT:
       serialize(*variant._content.asObject, writer);
       return;
 
-    case JSON_STRING:
+    case JsonVariantType::JSON_STRING:
       writer.writeString(variant._content.asString);
       return;
 
-    case JSON_NULL:
+    case JsonVariantType::JSON_NULL:
       writer.writeNull();
       return;
 
-    case JSON_UNPARSED:
+    case JsonVariantType::JSON_UNPARSED:
       writer.writeRaw(variant._content.asString);
       return;
 
-    case JSON_NEGATIVE_INTEGER:
+    case JsonVariantType::JSON_NEGATIVE_INTEGER:
       writer.writeRaw('-');  // Falls through.
 
-    case JSON_POSITIVE_INTEGER:
+    case JsonVariantType::JSON_POSITIVE_INTEGER:
       writer.writeInteger(variant._content.asInteger);
       return;
 
-    case JSON_BOOLEAN:
+    case JsonVariantType::JSON_BOOLEAN:
       writer.writeBoolean(variant._content.asInteger != 0);
       return;
 
-    default:  // JSON_UNDEFINED
-      return;
+    case JsonVariantType::JSON_UNDEFINED:
+      break;
   }
 }

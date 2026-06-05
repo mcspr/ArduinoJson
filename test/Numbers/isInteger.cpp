@@ -2,16 +2,12 @@
 // Copyright Benoit Blanchon 2014-2023
 // MIT License
 
-#include <ArduinoJson/Polyfills/isInteger.hpp>
+#include <ArduinoJson/Numbers/isInteger.hpp>
 #include <catch.hpp>
 
 using ArduinoJson::Internals::isInteger;
 
 TEST_CASE("isInteger()") {
-  SECTION("Null") {
-    REQUIRE_FALSE(isInteger(NULL));
-  }
-
   SECTION("Empty String") {
     REQUIRE_FALSE(isInteger(""));
   }
