@@ -40,9 +40,10 @@ TEST_CASE("JsonVariant set()/get()") {
   }
 #endif
 
-  SECTION("Null") {
-    checkValue<const char *>(NULL);
+  SECTION("Nullptr") {
+    checkValue<const char *>(nullptr);
   }
+
   SECTION("String") {
     checkValue<const char *>("hello");
   }
