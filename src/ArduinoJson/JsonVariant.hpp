@@ -111,7 +111,9 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   JsonVariant(T value,
               typename Internals::EnableIf<
-                  Internals::IsUnsignedIntegral<T>::value>::type * = 0) :
+                Internals::And<
+                  Internals::IsUnsignedIntegral<T>,
+                  Internals::Not<Internals::IsSame<T, bool>>>::value>::type * = 0) :
 
     _type(Internals::JsonVariantType::JSON_POSITIVE_INTEGER),
     _content(static_cast<Internals::JsonUInt>(value))
