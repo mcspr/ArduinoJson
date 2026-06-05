@@ -132,8 +132,8 @@ TEST_CASE("JsonBuffer::parseObject()") {
       JsonObject& obj = jb.parseObject("{\"key1\":null,\"key2\":null}");
       REQUIRE(obj.success());
       REQUIRE(obj.size() == 2);
-      REQUIRE(obj["key1"].as<char*>() == 0);
-      REQUIRE(obj["key2"].as<char*>() == 0);
+      REQUIRE(obj["key1"].as<const char*>() == std::string("null"));
+      REQUIRE(obj["key2"].as<const char*>() == std::string("null"));
     }
   }
 

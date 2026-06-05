@@ -3,21 +3,21 @@
 // MIT License
 
 #include <ArduinoJson.h>
-
 #include <catch.hpp>
+
+static constexpr const char* const_char_nullptr = nullptr;
 
 TEST_CASE("JsonObject::createNestedArray()") {
   DynamicJsonBuffer _jsonBuffer;
   JsonObject& _object = _jsonBuffer.createObject();
 
-  SECTION("success() should return true if key is non-null") {
+  SECTION("success() should return true if key is not nullptr") {
     JsonArray& arr = _object.createNestedArray("key");
     REQUIRE(arr.success() == true);
   }
 
-  SECTION("success() should return false if key is null") {
-    const char* null = 0;
-    JsonArray& arr = _object.createNestedArray(null);
+  SECTION("success() should return false if key is nullptr") {
+    JsonArray& arr = _object.createNestedArray(const_char_nullptr);
     REQUIRE(arr.success() == false);
   }
 }

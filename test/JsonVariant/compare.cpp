@@ -6,7 +6,7 @@
 
 #include <catch.hpp>
 
-static const char* null = 0;
+static constexpr const char* const_char_nullptr = nullptr;
 
 template <typename T>
 void checkEquals(JsonVariant a, T b) {
@@ -99,14 +99,14 @@ TEST_CASE("JsonVariant comparisons") {
     checkComparisons<unsigned short>(122, 123, 124);
   }
 
-  SECTION("null") {
-    JsonVariant variant = null;
+  SECTION("const char* nullptr") {
+    JsonVariant variant = JsonVariant(const_char_nullptr);
 
     REQUIRE(variant == variant);
     REQUIRE_FALSE(variant != variant);
 
-    REQUIRE(variant == null);
-    REQUIRE_FALSE(variant != null);
+    REQUIRE(variant == const_char_nullptr);
+    REQUIRE_FALSE(variant != const_char_nullptr);
 
     REQUIRE(variant != "null");
     REQUIRE_FALSE(variant == "null");
@@ -125,8 +125,8 @@ TEST_CASE("JsonVariant comparisons") {
     REQUIRE(variant != "world");
     REQUIRE_FALSE(variant == "world");
 
-    REQUIRE(variant != null);
-    REQUIRE_FALSE(variant == null);
+    REQUIRE(variant != const_char_nullptr);
+    REQUIRE_FALSE(variant == const_char_nullptr);
 
     REQUIRE("hello" == variant);
     REQUIRE_FALSE("hello" != variant);
@@ -134,8 +134,8 @@ TEST_CASE("JsonVariant comparisons") {
     REQUIRE("world" != variant);
     REQUIRE_FALSE("world" == variant);
 
-    REQUIRE(null != variant);
-    REQUIRE_FALSE(null == variant);
+    REQUIRE(const_char_nullptr != variant);
+    REQUIRE_FALSE(const_char_nullptr == variant);
   }
 
   SECTION("String") {
@@ -151,8 +151,8 @@ TEST_CASE("JsonVariant comparisons") {
     REQUIRE(variant != std::string("world"));
     REQUIRE_FALSE(variant == std::string("world"));
 
-    REQUIRE(variant != null);
-    REQUIRE_FALSE(variant == null);
+    REQUIRE(variant != const_char_nullptr);
+    REQUIRE_FALSE(variant == const_char_nullptr);
 
     REQUIRE(std::string("hello") == variant);
     REQUIRE_FALSE(std::string("hello") != variant);
@@ -160,8 +160,8 @@ TEST_CASE("JsonVariant comparisons") {
     REQUIRE(std::string("world") != variant);
     REQUIRE_FALSE(std::string("world") == variant);
 
-    REQUIRE(null != variant);
-    REQUIRE_FALSE(null == variant);
+    REQUIRE(const_char_nullptr != variant);
+    REQUIRE_FALSE(const_char_nullptr == variant);
   }
 
   SECTION("IntegerInVariant") {

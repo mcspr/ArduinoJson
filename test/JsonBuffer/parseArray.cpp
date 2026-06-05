@@ -104,8 +104,10 @@ TEST_CASE("JsonBuffer::parseArray()") {
 
     REQUIRE(arr.success());
     REQUIRE(2 == arr.size());
-    REQUIRE(arr[0].as<char*>() == 0);
-    REQUIRE(arr[1].as<char*>() == 0);
+    REQUIRE(arr[0].is<JsonNull>());
+    REQUIRE(arr[1].is<JsonNull>());
+    REQUIRE(arr[0].as<char*>() == std::string("null"));
+    REQUIRE(arr[1].as<char*>() == std::string("null"));
   }
 
   SECTION("TwoStringsDoubleQuotes") {

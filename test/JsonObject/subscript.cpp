@@ -5,6 +5,8 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+static constexpr const char* const_char_nullptr = nullptr;
+
 TEST_CASE("JsonObject::operator[]") {
   DynamicJsonBuffer _jsonBuffer;
   JsonObject& _object = _jsonBuffer.createObject();
@@ -167,11 +169,9 @@ TEST_CASE("JsonObject::operator[]") {
   SECTION("should ignore null key") {
     // object must have a value to make a call to strcmp()
     _object["dummy"] = 42;
-
-    const char* null = 0;
-    _object[null] = 666;
+    _object[const_char_nullptr] = 666;
 
     REQUIRE(_object.size() == 1);
-    REQUIRE(_object[null] == 0);
+    REQUIRE_FALSE(_object[const_char_nullptr].success());
   }
 }
