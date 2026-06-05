@@ -10,9 +10,58 @@
 #include "../Serialization/FloatParts.hpp"
 
 #include <cstdint>
+#include <limits>
 
 namespace ArduinoJson {
 namespace Internals {
+namespace JsonIntegerWriter {
+
+struct Base10 {
+  static constexpr auto digits = std::numeric_limits<JsonUInt>::digits10;
+
+  explicit Base10(JsonUInt value) {
+    auto* it = wend();
+
+    *(it--) = '\0';
+    while (value >= JsonUInt(10)) {
+      *(it--) = char('0' + (value % JsonUInt(10)));
+      value = JsonUInt(value / JsonUInt(10));
+    }
+
+    *it = char('0' + (value % JsonUInt(10)));
+    _data = it;
+  }
+
+  const char* data() const {
+    return _data;
+  }
+
+  const char* c_str() const {
+    return data();
+  }
+
+  const char* begin() const {
+   return data();
+  }
+
+  const char* end() const {
+    return &_buffer[sizeof(_buffer) - 1];
+  }
+
+  size_t length() const {
+    return static_cast<size_t>(end() - begin());
+  }
+
+ private:
+  char* wend() {
+    return &_buffer[sizeof(_buffer) - 1];
+  }
+
+  char _buffer[digits + 3];
+  char* _data;
+};
+
+}
 
 // Writes the JSON tokens to a Print implementation
 // This class is used by:
@@ -24,7 +73,12 @@ namespace Internals {
 template <typename Print>
 class JsonWriter {
  public:
-  explicit JsonWriter(Print &sink) : _sink(sink), _length(0) {}
+  explicit JsonWriter(Print &sink) :
+    _sink(sink)
+  {}
+
+  JsonWriter &operator=(const JsonWriter &) = delete;
+  JsonWriter &operator=(JsonWriter &&) = delete;
 
   // Returns the number of bytes sent to the Print implementation.
   // This is very handy for implementations of printTo() that must return the
@@ -82,66 +136,69 @@ class JsonWriter {
 
   template <typename TFloat>
   void writeFloat(TFloat value) {
-    if (isNaN(value)) return writeRaw("NaN");
+    if (isNaN(value)) {
+      writeRaw("NaN");
+      return;
+    }
 
     if (value < 0.0) {
       writeRaw('-');
       value = -value;
     }
 
-    if (isInfinity(value)) return writeRaw("Infinity");
+    if (isInfinity(value)) {
+      writeRaw("Infinity");
+      return;
+    }
 
     FloatParts<TFloat> parts(value);
 
     writeInteger(parts.integral);
-    if (parts.decimalPlaces) writeDecimals(parts.decimal, parts.decimalPlaces);
+    if (parts.decimalPlaces > 0) {
+      writeRaw('.');
+      writeInteger(parts.decimal, static_cast<size_t>(parts.decimalPlaces));
+    }
+
+    const auto exponent = static_cast<unsigned>(
+        parts.exponent < 0
+            ? -parts.exponent
+            : parts.exponent);
 
     if (parts.exponent < 0) {
       writeRaw("e-");
-      writeInteger(-parts.exponent);
+      writeInteger(exponent);
     }
 
     if (parts.exponent > 0) {
       writeRaw('e');
-      writeInteger(parts.exponent);
+      writeInteger(exponent);
     }
   }
 
   template <typename UInt>
   void writeInteger(UInt value) {
-    char buffer[22];
-    char *end = buffer + sizeof(buffer) - 1;
-    char *ptr = end;
-
-    *ptr = 0;
-    do {
-      *--ptr = char(value % 10 + '0');
-      value = UInt(value / 10);
-    } while (value);
-
-    writeRaw(ptr);
+    const auto repr = JsonIntegerWriter::Base10(value);
+    writeRaw(repr.c_str());
   }
 
-  void writeDecimals(uint32_t value, int8_t width) {
-    // buffer should be big enough for all digits, the dot and the null
-    // terminator
-    char buffer[16];
-    char *ptr = buffer + sizeof(buffer) - 1;
-
-    // write the string in reverse order
-    *ptr = 0;
-    while (width--) {
-      *--ptr = char(value % 10 + '0');
-      value /= 10;
+  void writeInteger(uint32_t value, size_t padding) {
+    const auto repr = JsonIntegerWriter::Base10(value);
+    if (repr.length() < padding) {
+      size_t left = padding - repr.length();
+      while (left--)
+        writeRaw('0');
     }
-    *--ptr = '.';
 
-    // and dump it in the right order
-    writeRaw(ptr);
+    padding = Min(padding, repr.length());
+    const auto* end = repr.data() + padding;
+    for (auto it = repr.data(); it != end; ++it) {
+      writeRaw(*it);
+    }
   }
 
   void writeRaw(const char *s) {
-    _length += _sink.print(s);
+    if (s)
+      _length += _sink.print(s);
   }
   void writeRaw(char c) {
     _length += _sink.print(c);
@@ -149,10 +206,7 @@ class JsonWriter {
 
  protected:
   Print &_sink;
-  size_t _length;
-
- private:
-  JsonWriter &operator=(const JsonWriter &);  // cannot be assigned
+  size_t _length{};
 };
 }  // namespace Internals
 }  // namespace ArduinoJson
