@@ -11,7 +11,7 @@ class Encoding {
  public:
   // Optimized for code size on a 8-bit AVR
   static char escapeChar(char c) {
-    const char *p = escapeTable(false);
+    const char *p = escapeTable(EscapeTableSerializing);
     while (p[0] && p[1] != c) {
       p += 2;
     }
@@ -20,18 +20,24 @@ class Encoding {
 
   // Optimized for code size on a 8-bit AVR
   static char unescapeChar(char c) {
-    const char *p = escapeTable(true);
+    const char *p = escapeTable(EscapeTableDeserializing);
     for (;;) {
-      if (p[0] == '\0') return c;
-      if (p[0] == c) return p[1];
+      if (p[0] == '\0')
+        return '\0';
+      if (p[0] == c)
+        return p[1];
       p += 2;
     }
   }
 
  private:
-  static const char *escapeTable(bool excludeIdenticals) {
-    return &"\"\"\\\\b\bf\fn\nr\rt\t"[excludeIdenticals ? 4 : 0];
+  static constexpr int EscapeTableSerializing = 4;
+  static constexpr int EscapeTableDeserializing = 0;
+
+  static const char *escapeTable(int offset) {
+    return &"//''\"\"\\\\b\bf\fn\nr\rt\t"[offset];
   }
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

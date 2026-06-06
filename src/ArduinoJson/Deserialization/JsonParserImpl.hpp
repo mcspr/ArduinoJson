@@ -155,7 +155,8 @@ ArduinoJson::Internals::JsonParser<TReader, TWriter>::parseString() {
         return nullptr;  // incomplete input
       _reader.move();
 
-      if (c == stopChar) break;
+      if (c == stopChar)
+        break;
 
       if (c != '\\') // appends values as-is unless escaped
         str.append(c);
