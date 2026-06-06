@@ -7,7 +7,7 @@
 
 static bool isAligned(void *ptr) {
   const size_t mask = sizeof(void *) - 1;
-  size_t addr = reinterpret_cast<size_t>(ptr);
+  uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
   return (addr & mask) == 0;
 }
 
@@ -20,20 +20,20 @@ TEST_CASE("StaticJsonBuffer::alloc()") {
     REQUIRE(p1 != p2);
   }
 
-  SECTION("Returns non-NULL when using full capacity") {
+  SECTION("Returns valid pointer when using full capacity") {
     void *p = buffer.alloc(64);
-    REQUIRE(0 != p);
+    REQUIRE(nullptr != p);
   }
 
-  SECTION("Returns NULL when full") {
+  SECTION("Returns nullptr when full") {
     buffer.alloc(64);
     void *p = buffer.alloc(1);
-    REQUIRE(0 == p);
+    REQUIRE(nullptr == p);
   }
 
-  SECTION("Returns NULL when buffer is too small") {
+  SECTION("Returns nullptr when buffer is too small") {
     void *p = buffer.alloc(65);
-    REQUIRE(0 == p);
+    REQUIRE(nullptr == p);
   }
 
   SECTION("Returns aligned pointers") {

@@ -10,28 +10,31 @@
 template <typename TReader, typename TWriter>
 inline bool ArduinoJson::Internals::JsonParser<TReader, TWriter>::eat(
     TReader &reader, char charToSkip) {
+
   skipSpacesAndComments(reader);
-  if (reader.current() != charToSkip) return false;
-  reader.move();
-  return true;
+  const auto current = reader.current();
+  if (current > 0 && current == charToSkip) {
+    reader.move();
+    return true;
+  }
+  return false;
 }
 
 template <typename TReader, typename TWriter>
 inline bool
 ArduinoJson::Internals::JsonParser<TReader, TWriter>::parseAnythingTo(
     JsonVariant *destination) {
-  skipSpacesAndComments(_reader);
 
+  skipSpacesAndComments(_reader);
   switch (_reader.current()) {
     case '[':
       return parseArrayTo(destination);
 
     case '{':
       return parseObjectTo(destination);
-
-    default:
-      return parseStringTo(destination);
   }
+
+  return parseStringTo(destination);
 }
 
 template <typename TReader, typename TWriter>
@@ -148,27 +151,35 @@ ArduinoJson::Internals::JsonParser<TReader, TWriter>::parseString() {
     char stopChar = c;
     for (;;) {
       c = _reader.current();
-      if (c == '\0') break;
+      if (c == '\0')
+        return nullptr;  // incomplete input
       _reader.move();
 
       if (c == stopChar) break;
 
-      if (c == '\\') {
-        // replace char
-        c = Encoding::unescapeChar(_reader.current());
-        if (c == '\0') break;
-        _reader.move();
-      }
+      if (c != '\\') // appends values as-is unless escaped
+        str.append(c);
+      else {
+        c = _reader.current();
+        if (c == '\0')
+          return nullptr;  // incomplete input
 
-      str.append(c);
+        c = Encoding::unescapeChar(c);
+        if (c == '\0')
+          return nullptr;  // invalid escape
+
+        _reader.move();
+        str.append(c);
+      }
     }
-  } else {  // no quotes
-    for (;;) {
-      if (!canBeInNonQuotedString(c)) break;
+  } else if (canBeInNonQuotedString(c)) {  // no quotes
+    do {
       _reader.move();
       str.append(c);
       c = _reader.current();
-    }
+    } while (canBeInNonQuotedString(c));
+  } else {
+    return nullptr;  // invalid
   }
 
   return str.c_str();
@@ -178,12 +189,16 @@ template <typename TReader, typename TWriter>
 inline bool ArduinoJson::Internals::JsonParser<TReader, TWriter>::parseStringTo(
     JsonVariant *destination) {
   bool hasQuotes = isQuote(_reader.current());
-  const char *value = parseString();
-  if (value == nullptr) return false;
-  if (hasQuotes) {
-    *destination = value;
-  } else {
-    *destination = RawJson(value);
+  auto *value = parseString();
+  if (value != nullptr) {
+    if (hasQuotes) {
+      *destination = value;
+      return true;
+    } else {
+      *destination = RawJson(value);
+      return true;
+    }
   }
-  return true;
+
+  return false;
 }

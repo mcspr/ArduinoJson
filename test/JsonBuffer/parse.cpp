@@ -73,8 +73,6 @@ TEST_CASE("JsonBuffer::parse()") {
 
   SECTION("Incomplete string") {
     JsonVariant variant = jb.parse("\"hello");
-    REQUIRE(variant.success());
-    REQUIRE(variant.is<char*>());
-    REQUIRE_THAT(variant.as<char*>(), Equals("hello"));
+    REQUIRE_FALSE(variant.success());
   }
 }

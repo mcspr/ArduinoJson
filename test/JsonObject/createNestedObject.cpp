@@ -20,4 +20,12 @@ TEST_CASE("JsonObject::createNestedObject()") {
     JsonObject& obj = _object.createNestedObject(const_char_nullptr);
     REQUIRE(obj.success() == false);
   }
+
+  SECTION("success() returns false when allocation fails") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+    REQUIRE(obj.success());
+    JsonObject& other = obj.createNestedObject("hello");
+    REQUIRE_FALSE(other.success());
+  }
 }

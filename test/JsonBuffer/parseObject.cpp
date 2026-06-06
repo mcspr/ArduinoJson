@@ -5,8 +5,6 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using Catch::Matchers::Equals;
-
 TEST_CASE("JsonBuffer::parseObject()") {
   DynamicJsonBuffer jb;
 
@@ -14,6 +12,42 @@ TEST_CASE("JsonBuffer::parseObject()") {
     JsonObject& obj = jb.parseObject("{}");
     REQUIRE(obj.success());
     REQUIRE(obj.size() == 0);
+  }
+
+  SECTION("An empty quoted key") {
+    JsonObject& obj = jb.parseObject("{\"\": \"value\"}");
+    REQUIRE(obj.success());
+    REQUIRE(obj.size() == 1);
+    REQUIRE(obj[""] == "value");
+  }
+
+  SECTION("An empty key without quotes") {
+    JsonObject& obj = jb.parseObject("{: \"value\"}");
+    REQUIRE_FALSE(obj.success());
+  }
+
+  SECTION("Null byte in key") {
+    JsonObject& obj = jb.parseObject("{\"123\0\": \"value\"}");
+    REQUIRE_FALSE(obj.success());
+  }
+
+  SECTION("Null byte in value") {
+    JsonObject& obj = jb.parseObject("{\"key\": \"va\0lue\"}");
+    REQUIRE_FALSE(obj.success());
+  }
+
+  SECTION("Null byte somewhere") {
+    JsonObject& obj = jb.parseObject("{\"key\":\0\"value\"}");
+    REQUIRE_FALSE(obj.success());
+  }
+
+  SECTION("An incomplete key quotes") {
+    REQUIRE_FALSE(jb.parseObject("{\"key:\"value\"}").success());
+    REQUIRE_FALSE(jb.parseObject("{key\":\"value\"}").success());
+    REQUIRE_FALSE(jb.parseObject("{'key:\"value\"}").success());
+    REQUIRE_FALSE(jb.parseObject("{key':\"value\"}").success());
+    REQUIRE_FALSE(jb.parseObject("{\"key':\"value\"}").success());
+    REQUIRE_FALSE(jb.parseObject("{'key\":\"value\"}").success());
   }
 
   SECTION("Quotes") {
@@ -29,6 +63,14 @@ TEST_CASE("JsonBuffer::parseObject()") {
       REQUIRE(obj.success());
       REQUIRE(obj.size() == 1);
       REQUIRE(obj["key"] == "value");
+    }
+
+    SECTION("Mixed quotes") {
+      JsonObject& obj = jb.parseObject("{'key1':\"value1\",\"key2\":'value2'}");
+      REQUIRE(obj.success());
+      REQUIRE(obj.size() == 2);
+      REQUIRE(obj["key1"] == "value1");
+      REQUIRE(obj["key2"] == "value2");
     }
 
     SECTION("No quotes") {

@@ -5,8 +5,6 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using Catch::Matchers::Equals;
-
 TEST_CASE("JsonBuffer::parseArray()") {
   DynamicJsonBuffer jb;
 
@@ -158,10 +156,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
   SECTION("EmptyStringNoQuotes") {
     JsonArray& arr = jb.parseArray("[,]");
 
-    REQUIRE(arr.success());
-    REQUIRE(2 == arr.size());
-    REQUIRE(arr[0] == "");
-    REQUIRE(arr[1] == "");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("ClosingDoubleQuoteMissing") {

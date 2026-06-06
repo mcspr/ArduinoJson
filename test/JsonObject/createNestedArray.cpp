@@ -13,11 +13,19 @@ TEST_CASE("JsonObject::createNestedArray()") {
 
   SECTION("success() should return true if key is not nullptr") {
     JsonArray& arr = _object.createNestedArray("key");
-    REQUIRE(arr.success() == true);
+    REQUIRE(arr.success());
   }
 
   SECTION("success() should return false if key is nullptr") {
     JsonArray& arr = _object.createNestedArray(const_char_nullptr);
-    REQUIRE(arr.success() == false);
+    REQUIRE_FALSE(arr.success());
+  }
+
+  SECTION("success() returns false when allocation fails") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+    REQUIRE(obj.success());
+    JsonArray& arr = obj.createNestedArray("hello");
+    REQUIRE_FALSE(arr.success());
   }
 }
