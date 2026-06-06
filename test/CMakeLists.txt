@@ -5,6 +5,8 @@
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(ASAN_OPTIONS handle_abort=1)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 	add_compile_options(
 		-pedantic
@@ -32,6 +34,20 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 	)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+	if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+	   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+		add_compile_options(
+			-fsanitize=address,undefined
+			-fsanitize-trap=all
+		)
+		add_link_options(
+			-fsanitize=address,undefined
+			-fsanitize-trap=all
+		)
+	endif()
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	add_compile_options(
 		-Wstrict-null-sentinel
@@ -56,15 +72,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 		# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62232
 		add_compile_options(-Wnon-virtual-dtor)
 	endif()
-
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
-		add_compile_options(
-			-fsanitize=address,undefined
-		)
-		add_link_options(
-			-fsanitize=address,undefined
-		)
-	endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -72,10 +79,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 		-Wc++11-compat
 		-Wdeprecated-register
 		-Wnon-virtual-dtor
-		-fsanitize=address,undefined
-	)
-	add_link_options(
-		-fsanitize=address,undefined
 	)
 endif()
 

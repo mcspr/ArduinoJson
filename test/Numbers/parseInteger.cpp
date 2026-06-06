@@ -41,9 +41,9 @@ void shouldNotConvert(const char (&input)[Size]) {
 TEST_CASE("parseInteger<int8_t>()") {
   shouldNotParse<int8_t>("");
   shouldParseAndConvert<int8_t>("0", 0);
-  shouldParseAndConvert<int8_t>("-128", -128);
-  shouldParseAndConvert<int8_t>("127", 127);
-  shouldParseAndConvert<int8_t>("+127", 127);
+  shouldParseAndConvert<int8_t>("-128", int8_t{-128});
+  shouldParseAndConvert<int8_t>("127", int8_t{127});
+  shouldParseAndConvert<int8_t>("+127", int8_t{127});
   shouldParseAndConvert<int8_t>("3.14", 3);
   shouldNotParse<int8_t>("true");
   shouldNotParse<int8_t>("false");
@@ -57,9 +57,9 @@ TEST_CASE("parseInteger<int8_t>()") {
 TEST_CASE("parseInteger<int16_t>()") {
   shouldNotParse<int16_t>("");
   shouldParseAndConvert<int16_t>("0", 0);
-  shouldParseAndConvert<int16_t>("-32768", -32768);
-  shouldParseAndConvert<int16_t>("32767", 32767);
-  shouldParseAndConvert<int16_t>("+32767", 32767);
+  shouldParseAndConvert<int16_t>("-32768", int16_t{-32768});
+  shouldParseAndConvert<int16_t>("32767", int16_t{32767});
+  shouldParseAndConvert<int16_t>("+32767", int16_t{32767});
   shouldParseAndConvert<int16_t>("3.14", 3);
   shouldNotParse<int16_t>("true");
   shouldNotParse<int16_t>("false");
@@ -73,9 +73,9 @@ TEST_CASE("parseInteger<int16_t>()") {
 TEST_CASE("parseInteger<int32_t>()") {
   shouldNotParse<int32_t>("");
   shouldParseAndConvert<int32_t>("0", 0);
-  shouldParseAndConvert<int32_t>("-2147483648", (-2147483647 - 1));
-  shouldParseAndConvert<int32_t>("2147483647", 2147483647);
-  shouldParseAndConvert<int32_t>("+2147483647", 2147483647);
+  shouldParseAndConvert<int32_t>("-2147483648", int32_t{-2147483648});
+  shouldParseAndConvert<int32_t>("2147483647", int32_t{2147483647});
+  shouldParseAndConvert<int32_t>("+2147483647", int32_t{2147483647});
   shouldParseAndConvert<int32_t>("3.14", 3);
   shouldNotParse<int32_t>("true");
   shouldNotParse<int32_t>("false");
@@ -91,8 +91,8 @@ TEST_CASE("parseInteger<int32_t>()") {
 TEST_CASE("parseInteger<uint8_t>()") {
   shouldNotParse<uint8_t>("");
   shouldParseAndConvert<uint8_t>("0", 0);
-  shouldParseAndConvert<uint8_t>("255", 255);
-  shouldParseAndConvert<uint8_t>("+255", 255);
+  shouldParseAndConvert<uint8_t>("255", uint8_t{255});
+  shouldParseAndConvert<uint8_t>("+255", uint8_t{255});
   shouldParseAndConvert<uint8_t>("3.14", 3);
   shouldNotParse<uint8_t>("true");
   shouldNotParse<uint8_t>("false");
@@ -106,8 +106,8 @@ TEST_CASE("parseInteger<uint8_t>()") {
 TEST_CASE("parseInteger<uint16_t>()") {
   shouldNotParse<uint16_t>("");
   shouldParseAndConvert<uint16_t>("0", 0);
-  shouldParseAndConvert<uint16_t>("65535", 65535);
-  shouldParseAndConvert<uint16_t>("+65535", 65535);
+  shouldParseAndConvert<uint16_t>("65535", uint16_t{65535});
+  shouldParseAndConvert<uint16_t>("+65535", uint16_t{65535});
   shouldParseAndConvert<uint16_t>("3.14", 3);
   shouldNotParse<uint16_t>("true");
   shouldNotParse<uint16_t>("false");
@@ -121,8 +121,8 @@ TEST_CASE("parseInteger<uint16_t>()") {
 TEST_CASE("parseInteger<uint32_t>()") {
   shouldNotParse<uint32_t>("");
   shouldParseAndConvert<uint32_t>("0", 0);
-  shouldParseAndConvert<uint32_t>("4294967295", 4294967295);
-  shouldParseAndConvert<uint32_t>("+4294967295", 4294967295);
+  shouldParseAndConvert<uint32_t>("4294967295", uint32_t{4294967295});
+  shouldParseAndConvert<uint32_t>("+4294967295", uint32_t{4294967295});
   shouldParseAndConvert<uint32_t>("3.14", 3);
   shouldNotParse<uint32_t>("true");
   shouldNotParse<uint32_t>("false");

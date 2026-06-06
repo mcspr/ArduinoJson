@@ -145,7 +145,8 @@ TEST_CASE("JsonVariant::as()") {
 #if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
   SECTION("NumberStringAsInt64Negative") {
     JsonVariant variant = "-9223372036854775808";
-    REQUIRE(-9223372036854775807 - 1 == variant.as<long long>());
+    REQUIRE_FALSE(variant.is<long long int>());
+    REQUIRE_FALSE(variant.is<double>());
   }
 
   SECTION("NumberStringAsInt64Positive") {

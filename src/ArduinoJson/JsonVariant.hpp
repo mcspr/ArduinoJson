@@ -88,17 +88,15 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(signed long)
   // JsonVariant(signed long long)
   template <typename T>
-  JsonVariant(
-      T value,
+  JsonVariant(T value,
       typename Internals::EnableIf<Internals::IsSignedIntegral<T>::value>::type* = nullptr) :
 
     _type((value >= 0)
             ? Internals::JsonVariantType::JSON_POSITIVE_INTEGER
             : Internals::JsonVariantType::JSON_NEGATIVE_INTEGER),
-    _content(static_cast<Internals::JsonUInt>(
-          (value >= 0)
-            ? value
-            : -value))
+    _content((value >= 0)
+            ? static_cast<Internals::JsonUInt>(value)
+            : -static_cast<Internals::JsonUInt>(value))
   {}
   // JsonVariant(unsigned short)
   // JsonVariant(unsigned int)
