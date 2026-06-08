@@ -4,33 +4,48 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ArduinoJson {
 namespace Internals {
 
 // A Print implementation that allows to write in a char[]
 class StaticStringBuilder {
  public:
-  StaticStringBuilder(char *buf, size_t size) : end(buf + size - 1), p(buf) {
-    *p = '\0';
-  }
+  StaticStringBuilder(char *ptr, size_t size) :
+    _ptr(ptr),
+    _end(ptr + size)
+  {}
 
   size_t print(char c) {
-    if (p >= end) return 0;
-    *p++ = c;
-    *p = '\0';
-    return 1;
+    if ((_ptr + 1) < _end) {
+      _ptr[0] = c;
+      _ptr[1] = '\0';
+      _ptr += 1;
+      return 1;
+    }
+
+    return 0;
   }
 
   size_t print(const char *s) {
-    char *begin = p;
-    while (p < end && *s) *p++ = *s++;
-    *p = '\0';
-    return size_t(p - begin);
+    char *begin = _ptr;
+    char *end = _end - 1;
+
+    if (_ptr < end) {
+      while ((_ptr < end) && *s) {
+        *_ptr++ = *s++;
+      }
+
+      _ptr[0] = '\0';
+    }
+
+    return static_cast<size_t>(_ptr - begin);
   }
 
  private:
-  char *end;
-  char *p;
+  char *_ptr;
+  char *_end;
 };
 }  // namespace Internals
 }  // namespace ArduinoJson
