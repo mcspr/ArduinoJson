@@ -29,14 +29,14 @@ struct StringTraitsImpl<RawJsonString<String>, void> {
     return StringTraits<String>::is_null(source.get());
   }
 
-  typedef RawJsonString<const char*> duplicate_t;
+  typedef RawJsonString<const char*> duplicate_type;
 
   typedef RawJsonString<String> source_type;
   typedef typename source_type::ref_type ref_type;
 
   template <typename Buffer>
-  static duplicate_t duplicate(const source_type& source, Buffer* buffer) {
-    return duplicate_t(StringTraits<ref_type>::duplicate(source.get(), buffer));
+  static duplicate_type duplicate(const source_type& source, Buffer* buffer) {
+    return duplicate_type(StringTraits<ref_type>::duplicate(source.get(), buffer));
   }
 
   typedef FalseType has_append;

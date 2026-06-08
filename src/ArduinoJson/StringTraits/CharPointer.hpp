@@ -62,6 +62,23 @@ struct CharPointerTraits {
 
   typedef ReaderBase<ReaderImpl> Reader;
 
+  static bool equals(const TChar* str, size_t str_len, const char* expected, size_t expected_len) {
+    const char* actual = reinterpret_cast<const char*>(str);
+    if (!actual || !expected)
+      return actual == expected;
+    if (str_len == expected_len)
+      return memcmp(actual, expected, str_len) == 0;
+
+    return false;
+  }
+
+  static bool equals(const TChar* str, size_t str_len, const char* expected) {
+    if (!expected)
+      return str_len == 0 || str == expected;
+
+    return equals(str, str_len, expected, strlen(expected));
+  }
+
   static bool equals(const TChar* str, const char* expected) {
     const char* actual = reinterpret_cast<const char*>(str);
     if (!actual || !expected) return actual == expected;
@@ -72,10 +89,10 @@ struct CharPointerTraits {
     return !str;
   }
 
-  typedef const char* duplicate_t;
+  typedef const char* duplicate_type;
 
   template <typename Buffer>
-  static duplicate_t duplicate(const TChar* str, Buffer* buffer, size_t size) {
+  static duplicate_type duplicate(const TChar* str, Buffer* buffer, size_t size) {
     void* dup = nullptr;
     if (!is_null(str)) {
       dup = buffer->alloc(size + 1);
@@ -85,11 +102,11 @@ struct CharPointerTraits {
       }
     }
 
-    return static_cast<duplicate_t>(dup);
+    return static_cast<duplicate_type>(dup);
   }
 
   template <typename Buffer>
-  static duplicate_t duplicate(const TChar* str, Buffer* buffer) {
+  static duplicate_type duplicate(const TChar* str, Buffer* buffer) {
     return duplicate(str, buffer, strlen(reinterpret_cast<const char *>(str)));
   }
 
@@ -111,7 +128,7 @@ struct StringTraitsImpl<TChar[Size], typename EnableIf<IsChar<TChar>::value>::ty
     : CharPointerTraits<TChar> {
 
   template <typename Buffer>
-  static typename CharPointerTraits<TChar>::duplicate_t
+  static typename CharPointerTraits<TChar>::duplicate_type
   duplicate(const TChar* str, Buffer* buffer) {
     return CharPointerTraits<TChar>::duplicate(str, buffer, Size - 1);
   }

@@ -9,8 +9,6 @@
 #include "StringTraitsBase.hpp"
 #include "CharPointer.hpp"
 
-#include <cstddef>
-
 #if ARDUINOJSON_ENABLE_STD_STRING || ARDUINOJSON_ENABLE_ARDUINO_STRING
 
 #if ARDUINOJSON_ENABLE_ARDUINO_STRING
@@ -26,15 +24,12 @@ namespace Internals {
 
 template <typename TString>
 struct StdStringTraits {
-  typedef const char* duplicate_t;
+  typedef const char* duplicate_type;
+  typedef CharPointerTraits<char> traits_type;
 
   template <typename Buffer>
-  static duplicate_t duplicate(const TString& str, Buffer* buffer) {
-    if (!str.c_str()) return NULL;  // <- Arduino string can return NULL
-    size_t size = str.length() + 1;
-    void* dup = buffer->alloc(size);
-    if (dup != NULL) memcpy(dup, str.c_str(), size);
-    return static_cast<duplicate_t>(dup);
+  static duplicate_type duplicate(const TString& str, Buffer* buffer) {
+    return traits_type::duplicate(str.c_str(), buffer, str.length());
   }
 
   static bool is_null(const TString& str) {
@@ -44,23 +39,20 @@ struct StdStringTraits {
 
   struct Reader : CharPointerTraits<char>::Reader {
     Reader(const TString& str) :
-      CharPointerTraits<char>::Reader(str.c_str(), str.length())
+      traits_type::Reader(str.c_str(), str.length())
     {}
   };
 
   static bool equals(const TString& str, const char* expected) {
-    // Arduino's String::c_str() can return NULL
-    const char* actual = str.c_str();
-    if (!actual || !expected) return actual == expected;
-    return 0 == strcmp(actual, expected);
-  }
-
-  static void append(TString& str, char c) {
-    str += c;
+    return traits_type::equals(str.c_str(), str.length(), expected);
   }
 
   static void append(TString& str, const char* s) {
     str += s;
+  }
+
+  static void append(TString& str, char c) {
+    str += c;
   }
 
   typedef TrueType has_append;

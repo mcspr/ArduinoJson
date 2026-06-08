@@ -42,13 +42,13 @@ struct StringTraitsImpl<const __FlashStringHelper*, void> {
     return false;
   }
 
-  typedef Traits::duplicate_t duplicate_t;
+  typedef Traits::duplicate_type duplicate_type;
 
   template <typename Buffer>
-  static duplicate_t duplicate(const void* str, Buffer* buffer) {
+  static duplicate_type duplicate(const void* str, Buffer* buffer) {
     void* dup = nullptr;
     if (!is_null(str)) {
-      const char* ptr = reinterpret_cast<duplicate_t>(str);
+      const char* ptr = reinterpret_cast<duplicate_type>(str);
       size_t size = strlen_P(ptr);
       dup = buffer->alloc(size + 1);
       if (dup != nullptr) {
@@ -57,7 +57,7 @@ struct StringTraitsImpl<const __FlashStringHelper*, void> {
       }
     }
 
-    return static_cast<duplicate_t>(dup);
+    return static_cast<duplicate_type>(dup);
   }
 
   typedef FalseType has_append;
