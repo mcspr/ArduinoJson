@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 namespace ArduinoJson {
 namespace Internals {
 
