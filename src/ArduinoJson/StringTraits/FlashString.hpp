@@ -9,6 +9,7 @@
 #if ARDUINOJSON_ENABLE_PROGMEM
 
 #include "../TypeTraits/Constant.hpp"
+#include "../Strings/Reader.hpp"
 
 #include "StringTraitsBase.hpp"
 #include "CharPointer.hpp"
@@ -30,7 +31,7 @@ struct StringTraitsImpl<const __FlashStringHelper*, void> {
   typedef CharPointerTraits<char> Traits;
 
  public:
-  typedef Traits::ReaderBase<ReaderImpl> Reader;
+  typedef ReaderBase<ReaderImpl> Reader;
 
   static bool equals(const void* str, const char* expected) {
     const char* actual = reinterpret_cast<const char*>(str);

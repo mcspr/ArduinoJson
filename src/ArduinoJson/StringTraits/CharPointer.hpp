@@ -10,6 +10,8 @@
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/Not.hpp"
 
+#include "../Strings/Reader.hpp"
+
 #include "StringTraitsBase.hpp"
 
 #include <cstddef>
@@ -18,49 +20,18 @@
 namespace ArduinoJson {
 namespace Internals {
 
+struct CharPointerReaderImpl {
+  static char read(const void* ptr) {
+    return *reinterpret_cast<const char *>(ptr);
+  }
+};
+
+typedef ReaderBase<CharPointerReaderImpl> CharPointerReader;
+
 template <typename TChar>
 struct CharPointerTraits {
- private:
-  struct ReaderImpl {
-    static char read(const void* ptr) {
-      return *reinterpret_cast<const char *>(ptr);
-    }
-  };
-
  public:
-  template <typename TImpl>
-  struct ReaderBase {
-   private:
-    const TChar* _ptr;
-    const TChar* _end;
-
-   public:
-    ReaderBase(const TChar* ptr, size_t size) :
-      _ptr(ptr ? ptr : reinterpret_cast<const TChar*>("")),
-      _end(ptr ? (ptr + size) : 0)
-    {}
-
-    void move() {
-      if (_ptr < _end)
-        ++_ptr;
-    }
-
-    char current() const {
-      if (_ptr < _end)
-        return TImpl::read(_ptr);
-
-      return '\0';
-    }
-
-    char next() const {
-      if ((_ptr + 1) < _end)
-        return TImpl::read(_ptr + 1);
-
-      return '\0';
-    }
-  };
-
-  typedef ReaderBase<ReaderImpl> Reader;
+  typedef CharPointerReader Reader;
 
   static bool equals(const TChar* str, size_t str_len, const char* expected, size_t expected_len) {
     const char* actual = reinterpret_cast<const char*>(str);
