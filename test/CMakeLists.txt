@@ -7,6 +7,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(ASAN_OPTIONS handle_abort=1)
 
+option(COVERAGE "Enable tests coverage support")
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 	add_compile_options(
 		-pedantic
@@ -32,6 +34,24 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wstrict-aliasing
 		-Wundef
 	)
+	if(COVERAGE)
+		add_compile_options(
+			-fprofile-arcs
+			-ftest-coverage
+		)
+	endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+	if(((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+		CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.0) OR
+	   (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+	    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)) AND
+	   NOT COVERAGE)
+		add_compile_options(-g -Og)
+	else()
+		add_compile_options(-g -O0)
+	endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
