@@ -5,19 +5,24 @@
 #pragma once
 
 #include "../JsonBuffer.hpp"
-#include "../StringTraits/StringTraits.hpp"
 
+#include "../StringTraits/StringTraits.hpp"
 #include "../RawJson.hpp"
 
 #include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/IsBaseOf.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
+#include "../TypeTraits/And.hpp"
+#include "../TypeTraits/Not.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
 template <typename Source, typename = void>
 struct ValueSaverImpl {
+  typedef Source duplicate_type;
+
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {
     dst = src;
@@ -37,39 +42,72 @@ struct ValueStringDuplicate<Internals::RawJsonString<T>> {
   typedef Internals::RawJsonString<const char*> Type;
 };
 
-// source and destination are strings (i.e. should_duplicate present from specialization)
+// source and destination are strings (i.e. Duplicate present from specialization)
 template <typename Source>
 struct ValueSaverImpl<
-    Source, typename EnableIf<StringTraits<Source>::should_duplicate::value>::type> {
+    Source, typename EnableIf<ShouldDuplicate<StringTraits<Source>>::value>::type> {
+
+  typedef Source source_type;
+  typedef typename ValueStringDuplicate<Source>::Type duplicate_type;
 
   template <typename Destination>
   static bool save(JsonBuffer* buffer, Destination& dst, const Source& src) {
-    if (!StringTraits<Source>::is_null(src)) {
-      auto dup = StringTraits<Source>::duplicate(src, buffer);
-      if (dup) {
-        dst = typename ValueStringDuplicate<Source>::Type(dup);
-        return true;
-      }
+    using Duplicate = typename StringTraits<Source>::Duplicate;
+    auto* dup = Duplicate::Operator(src, buffer);
+    if (dup) {
+      dst = typename ValueStringDuplicate<Source>::Type(dup);
+      return true;
     }
 
     return false;
   }
 };
 
+// source is a string-like type that does not duplicate (aka is a view)
 // const char*, const signed char*, const unsigned char*
 // const char[], const signed char[], const unsigned char[]
+template <typename T>
+struct ValueSaverNullableView
+  : And<IsBaseOf<StringTraitsTag, T>,
+        IsNullable<T>,
+        Not<ShouldDuplicate<T>>>::type {
+};
+
 template <typename Source>
 struct ValueSaverImpl<
-    Source, typename EnableIf<!StringTraits<Source>::should_duplicate::value>::type> {
+    Source, typename EnableIf<ValueSaverNullableView<StringTraits<Source>>::value>::type> {
+
+  typedef typename ValueStringDuplicate<Source>::Type duplicate_type;
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {
-    if (!StringTraits<Source>::is_null(src)) {
+    using IsNull = typename StringTraits<Source>::IsNull;
+    if (!IsNull::Operator(src)) {
       dst = typename ValueStringDuplicate<Source>::Type(src);
       return true;
     }
 
     return false;
+  }
+};
+
+template <typename T>
+struct ValueSaverNonNullableView
+  : And<IsBaseOf<StringTraitsTag, T>,
+        Not<IsNullable<T>>,
+        Not<ShouldDuplicate<T>>>::type {
+};
+
+template <typename Source>
+struct ValueSaverImpl<
+    Source, typename EnableIf<ValueSaverNonNullableView<StringTraits<Source>>::value>::type> {
+
+  typedef typename ValueStringDuplicate<Source>::Type duplicate_type;
+
+  template <typename Destination>
+  static bool save(JsonBuffer*, Destination& dst, const Source& src) {
+    dst = typename ValueStringDuplicate<Source>::Type(src);
+    return true;
   }
 };
 
@@ -95,6 +133,7 @@ struct ValueSaverHelper<Source,
 template <typename Source>
 struct ValueSaver :
   public ValueSaverHelper<Source>::value_saver_type {
+  typedef typename ValueSaverHelper<Source>::value_saver_type value_saver_type;
 };
 
 }  // namespace Internals

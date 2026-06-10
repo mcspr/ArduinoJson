@@ -12,17 +12,19 @@ namespace Internals {
 // A Print implementation that allows to write in a String
 template <typename TString>
 class DynamicStringBuilder {
+  typedef typename StringTraits<TString>::Append Append;
+
  public:
   DynamicStringBuilder(TString &str) : _str(str) {}
 
   size_t print(char c) {
-    StringTraits<TString>::append(_str, c);
+    Append::Operator(_str, c);
     return 1;
   }
 
   size_t print(const char *s) {
     size_t initialLen = _str.length();
-    StringTraits<TString>::append(_str, s);
+    Append::Operator(_str, s);
     return _str.length() - initialLen;
   }
 

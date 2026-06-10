@@ -2,18 +2,62 @@
 
 #pragma once
 
+#include "../TypeTraits/Constant.hpp"
+#include "../TypeTraits/VoidType.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsArray.hpp"
-#include "../TypeTraits/Constant.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
+struct StringTraitsTag {
+};
+
+// type can be constructed from cstring and allows appending char & cstring by value
+
+template <typename T, typename = void>
+struct HasAppend : FalseType {
+};
+
+template <typename T>
+struct HasAppend<T, VoidType<typename T::Append>> : TrueType {
+};
+
+// type can be compared internally with any other cstring
+
+template <typename T, typename = void>
+struct HasEquals : FalseType {
+};
+
+template <typename T>
+struct HasEquals<T, VoidType<typename T::Equals>> : TrueType {
+};
+
+// type should be copied (duplicated) to the internal jsonbuffer before being used
+
+template <typename T, typename = void>
+struct ShouldDuplicate : FalseType {
+};
+
+template <typename T>
+struct ShouldDuplicate<T, VoidType<typename T::Duplicate>> : TrueType {
+};
+
+// type may be null and should be checked before being used
+
+template <typename T, typename = void>
+struct IsNullable : FalseType {
+};
+
+template <typename T>
+struct IsNullable<T, VoidType<typename T::IsNull>> : TrueType {
+};
+
+// base class does not implement anything
+
 template <typename TString, typename = void>
 struct StringTraitsImpl {
-  typedef FalseType has_append;
-  typedef FalseType has_equals;
 };
 
 // helper type to generalize impl type bindings to just `const T` or `T`

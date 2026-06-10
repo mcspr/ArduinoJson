@@ -191,9 +191,9 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
     return variantAsString();
   }
 
-  // Any string type that is implemented in Internals::StringTraits and provides has_append flag
+  // Any string type that is implemented in Internals::StringTraits and provides Append implementation
   template <typename T>
-  typename Internals::EnableIf<Internals::StringTraits<T>::has_append::value, T>::type
+  typename Internals::EnableIf<Internals::HasAppend<Internals::StringTraits<T>>::value, T>::type
   as() const {
     const char *cstr = variantAsString();
     if (cstr) return T(cstr);
@@ -304,12 +304,12 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // bool is<char*>() const;
   // bool is<const char*>() const;
   //
-  // Also supports any other string type that is implemented in Internals::StringTraits and provides has_append flag
+  // Also supports any other string type that is implemented in Internals::StringTraits and provides Append implementation
   template <typename T>
   typename Internals::EnableIf<
       Internals::Or<Internals::IsSame<T, const char *>,
                     Internals::IsSame<T, char *>,
-                    typename Internals::StringTraits<T>::has_append>::value,
+                    Internals::HasAppend<Internals::StringTraits<T>>>::value,
       bool>::type
   is() const {
     return variantIsString();

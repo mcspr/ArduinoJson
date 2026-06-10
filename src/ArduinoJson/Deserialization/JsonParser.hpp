@@ -8,10 +8,14 @@
 #include "../JsonVariant.hpp"
 #include "../JsonSpan.hpp"
 
+#include "../StringTraits/StringTraits.hpp"
+#include "../Readers/Readers.hpp"
+
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/IsPointer.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemovePointer.hpp"
+
 #include "StringWriter.hpp"
 
 namespace ArduinoJson {
@@ -84,7 +88,7 @@ template <typename TJsonBuffer, typename TJson, typename Enable = void>
 struct JsonParserBuilder {
   typedef typename RemoveConstReference<TJson>::type TJsonNoCref;
 
-  typedef typename StringTraits<TJsonNoCref>::Reader TReader;
+  typedef ReaderImpl<TJsonNoCref> TReader;
   typedef JsonParser<TReader, TJsonBuffer &> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TJson &&json,

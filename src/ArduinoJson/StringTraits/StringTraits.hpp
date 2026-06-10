@@ -4,16 +4,14 @@
 
 #pragma once
 
-#include <string.h>
-#include "../Configuration.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsBaseOf.hpp"
 #include "../TypeTraits/IsChar.hpp"
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
+
 #include "StringTraitsBase.hpp"
-#include "ArduinoStream.hpp"
+
 #include "CharPointer.hpp"
 #include "FlashString.hpp"
-#include "StdStream.hpp"
 #include "StdString.hpp"

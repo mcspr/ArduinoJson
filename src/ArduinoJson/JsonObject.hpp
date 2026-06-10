@@ -181,7 +181,8 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   iterator findKey(TKey&& key) {
     iterator it;
     for (it = begin(); it != end(); ++it) {
-      if (Internals::StringTraits<TKey>::equals(key, it->key)) break;
+      if (Internals::StringTraits<TKey>::Equals::Operator(key, it->key))
+        break;
     }
     return it;
   }
@@ -201,9 +202,6 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   template <typename TKey, typename TValue>
   bool set_impl(TKey&& key, TValue&& value) {
-    if (Internals::StringTraits<TKey>::is_null(key))
-      return false;
-
     // when creating a key, prune failed list entry before returning
     bool out = false;
 

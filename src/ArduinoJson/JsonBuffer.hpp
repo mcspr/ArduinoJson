@@ -4,14 +4,12 @@
 
 #pragma once
 
-#include <stddef.h>  // for size_t
-#include <stdint.h>  // for uint8_t
-#include <string.h>
+#include "Configuration.hpp"
 
 #include "Data/NonCopyable.hpp"
-#include "JsonVariant.hpp"
-#include "TypeTraits/EnableIf.hpp"
-#include "TypeTraits/IsArray.hpp"
+#include "Polyfills/attributes.hpp"
+
+#include <cstddef>  // for size_t
 
 namespace ArduinoJson {
 class JsonArray;

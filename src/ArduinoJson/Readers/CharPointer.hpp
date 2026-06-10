@@ -2,10 +2,17 @@
 
 #pragma once
 
+#include "Base.hpp"
+
+#include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/IsChar.hpp"
+
 #include <cstddef>
 
 namespace ArduinoJson {
 namespace Internals {
+namespace Readers {
+namespace CharPointer {
 
 template <typename TImpl>
 struct ReaderBase {
@@ -39,5 +46,21 @@ struct ReaderBase {
   }
 };
 
+struct ReaderImpl {
+  static char read(const void* ptr) {
+    return *reinterpret_cast<const char *>(ptr);
+  }
+};
+
+typedef ReaderBase<ReaderImpl> Reader;
+
+}
+
+template <typename TChar>
+struct ReaderImplBase<TChar*, typename EnableIf<IsChar<TChar>::value>::type>
+  : CharPointer::Reader {
+};
+
+}
 }
 }
