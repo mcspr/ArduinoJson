@@ -8,23 +8,25 @@
 #include <string>
 
 using ArduinoJson::Internals::RawJsonString;
+using ArduinoJson::Internals::StringTraits;
+using ArduinoJson::Internals::ShouldDuplicate;
 
 template <typename String>
 constexpr bool should_duplicate() {
-  return ArduinoJson::Internals::StringTraits<String>::should_duplicate::value;
+  return ShouldDuplicate<StringTraits<String>>::value;
 }
 
 TEST_CASE("StringTraits") {
   SECTION("should_duplicate") {
-    REQUIRE(false == should_duplicate<const char*>());
-    REQUIRE(true == should_duplicate<char*>());
-    REQUIRE(true == should_duplicate<std::string>());
-    REQUIRE(true == should_duplicate<std::string&>());
-    REQUIRE(true == should_duplicate<const std::string&>());
-    REQUIRE(true == should_duplicate<RawJsonString<char*> >());
-    REQUIRE(false == should_duplicate<RawJsonString<const char*> >());
-    REQUIRE(true == should_duplicate<RawJsonString<std::string> >());
-    REQUIRE(true == should_duplicate<RawJsonString<std::string&> >());
-    REQUIRE(true == should_duplicate<RawJsonString<const std::string&> >());
+    STATIC_REQUIRE_FALSE(should_duplicate<const char*>());
+    STATIC_REQUIRE(should_duplicate<char*>());
+    STATIC_REQUIRE(should_duplicate<std::string>());
+    STATIC_REQUIRE(should_duplicate<std::string&>());
+    STATIC_REQUIRE(should_duplicate<const std::string&>());
+    STATIC_REQUIRE(should_duplicate<RawJsonString<char*> >());
+    STATIC_REQUIRE_FALSE(should_duplicate<RawJsonString<const char*> >());
+    STATIC_REQUIRE(should_duplicate<RawJsonString<std::string> >());
+    STATIC_REQUIRE(should_duplicate<RawJsonString<std::string&> >());
+    STATIC_REQUIRE(should_duplicate<RawJsonString<const std::string&> >());
   }
 }
