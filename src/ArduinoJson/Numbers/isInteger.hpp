@@ -4,10 +4,11 @@
 
 #pragma once
 
+#include "../Strings/Strings.hpp"
+
 #include "parseNumber.hpp"
 
 #include <cstddef>
-#include <cstring>
 
 namespace ArduinoJson {
 namespace Internals {
@@ -29,7 +30,7 @@ inline bool isInteger(const char *s, size_t len) {
 }
 
 inline bool isInteger(const char *s) {
-  return isInteger(s, strlen(s));
+  return isInteger(s, Strings::Length::Operator(s));
 }
 
 

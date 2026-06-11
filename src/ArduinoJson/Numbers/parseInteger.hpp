@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../Strings/Strings.hpp"
+
 #include "convertNumber.hpp"
 #include "parseNumber.hpp"
 
@@ -23,7 +25,7 @@ inline ConvertResult<T> parseInteger(const char *s, size_t len) {
 
 template <typename T>
 inline ConvertResult<T> parseInteger(const char *s) {
-  return parseInteger<T>(s, strlen(s));
+  return parseInteger<T>(s, Strings::Length::Operator(s));
 }
 
 }  // namespace Internals

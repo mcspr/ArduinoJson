@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../Configuration.hpp"
+#include "../Strings/Strings.hpp"
 
 #include "../TypeTraits/FloatTraits.hpp"
 #include "../TypeTraits/Conditional.hpp"
@@ -12,6 +13,7 @@
 #include "../Data/JsonInteger.hpp"
 #include "../Data/JsonFloat.hpp"
 #include "../Polyfills/ctype.hpp"
+#include "../Polyfills/math.hpp"
 
 #include "convertNumber.hpp"
 
@@ -185,10 +187,11 @@ struct JsonNumberParser {
     const char* it = s;
 
     char result_sign = '\0';
-    switch (*it) {
+    char c = Strings::Copy::Operator(it);
+    switch (c) {
       case '-':
       case '+':
-        result_sign = *it;
+        result_sign = c;
         ++it;
         break;
     }
@@ -197,42 +200,33 @@ struct JsonNumberParser {
       return out;
 
     // inf, Inf, infinity, Infinity
-    if (*it == 'i' || *it == 'I') {
-      auto remaining = end - it;
-      switch (remaining) {
-        case 3:
-          if ((*it) != 'i')
-            return out;
-          break;
-
-        case 8:
-          if ((*it) != 'I')
-            return out;
-          break;
-        
-        default:
-          return out;
-      }
-
-      const uint8_t expected[] = {'n', 'f', 'i', 'n', 'i', 't', 'y' };
-      if (std::memcmp(&expected, it + 1, static_cast<size_t>(remaining - 1)) != 0)
+    c = Strings::Copy::Operator(it);
+    if (c == 'i' || c == 'I') {
+      const auto remaining = end - it;
+      if (!((c == 'i' && remaining == 3) ||
+            (c == 'I' && remaining == 8)))
         return out;
 
-      out = fixedResult(result_sign, traits::inf());
+      const uint8_t expected[] = {'n', 'f', 'i', 'n', 'i', 't', 'y'};
+      const auto common = Min(sizeof(expected), static_cast<size_t>(remaining - 1));
+      if (Strings::Equals::Operator(&expected[0], common, it + 1, common))
+        out = fixedResult(result_sign, traits::inf());
+
       return out;
     }
 
     // NaN, nan
-    if (*it == 'n' || *it == 'N') {
+    c = Strings::Copy::Operator(it);
+    if (c == 'n' || c == 'N') {
       if ((end - it) != 3)
         return out;
 
-      ++it;
-      if (*it != 'a')
+      c = Strings::Copy::Operator(++it);
+      if (c != 'a')
         return out;
 
-      ++it;
-      if (*it != 'n' && *it != 'N')
+      c = Strings::Copy::Operator(++it);
+      if (c != 'n' && c != 'N')
         return out;
 
       // no-op sign value, being lenient on any weird raw data
@@ -244,8 +238,12 @@ struct JsonNumberParser {
     exponent_t exponent_offset = 0;
     const mantissa_t maxUint = JsonUInt(-1);
 
-    while ((it != end) && isdigit(*it)) {
-      uint8_t digit = uint8_t(*it - '0');
+    while (it != end) {
+      c = Strings::Copy::Operator(it);
+      if (!isdigit(c))
+        break;
+
+      uint8_t digit = uint8_t(c - '0');
       if (mantissa > maxUint / 10)
         break;
       mantissa *= 10;
@@ -277,16 +275,22 @@ struct JsonNumberParser {
     }
 
     // remaing digits can't fit in the mantissa
-    while ((it != end) && isdigit(*it)) {
+    while (it != end) {
+      c = Strings::Copy::Operator(it);
+      if (!isdigit(c))
+        break;
       exponent_offset++;
       ++it;
     }
 
-    if ((it != end) && *it == '.') {
+    if ((it != end) && Strings::Copy::Operator(it) == '.') {
       ++it;
-      while ((it != end) && isdigit(*it)) {
+      while (it != end) {
+        c = Strings::Copy::Operator(it);
+        if (!isdigit(c))
+          break;
         if (mantissa < traits::mantissa_max / 10) {
-          mantissa = mantissa * 10 + uint8_t(*it - '0');
+          mantissa = mantissa * 10 + uint8_t(c - '0');
           exponent_offset--;
         }
         ++it;
@@ -296,17 +300,19 @@ struct JsonNumberParser {
     int exponent = 0;
     char exponent_sign = '\0';
 
-    if ((it != end) && (*it == 'e' || *it == 'E')) {
+    c = Strings::Copy::Operator(it);
+    if ((it != end) && (c == 'e' || c == 'E')) {
       ++it;
 
       // exponent value missing after specifier
       if (it == end)
         return out;
       
-      switch (*it) {
+      c = Strings::Copy::Operator(it);
+      switch (c) {
       case '-':
       case '+':
-        exponent_sign = *it;
+        exponent_sign = c;
         ++it;
 
         // exponent value missing after sign
@@ -318,10 +324,11 @@ struct JsonNumberParser {
 
       // the rest of exponent digits
       while (it != end) {
-        if (!isdigit(*it))
+        c = Strings::Copy::Operator(it);
+        if (!isdigit(c))
           break;
 
-        exponent = exponent * 10 + (*it - '0');
+        exponent = exponent * 10 + (c - '0');
 
         // 5.x and 7.x attepted to mimic js behaviour and return *something*
         // - negative exponent overflow would've returned 0.0

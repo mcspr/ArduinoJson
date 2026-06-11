@@ -7,6 +7,8 @@
 #include "JsonBufferBase.hpp"
 #include "Allocator.hpp"
 
+#include "Strings/Strings.hpp"
+
 #include <cstdlib>
 
 namespace ArduinoJson {
@@ -75,8 +77,11 @@ class DynamicJsonBufferBase final :
 
   class String {
    public:
-    String(DynamicJsonBufferBase* parent)
-        : _parent(parent), _start(nullptr), _length(0) {}
+    String(DynamicJsonBufferBase* parent) :
+      _parent(parent),
+      _start(nullptr),
+      _length(0)
+    {}
 
     void append(char c) {
       append(&c, 1);
@@ -88,23 +93,19 @@ class DynamicJsonBufferBase final :
     }
 
    private:
-    void _append(char* out, const char* begin, const char* end) {
-      for (auto it = begin; it != end; ++it, ++out) {
-        *out = *it;
-      }
-    }
-
     void append(const char* str, size_t len) {
       if (_parent->canAllocInHead(len)) {
         char* end = static_cast<char*>(_parent->allocInHead(len));
-        _append(end, str, str + len);
-        if (_length == 0) _start = end;
+        Strings::Copy::Operator(end, str, len);
+        if (_length == 0)
+          _start = end;
       } else {
-        char* newStart =
-            static_cast<char*>(_parent->allocInNewBlock(_length + len));
-        if (_start && newStart) memcpy(newStart, _start, _length);
+        char* newStart = static_cast<char*>(
+          _parent->allocInNewBlock(_length + len));
+        if (_start && newStart)
+          Strings::Copy::Operator(newStart, _start, _length);
         if (newStart)
-          _append(newStart + _length, str, str + len);
+          Strings::Copy::Operator(newStart + _length, str, len);
         else
           len = 0;
         _start = newStart;

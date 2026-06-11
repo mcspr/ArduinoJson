@@ -5,11 +5,11 @@
 #pragma once
 
 #include "../Configuration.hpp"
+#include "../Strings/Strings.hpp"
 
 #include "parseNumber.hpp"
 
 #include <cstddef>
-#include <cstring>
 
 namespace ArduinoJson {
 namespace Internals {
@@ -35,7 +35,7 @@ inline bool isFloat(const char *s, size_t len) {
 }
 
 inline bool isFloat(const char *s) {
-  return isFloat(s, strlen(s));
+  return isFloat(s, Strings::Length::Operator(s));
 }
 
 }  // namespace Internals

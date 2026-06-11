@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "../Strings/Strings.hpp"
 #include "../Data/Encoding.hpp"
 #include "../Data/JsonInteger.hpp"
 #include "../Polyfills/attributes.hpp"
@@ -119,7 +120,9 @@ class JsonWriter {
   void writeString(const char *value) {
     writeRaw('\"');
     if (value) {
-      while (*value) writeChar(*value++);
+      char c;
+      while ((c = Strings::Copy::Operator(value++)) != '\0')
+        writeChar(c);
     }
     writeRaw('\"');
   }
@@ -165,7 +168,8 @@ class JsonWriter {
             : parts.exponent);
 
     if (parts.exponent < 0) {
-      writeRaw("e-");
+      writeRaw('e');
+      writeRaw('-');
       writeInteger(exponent);
     }
 

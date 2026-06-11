@@ -8,6 +8,8 @@
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
 
+#include "../Strings/Strings.hpp"
+
 #include <ostream>
 
 namespace ArduinoJson {
@@ -24,7 +26,7 @@ class StreamPrintAdapter {
 
   size_t print(const char* s) {
     _os << s;
-    return strlen(s);
+    return Strings::Length::Operator(s);
   }
 
  private:

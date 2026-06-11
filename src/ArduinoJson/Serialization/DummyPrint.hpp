@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../Strings/Strings.hpp"
+
 #include <cstddef>
 #include <cstring>
 
@@ -18,7 +20,7 @@ class DummyPrint {
   }
 
   size_t print(const char* s) {
-    return strlen(s);
+    return Strings::Length::Operator(s);
   }
 };
 }  // namespace Internals

@@ -14,13 +14,13 @@
 #include "JsonObject.hpp"
 #include "JsonVariant.hpp"
 
+#include "Strings/Strings.hpp"
+
 #include "Numbers/isFloat.hpp"
 #include "Numbers/parseFloat.hpp"
 
 #include "Numbers/isInteger.hpp"
 #include "Numbers/parseInteger.hpp"
-
-#include <cstring> // for strcmp
 
 namespace ArduinoJson {
 
@@ -104,7 +104,8 @@ inline bool JsonVariant::variantAsBoolean() const {
 
     case JsonVariantType::JSON_STRING:
     case JsonVariantType::JSON_UNPARSED:
-      if (!_content.asString || (strcmp(_content.asString, "false") == 0))
+      if (!_content.asString ||
+          Internals::Strings::Equals::Operator(_content.asString, "false"))
         return false;
 
       return true;
@@ -161,15 +162,15 @@ inline bool JsonVariant::variantIsNull() const {
   return (_type == Internals::JsonVariantType::JSON_NULL ||
         ((_type == Internals::JsonVariantType::JSON_UNPARSED) &&
          _content.asString &&
-         (0 == strcmp("null", _content.asString))));
+         Internals::Strings::Equals::Operator(_content.asString, "null")));
 }
 
 inline bool JsonVariant::variantIsBoolean() const {
   return (_type == Internals::JsonVariantType::JSON_BOOLEAN ||
         ((_type == Internals::JsonVariantType::JSON_UNPARSED) &&
          _content.asString &&
-         ((0 == strcmp("true", _content.asString)) ||
-          (0 == strcmp("false", _content.asString)))));
+         (Internals::Strings::Equals::Operator(_content.asString, "true") ||
+          Internals::Strings::Equals::Operator(_content.asString, "false"))));
 }
 
 inline bool JsonVariant::variantIsInteger() const {

@@ -6,8 +6,7 @@
 #include <catch.hpp>
 
 static void eraseString(std::string &str) {
-  char *p = const_cast<char *>(str.c_str());
-  while (*p) *p++ = '*';
+  str.assign(str.length(), '*');
 }
 
 TEST_CASE("std::string") {

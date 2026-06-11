@@ -3,7 +3,6 @@
 #pragma once
 
 #include "../TypeTraits/RemoveConstReference.hpp"
-#include "../TypeTraits/RemoveConstReference.hpp"
 
 namespace ArduinoJson {
 namespace Internals {

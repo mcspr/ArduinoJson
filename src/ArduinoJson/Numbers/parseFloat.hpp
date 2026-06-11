@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include "../Strings/Strings.hpp"
+
 #include "convertNumber.hpp"
 #include "parseNumber.hpp"
-
-#include <cstring>
 
 namespace ArduinoJson {
 namespace Internals {
@@ -23,7 +23,7 @@ inline ConvertResult<T> parseFloat(const char *s, size_t len) {
 
 template <typename T>
 inline ConvertResult<T> parseFloat(const char *s) {
-  return parseFloat<T>(s, strlen(s));
+  return parseFloat<T>(s, Strings::Length::Operator(s));
 }
 
 }  // namespace Internals

@@ -33,13 +33,15 @@ struct ValueSaverImpl {
 // output dup'ed to JsonBuffer, or stored in the object directly
 template <typename T>
 struct ValueStringDuplicate {
-  typedef const char* Type;
+  typedef T type;
+  typedef const char* duplicate_type;
 };
 
 // same as above, but convert into RawJson<JsonString>
 template <typename T>
 struct ValueStringDuplicate<Internals::RawJsonString<T>> {
-  typedef Internals::RawJsonString<const char*> Type;
+  typedef T type;
+  typedef Internals::RawJsonString<const char*> duplicate_type;
 };
 
 // source and destination are strings (i.e. Duplicate present from specialization)
@@ -47,15 +49,16 @@ template <typename Source>
 struct ValueSaverImpl<
     Source, typename EnableIf<ShouldDuplicate<StringTraits<Source>>::value>::type> {
 
-  typedef Source source_type;
-  typedef typename ValueStringDuplicate<Source>::Type duplicate_type;
+  typedef ValueStringDuplicate<Source> value_string_type;
+  typedef typename value_string_type::type source_type;
+  typedef typename value_string_type::duplicate_type duplicate_type;
 
   template <typename Destination>
   static bool save(JsonBuffer* buffer, Destination& dst, const Source& src) {
-    using Duplicate = typename StringTraits<Source>::Duplicate;
-    auto* dup = Duplicate::Operator(src, buffer);
+    using Duplicate = typename StringTraits<source_type>::Duplicate;
+    auto* dup = Duplicate::Operator(buffer, src);
     if (dup) {
-      dst = typename ValueStringDuplicate<Source>::Type(dup);
+      dst = duplicate_type(dup);
       return true;
     }
 
@@ -77,13 +80,14 @@ template <typename Source>
 struct ValueSaverImpl<
     Source, typename EnableIf<ValueSaverNullableView<StringTraits<Source>>::value>::type> {
 
-  typedef typename ValueStringDuplicate<Source>::Type duplicate_type;
+  typedef ValueStringDuplicate<Source> value_string_type;
+  typedef typename value_string_type::duplicate_type duplicate_type;
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {
     using IsNull = typename StringTraits<Source>::IsNull;
     if (!IsNull::Operator(src)) {
-      dst = typename ValueStringDuplicate<Source>::Type(src);
+      dst = duplicate_type(src);
       return true;
     }
 
@@ -102,11 +106,12 @@ template <typename Source>
 struct ValueSaverImpl<
     Source, typename EnableIf<ValueSaverNonNullableView<StringTraits<Source>>::value>::type> {
 
-  typedef typename ValueStringDuplicate<Source>::Type duplicate_type;
+  typedef ValueStringDuplicate<Source> value_string_type;
+  typedef typename value_string_type::duplicate_type duplicate_type;
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {
-    dst = typename ValueStringDuplicate<Source>::Type(src);
+    dst = duplicate_type(src);
     return true;
   }
 };
