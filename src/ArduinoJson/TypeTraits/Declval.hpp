@@ -4,9 +4,31 @@
 
 namespace ArduinoJson {
 namespace Internals {
+namespace TypeTraits {
 
 template <typename T>
-typename RemoveConstReference<T>::type Declval();
+struct WithRvalueReference {
+  typedef T&& type;
+};
+
+template <typename T>
+struct WithRvalueReference<T&> {
+  typedef T&& type;
+};
+
+template <typename T>
+struct WithRvalueReference<T&&> {
+  typedef T&& type;
+};
+
+template <typename T>
+using DeclvalReturnType = typename WithRvalueReference<
+  typename RemoveConstReference<T>::type>::type;
+
+}
+
+template <typename T>
+typename TypeTraits::DeclvalReturnType<T> Declval() noexcept;
 
 }
 }
