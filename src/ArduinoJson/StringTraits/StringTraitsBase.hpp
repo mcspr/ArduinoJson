@@ -44,6 +44,16 @@ template <typename T>
 struct ShouldDuplicate<T, VoidType<typename T::Duplicate>> : TrueType {
 };
 
+// opposite of duplicate, type could return a cstring pointer
+
+template <typename T, typename = void>
+struct CanReference : FalseType {
+};
+
+template <typename T>
+struct CanReference<T, VoidType<typename T::Reference>> : TrueType {
+};
+
 // type may be null and should be checked before being used
 
 template <typename T, typename = void>

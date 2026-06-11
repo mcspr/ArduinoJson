@@ -34,6 +34,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wstrict-aliasing
 		-Wundef
 	)
+
+	# error: '__COUNTER__' is a C2y extension [-Werror,-Wc2y-extensions]
+	# ref. https://github.com/catchorg/Catch2/issues/3076
+	# ref. https://github.com/llvm/llvm-project/issues/189645
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+	   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 22)
+		add_compile_options(
+			-Wno-c2y-extensions
+		)
+	endif ()
+
 	if(COVERAGE)
 		add_compile_options(
 			-fprofile-arcs

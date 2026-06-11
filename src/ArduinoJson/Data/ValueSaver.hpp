@@ -72,6 +72,7 @@ struct ValueSaverImpl<
 template <typename T>
 struct ValueSaverNullableView
   : And<IsBaseOf<StringTraitsTag, T>,
+        CanReference<T>,
         IsNullable<T>,
         Not<ShouldDuplicate<T>>>::type {
 };
@@ -85,9 +86,12 @@ struct ValueSaverImpl<
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {
-    using IsNull = typename StringTraits<Source>::IsNull;
-    if (!IsNull::Operator(src)) {
-      dst = duplicate_type(src);
+    using traits_type = StringTraits<Source>;
+
+    using is_null = typename traits_type::IsNull;
+    if (!is_null::Operator(src)) {
+      using take_reference = typename traits_type::Reference;
+      dst = duplicate_type(take_reference::Operator(src));
       return true;
     }
 
@@ -98,6 +102,7 @@ struct ValueSaverImpl<
 template <typename T>
 struct ValueSaverNonNullableView
   : And<IsBaseOf<StringTraitsTag, T>,
+        CanReference<T>,
         Not<IsNullable<T>>,
         Not<ShouldDuplicate<T>>>::type {
 };
@@ -111,7 +116,9 @@ struct ValueSaverImpl<
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, const Source& src) {
-    dst = duplicate_type(src);
+    using traits_type = StringTraits<Source>;
+    using take_reference = typename traits_type::Reference;
+    dst = duplicate_type(take_reference::Operator(src));
     return true;
   }
 };

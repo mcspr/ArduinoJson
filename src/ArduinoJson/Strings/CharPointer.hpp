@@ -38,6 +38,12 @@ struct IsNull {
   }
 };
 
+struct Reference {
+  static const char* Operator(const void* str) {
+    return reinterpret_cast<const char *>(str);
+  }
+};
+
 struct Equals {
   static bool Operator(const void* str, size_t str_len, const char* expected, size_t expected_len) {
     const char* actual = reinterpret_cast<const char *>(str);

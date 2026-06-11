@@ -24,6 +24,7 @@ struct CharPointerTraitsBase : StringTraitsTag {
   typedef Readers::CharPointer::Reader Reader;
   typedef Strings::CharPointer::Equals Equals;
   typedef Strings::CharPointer::IsNull IsNull;
+  typedef Strings::CharPointer::Reference Reference;
 };
 
 template <typename TChar, typename = void>

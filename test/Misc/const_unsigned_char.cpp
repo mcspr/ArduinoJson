@@ -5,27 +5,27 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-TEST_CASE("unsigned char string") {
+TEST_CASE("const unsigned char string") {
   SECTION("JsonBuffer::parseArray") {
-    unsigned char json[] = "[42]";
+    const unsigned char json[] = "[42]";
 
-    StaticJsonBuffer<JSON_ARRAY_SIZE(1)> jsonBuffer;
+    StaticJsonBuffer<JSON_ARRAY_SIZE(1) + 8> jsonBuffer;
     JsonArray& arr = jsonBuffer.parseArray(json);
 
     REQUIRE(true == arr.success());
   }
 
   SECTION("JsonBuffer::parseObject") {
-    unsigned char json[] = "{\"a\":42}";
+    const unsigned char json[] = "{\"a\":42}";
 
-    StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1) + 16> jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject(json);
 
     REQUIRE(true == obj.success());
   }
 
   SECTION("JsonVariant constructor") {
-    unsigned char value[] = "42";
+    const unsigned char value[] = "42";
 
     JsonVariant variant(value);
 
@@ -33,7 +33,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonVariant assignment operator") {
-    unsigned char value[] = "42";
+    const unsigned char value[] = "42";
 
     JsonVariant variant(666);
     variant = value;
@@ -42,7 +42,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonVariant::operator[]") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonVariant variant = jsonBuffer.parseObject("{\"hello\":\"world\"}");
@@ -51,7 +51,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonVariant::operator[] const") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     const JsonVariant variant = jsonBuffer.parseObject("{\"hello\":\"world\"}");
@@ -60,7 +60,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonVariant::operator==") {
-    unsigned char comparand[] = "hello";
+    const unsigned char comparand[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     const JsonVariant variant = "hello";
@@ -72,7 +72,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonVariant::operator!=") {
-    unsigned char comparand[] = "hello";
+    const unsigned char comparand[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     const JsonVariant variant = "world";
@@ -84,7 +84,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::operator[]") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -94,7 +94,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObjectSubscript::operator=") {  // issue #416
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -104,7 +104,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObjectSubscript::set()") {
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -114,7 +114,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::operator[] const") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     const JsonObject& obj = jsonBuffer.parseObject("{\"hello\":\"world\"}");
@@ -123,7 +123,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::get()") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject("{\"hello\":\"world\"}");
@@ -132,7 +132,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::set() key") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -142,7 +142,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::set() value") {
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -152,7 +152,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::set key&value") {
-    unsigned char key[] = "world";
+    const unsigned char key[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -162,7 +162,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::containsKey()") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     const JsonObject& obj = jsonBuffer.parseObject("{\"hello\":\"world\"}");
@@ -171,7 +171,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::remove()") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject("{\"hello\":\"world\"}");
@@ -181,7 +181,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::is()") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject("{\"hello\":42}");
@@ -190,7 +190,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::createNestedArray()") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -198,7 +198,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonObject::createNestedObject()") {
-    unsigned char key[] = "hello";
+    const unsigned char key[] = "hello";
 
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -206,7 +206,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonArray::add()") {
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonArray& arr = jsonBuffer.createArray();
@@ -216,7 +216,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonArray::set()") {
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonArray& arr = jsonBuffer.createArray();
@@ -227,7 +227,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonArraySubscript::set()") {
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonArray& arr = jsonBuffer.createArray();
@@ -238,7 +238,7 @@ TEST_CASE("unsigned char string") {
   }
 
   SECTION("JsonArraySubscript::operator=") {
-    unsigned char value[] = "world";
+    const unsigned char value[] = "world";
 
     DynamicJsonBuffer jsonBuffer;
     JsonArray& arr = jsonBuffer.createArray();
