@@ -59,11 +59,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 	   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
 		add_compile_options(
 			-fsanitize=address,undefined
-			-fsanitize-trap=all
+			-fno-sanitize-recover=all
 		)
 		add_link_options(
 			-fsanitize=address,undefined
-			-fsanitize-trap=all
+			-fno-sanitize-recover=all
 		)
 	endif()
 endif()
