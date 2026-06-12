@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <cstring>
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -21,6 +24,18 @@ inline bool isInfinity(float x) {
 
 inline bool isInfinity(double x) {
   return x != 0.0 && x * 2.0 == x;
+}
+
+inline bool SignBit(float x) {
+  uint32_t tmp;
+  std::memcpy(&tmp, &x, sizeof(x));
+  return (tmp & uint32_t{0x80000000}) != 0;
+}
+
+inline bool SignBit(double x) {
+  uint64_t tmp;
+  std::memcpy(&tmp, &x, sizeof(x));
+  return (tmp & uint64_t{0x8000000000000000}) != 0;
 }
 
 template <typename T>

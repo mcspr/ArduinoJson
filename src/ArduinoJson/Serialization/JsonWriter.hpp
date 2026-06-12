@@ -7,8 +7,8 @@
 #include "../Strings/Strings.hpp"
 #include "../Data/Encoding.hpp"
 #include "../Data/JsonInteger.hpp"
-#include "../Polyfills/attributes.hpp"
 #include "../Serialization/FloatParts.hpp"
+#include "../Polyfills/math.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -181,20 +181,28 @@ class JsonWriter {
     }
   }
 
+  void writeNaN() {
+    writeRaw("NaN");
+  }
+
+  void writeInfinity() {
+    writeRaw("Infinity");
+  }
+
   template <typename TFloat>
   void writeFloat(TFloat value) {
     if (isNaN(value)) {
-      writeRaw("NaN");
+      writeNaN();
       return;
     }
 
-    if (value < 0.0) {
+    if (SignBit(value)) {
       writeRaw('-');
       value = -value;
     }
 
     if (isInfinity(value)) {
-      writeRaw("Infinity");
+      writeInfinity();
       return;
     }
 

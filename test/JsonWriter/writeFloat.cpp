@@ -2,12 +2,14 @@
 // Copyright Benoit Blanchon 2014-2023
 // MIT License
 
-#include <catch.hpp>
+#include <ArduinoJson/Serialization/DynamicStringBuilder.hpp>
+#include <ArduinoJson/Serialization/JsonWriter.hpp>
+
+#include <cmath>
 #include <limits>
 #include <string>
 
-#include <ArduinoJson/Serialization/DynamicStringBuilder.hpp>
-#include <ArduinoJson/Serialization/JsonWriter.hpp>
+#include <catch.hpp>
 
 using ArduinoJson::Internals::DynamicStringBuilder;
 using ArduinoJson::Internals::JsonWriter;
@@ -24,38 +26,46 @@ void check(TFloat input, const std::string& expected) {
 
 TEST_CASE("JsonWriter::writeFloat(double)") {
   SECTION("Pi") {
-    check<double>(3.14159265359, "3.141592654");
+    check<double>(std::acos(-1.0), "3.141592654");
   }
 
   SECTION("Signaling NaN") {
-    double nan = std::numeric_limits<double>::signaling_NaN();
+    auto nan = std::numeric_limits<double>::signaling_NaN();
     check<double>(nan, "NaN");
   }
 
   SECTION("Quiet NaN") {
-    double nan = std::numeric_limits<double>::quiet_NaN();
+    auto nan = std::numeric_limits<double>::quiet_NaN();
     check<double>(nan, "NaN");
   }
 
   SECTION("Infinity") {
-    double inf = std::numeric_limits<double>::infinity();
+    auto inf = std::numeric_limits<double>::infinity();
     check<double>(inf, "Infinity");
     check<double>(-inf, "-Infinity");
   }
 
   SECTION("Zero") {
     check<double>(0.0, "0");
-    check<double>(-0.0, "0");
+    check<double>(-0.0, "-0");
   }
 
-  SECTION("Espilon") {
-    check<double>(2.2250738585072014E-308, "2.225073859e-308");
-    check<double>(-2.2250738585072014E-308, "-2.225073859e-308");
+  SECTION("Epsilon") {
+    auto epsilon = std::numeric_limits<double>::epsilon();
+    check<double>(epsilon, "2.220446049e-16");
+    check<double>(-epsilon, "-2.220446049e-16");
+  }
+
+  SECTION("Min double") {
+    auto minval = std::numeric_limits<double>::min();
+    check<double>(minval, "2.225073859e-308");
+    check<double>(-minval, "-2.225073859e-308");
   }
 
   SECTION("Max double") {
-    check<double>(1.7976931348623157E+308, "1.797693135e308");
-    check<double>(-1.7976931348623157E+308, "-1.797693135e308");
+    auto maxval = std::numeric_limits<double>::max();
+    check<double>(maxval, "1.797693135e308");
+    check<double>(-maxval, "-1.797693135e308");
   }
 
   SECTION("Big exponent") {
@@ -105,7 +115,46 @@ TEST_CASE("JsonWriter::writeFloat(double)") {
 
 TEST_CASE("JsonWriter::writeFloat(float)") {
   SECTION("Pi") {
-    check<float>(3.14159265359f, "3.141593");
+    check<float>(std::acos(-1.0f), "3.141593");
+  }
+
+  SECTION("Signaling NaN") {
+    auto nan = std::numeric_limits<float>::signaling_NaN();
+    check<float>(nan, "NaN");
+  }
+
+  SECTION("Quiet NaN") {
+    auto nan = std::numeric_limits<float>::quiet_NaN();
+    check<float>(nan, "NaN");
+  }
+
+  SECTION("Infinity") {
+    auto inf = std::numeric_limits<float>::infinity();
+    check<float>(inf, "Infinity");
+    check<float>(-inf, "-Infinity");
+  }
+
+  SECTION("Zero") {
+    check<float>(0.0f, "0");
+    check<float>(-0.0f, "-0");
+  }
+
+  SECTION("Epsilon") {
+    auto epsilon = std::numeric_limits<float>::epsilon();
+    check<float>(epsilon, "1.192093e-7");
+    check<float>(-epsilon, "-1.192093e-7");
+  }
+
+  SECTION("Min float") {
+    auto minval = std::numeric_limits<float>::min();
+    check<float>(minval, "1.175494e-38");
+    check<float>(-minval, "-1.175494e-38");
+  }
+
+  SECTION("Max float") {
+    auto maxval = std::numeric_limits<float>::max();
+    check<float>(maxval, "3.402823e38");
+    check<float>(-maxval, "-3.402823e38");
   }
 
   SECTION("999.9") {  // issue #543
