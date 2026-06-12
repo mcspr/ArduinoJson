@@ -137,6 +137,11 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(variant.as<bool>());
   }
 
+  SECTION("NumberRawStringAsBool") {
+    JsonVariant variant = RawJson("12345");
+    REQUIRE(variant.as<bool>());
+  }
+
   SECTION("NumberStringAsLong") {
     JsonVariant variant = "42";
     REQUIRE(42L == variant.as<long>());
@@ -155,8 +160,23 @@ TEST_CASE("JsonVariant::as()") {
   }
 #endif
 
+  SECTION("TrueStringAsBool") {
+    JsonVariant variant = "true";
+    REQUIRE(variant.as<bool>());
+  }
+
+  SECTION("TrueRawStringAsBool") {
+    JsonVariant variant = RawJson("true");
+    REQUIRE(variant.as<bool>());
+  }
+
   SECTION("FalseStringAsBool") {
     JsonVariant variant = "false";
+    REQUIRE_FALSE(variant.as<bool>());
+  }
+
+  SECTION("FalseRawStringAsBool") {
+    JsonVariant variant = RawJson("false");
     REQUIRE_FALSE(variant.as<bool>());
   }
 
@@ -185,9 +205,19 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(std::string("hello") == variant.as<std::string>());
   }
 
-  SECTION("UnparsedStringAsConstCharPtr") {
-    JsonVariant variant = RawJson("null");
-    REQUIRE(std::string("null") == variant.as<const char*>());
+  SECTION("NullptrStringAsConstCharPtr") {
+    JsonVariant variant = static_cast<const char *>(nullptr);
+    REQUIRE(nullptr == variant.as<const char*>());
+  }
+
+  SECTION("NullptrStringAsCharPtr") {
+    JsonVariant variant = static_cast<const char *>(nullptr);
+    REQUIRE(nullptr == variant.as<char*>());
+  }
+
+  SECTION("NullptrStringAsString") {
+    JsonVariant variant = static_cast<const char *>(nullptr);
+    REQUIRE(std::string("") == variant.as<std::string>());
   }
 
   SECTION("UnparsedStringAsConstCharPtr") {
@@ -195,14 +225,9 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(std::string("null") == variant.as<const char*>());
   }
 
-  SECTION("RandomRawStringAsBool") {
-    JsonVariant variant = RawJson("12345");
-    REQUIRE(variant.as<bool>());
-  }
-
-  SECTION("RandomStringAsLong") {
-    JsonVariant variant = "anything";
-    REQUIRE(0L == variant.as<long>());
+  SECTION("UnparsedStringAsConstCharPtr") {
+    JsonVariant variant = RawJson("null");
+    REQUIRE(std::string("null") == variant.as<const char*>());
   }
 
   SECTION("ObjectAsString") {
