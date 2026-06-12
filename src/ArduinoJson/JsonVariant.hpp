@@ -195,11 +195,17 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   typename Internals::EnableIf<Internals::HasAppend<Internals::StringTraits<T>>::value, T>::type
   as() const {
-    const char *cstr = variantAsString();
-    if (cstr) return T(cstr);
-    T s;
-    printTo(s);
-    return s;
+    T out;
+
+    using append_to = typename Internals::StringTraits<T>::Append;
+    if (variantIsString()) {
+      auto* cstr = variantAsString();
+      if (cstr)
+        append_to::Operator(out, cstr);
+    } else
+      printTo(out);
+
+    return out;
   }
   //
   // JsonArray& as<JsonArray> const;
