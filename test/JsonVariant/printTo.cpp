@@ -4,7 +4,9 @@
 
 #include <ArduinoJson.h>
 #include <catch.hpp>
+
 #include <limits>
+#include <string>
 
 void check(JsonVariant variant, const std::string &expected) {
   char buffer[256] = "";
@@ -24,6 +26,10 @@ TEST_CASE("JsonVariant::printTo()") {
 
   SECTION("Raw string") {
     check(RawJson("whatever"), "whatever");
+  }
+
+  SECTION("Null string") {
+    check(static_cast<const char*>(nullptr), "\"\"");
   }
 
   SECTION("Empty string") {
@@ -60,15 +66,23 @@ TEST_CASE("JsonVariant::printTo()") {
 
 #if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
   SECTION("NegativeInt64") {
-    check(-9223372036854775806LL, "-9223372036854775806");
+    constexpr auto value = std::numeric_limits<signed long long>::min();
+    check(value, std::to_string(value));
   }
 
   SECTION("PositiveInt64") {
-    check(9223372036854775807LL, "9223372036854775807");
+    constexpr auto value = std::numeric_limits<signed long long>::max();
+    check(value, std::to_string(value));
   }
 
-  SECTION("UInt64") {
-    check(18446744073709551615ULL, "18446744073709551615");
+  SECTION("UInt64 min") {
+    constexpr auto value = std::numeric_limits<unsigned long long>::min();
+    check(value, std::to_string(value));
+  }
+
+  SECTION("UInt64 max") {
+    constexpr auto value = std::numeric_limits<unsigned long long>::max();
+    check(value, std::to_string(value));
   }
 #endif
 }
