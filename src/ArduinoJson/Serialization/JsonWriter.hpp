@@ -206,8 +206,10 @@ class JsonWriter {
       return;
     }
 
-    FloatParts<TFloat> parts(value);
+    writeFloat(FloatParts::make(value));
+  }
 
+  void writeFloat(FloatParts parts) {
     writeInteger(parts.integral);
     if (parts.decimalPlaces > 0) {
       writeRaw('.');

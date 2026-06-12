@@ -5,39 +5,39 @@
 #pragma once
 
 #include "../Configuration.hpp"
-#include "../Polyfills/math.hpp"
 #include "../TypeTraits/FloatTraits.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
-template <typename TFloat>
 struct FloatParts {
   uint32_t integral;
   uint32_t decimal;
   int16_t exponent;
   int8_t decimalPlaces;
 
-  FloatParts(TFloat value) {
+  template <typename TFloat>
+  static FloatParts make(TFloat value) {
     uint32_t maxDecimalPart = sizeof(TFloat) >= 8 ? 1000000000 : 1000000;
-    decimalPlaces = sizeof(TFloat) >= 8 ? 9 : 6;
+    int8_t decimalPlaces = sizeof(TFloat) >= 8 ? 9 : 6;
 
-    exponent = normalize(value);
+    const auto normalized = normalize(value);
 
-    integral = uint32_t(value);
+    uint32_t integral = uint32_t(normalized.value);
     // reduce number of decimal places by the number of integral places
     for (uint32_t tmp = integral; tmp >= 10; tmp /= 10) {
       maxDecimalPart /= 10;
       decimalPlaces--;
     }
 
-    TFloat remainder = (value - TFloat(integral)) * TFloat(maxDecimalPart);
+    TFloat remainder = (normalized.value - TFloat(integral)) * TFloat(maxDecimalPart);
 
-    decimal = uint32_t(remainder);
+    uint32_t decimal = uint32_t(remainder);
     remainder = remainder - TFloat(decimal);
 
     // rounding:
     // increment by 1 if remainder >= 0.5
+    int16_t exponent = normalized.powersOf10;
     decimal += uint32_t(remainder * 2);
     if (decimal >= maxDecimalPart) {
       decimal = 0;
@@ -53,9 +53,19 @@ struct FloatParts {
       decimal /= 10;
       decimalPlaces--;
     }
+
+    return {integral, decimal, exponent, decimalPlaces};
   }
 
-  static int16_t normalize(TFloat& value) {
+ private:
+  template <typename TFloat>
+  struct NormalizedValue {
+    TFloat value;
+    int16_t powersOf10;
+  };
+
+  template <typename TFloat>
+  static NormalizedValue<TFloat> normalize(TFloat value) {
     typedef FloatTraits<TFloat> traits;
     int16_t powersOf10 = 0;
 
@@ -82,7 +92,7 @@ struct FloatParts {
       }
     }
 
-    return powersOf10;
+    return {value, powersOf10};
   }
 };
 }  // namespace Internals
