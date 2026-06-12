@@ -76,8 +76,8 @@ struct PaddedBase10 : public Base10 {
     }
 
     padding = Min(padding, Base10::length());
-    const auto* end = Base10::data() + padding;
-    for (auto it = Base10::data(); it != end; ++it) {
+    const auto* base10_end = Base10::data() + padding;
+    for (auto it = Base10::data(); it != base10_end; ++it) {
       *(out++) = *it;
     }
 
