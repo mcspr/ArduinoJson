@@ -18,7 +18,9 @@ namespace Internals {
 namespace JsonIntegerWriter {
 
 struct Base10 {
-  static constexpr auto digits = std::numeric_limits<JsonUInt>::digits10;
+  static constexpr auto actual_digits = std::numeric_limits<JsonUInt>::digits10;
+  static constexpr auto buffer_digits = actual_digits + 10;
+  using buffer_type = char[Base10::buffer_digits];
 
   explicit Base10(JsonUInt value) {
     auto* it = wend();
@@ -58,8 +60,50 @@ struct Base10 {
     return &_buffer[sizeof(_buffer) - 1];
   }
 
-  char _buffer[digits + 3];
+  buffer_type _buffer;
   char* _data;
+};
+
+struct PaddedBase10 : public Base10 {
+  PaddedBase10(JsonUInt value, size_t padding) :
+    Base10(value)
+  {
+    auto* out = wbegin();
+    if (Base10::length() < padding) {
+      size_t left = padding - Base10::length();
+      while (left--)
+        *(out++) = '0';
+    }
+
+    padding = Min(padding, Base10::length());
+    const auto* end = Base10::data() + padding;
+    for (auto it = Base10::data(); it != end; ++it) {
+      *(out++) = *it;
+    }
+
+    *out = '\0';
+  }
+
+  const char* data() const {
+    return &_buffer[0];
+  }
+
+  const char* c_str() const {
+    return data();
+  }
+
+ private:
+  using Base10::Base10;
+  using Base10::operator=;
+  using Base10::begin;
+  using Base10::end;
+  using Base10::length;
+
+  char* wbegin() {
+    return &_buffer[0];
+  }
+
+  buffer_type _buffer;
 };
 
 }
@@ -186,18 +230,8 @@ class JsonWriter {
   }
 
   void writeInteger(uint32_t value, size_t padding) {
-    const auto repr = JsonIntegerWriter::Base10(value);
-    if (repr.length() < padding) {
-      size_t left = padding - repr.length();
-      while (left--)
-        writeRaw('0');
-    }
-
-    padding = Min(padding, repr.length());
-    const auto* end = repr.data() + padding;
-    for (auto it = repr.data(); it != end; ++it) {
-      writeRaw(*it);
-    }
+    const auto repr = JsonIntegerWriter::PaddedBase10(value, padding);
+    writeRaw(repr.c_str());
   }
 
   void writeRaw(const char *s) {
