@@ -7,6 +7,7 @@
 #include "../Strings/Strings.hpp"
 #include "../Data/Encoding.hpp"
 #include "../Data/JsonInteger.hpp"
+#include "../Data/JsonFloat.hpp"
 #include "../Serialization/FloatParts.hpp"
 #include "../Polyfills/math.hpp"
 
@@ -15,12 +16,18 @@
 
 namespace ArduinoJson {
 namespace Internals {
-namespace JsonIntegerWriter {
+namespace JsonNumberWriter {
+
+// writer is expecting a fixed type unsigned value regardless of the original type
+static constexpr auto Base10UIntDigits =
+    size_t{ 3 + std::numeric_limits<JsonUInt>::digits10 };
+
+// writer currently padding only for writeFloat(), reuse existing buffer for extra data
+static constexpr auto Base10FloatDecimalPlaces =
+    size_t{ FloatParts::decimalPlacesForType<JsonFloat>() };
 
 struct Base10 {
-  static constexpr auto actual_digits = std::numeric_limits<JsonUInt>::digits10;
-  static constexpr auto buffer_digits = actual_digits + 10;
-  using buffer_type = char[Base10::buffer_digits];
+  using buffer_type = char[1 + Base10UIntDigits + Base10FloatDecimalPlaces];
 
   explicit Base10(JsonUInt value) {
     auto* it = wend();
@@ -55,7 +62,11 @@ struct Base10 {
     return static_cast<size_t>(end() - begin());
   }
 
- private:
+ protected:
+  char* wbegin() {
+    return &_buffer[0];
+  }
+
   char* wend() {
     return &_buffer[sizeof(_buffer) - 1];
   }
@@ -68,28 +79,17 @@ struct PaddedBase10 : public Base10 {
   PaddedBase10(JsonUInt value, size_t padding) :
     Base10(value)
   {
-    auto* out = wbegin();
+    padding = Min(Base10FloatDecimalPlaces, padding);
     if (Base10::length() < padding) {
-      size_t left = padding - Base10::length();
-      while (left--)
-        *(out++) = '0';
+      const auto left = padding - Base10::length();
+      const auto* left_begin = _data - left;
+      while (_data != left_begin) {
+        *(--_data) = '0';
+      }
     }
 
-    padding = Min(padding, Base10::length());
-    const auto* base10_end = Base10::data() + padding;
-    for (auto it = Base10::data(); it != base10_end; ++it) {
-      *(out++) = *it;
-    }
-
-    *out = '\0';
-  }
-
-  const char* data() const {
-    return &_buffer[0];
-  }
-
-  const char* c_str() const {
-    return data();
+    padding = Min(Base10::length(), padding);
+    _data[padding] = '\0';
   }
 
  private:
@@ -98,12 +98,6 @@ struct PaddedBase10 : public Base10 {
   using Base10::begin;
   using Base10::end;
   using Base10::length;
-
-  char* wbegin() {
-    return &_buffer[0];
-  }
-
-  buffer_type _buffer;
 };
 
 }
@@ -206,6 +200,16 @@ class JsonWriter {
       return;
     }
 
+    if (value == TFloat(0)) {
+      writeRaw('0');
+      return;
+    }
+
+    if (value == TFloat(1)) {
+      writeRaw('1');
+      return;
+    }
+
     writeFloat(FloatParts::make(value));
   }
 
@@ -235,12 +239,12 @@ class JsonWriter {
 
   template <typename UInt>
   void writeInteger(UInt value) {
-    const auto repr = JsonIntegerWriter::Base10(value);
+    const auto repr = JsonNumberWriter::Base10(value);
     writeRaw(repr.c_str());
   }
 
   void writeInteger(uint32_t value, size_t padding) {
-    const auto repr = JsonIntegerWriter::PaddedBase10(value, padding);
+    const auto repr = JsonNumberWriter::PaddedBase10(value, padding);
     writeRaw(repr.c_str());
   }
 
