@@ -11,34 +11,54 @@ namespace ArduinoJson {
 namespace Internals {
 
 struct FloatParts {
-  uint32_t integral;
-  uint32_t decimal;
-  int16_t exponent;
-  int8_t decimalPlaces;
+  using value_type = uint32_t;
+  using exponent_type = int16_t;
+  using decimal_places_type = int8_t;
+
+  value_type integral;
+  value_type decimal;
+  exponent_type exponent;
+  decimal_places_type decimalPlaces;
+
+  template <typename TFloat>
+  static constexpr decimal_places_type decimalPlacesForType() {
+    return sizeof(TFloat) >= 8
+      ? 9
+      : 6;
+  }
+
+  template <typename TFloat>
+  static constexpr value_type maxDecimalPartForType() {
+    // not larger than...
+    return sizeof(TFloat) >= 8
+      ? 1000000000 // ... 10 digits
+      : 1000000;   // ... 7 digits
+  }
 
   template <typename TFloat>
   static FloatParts make(TFloat value) {
-    uint32_t maxDecimalPart = sizeof(TFloat) >= 8 ? 1000000000 : 1000000;
-    int8_t decimalPlaces = sizeof(TFloat) >= 8 ? 9 : 6;
+    auto maxDecimalPart = maxDecimalPartForType<TFloat>();
+    auto decimalPlaces = decimalPlacesForType<TFloat>();
 
     const auto normalized = normalize(value);
 
-    uint32_t integral = uint32_t(normalized.value);
+    auto integral = value_type(normalized.value);
     // reduce number of decimal places by the number of integral places
-    for (uint32_t tmp = integral; tmp >= 10; tmp /= 10) {
+    for (auto tmp = integral; tmp >= 10; tmp /= 10) {
       maxDecimalPart /= 10;
       decimalPlaces--;
     }
 
+    // retrieve decimal part as a integral value, adjusting number of visible digits in the process
     TFloat remainder = (normalized.value - TFloat(integral)) * TFloat(maxDecimalPart);
 
-    uint32_t decimal = uint32_t(remainder);
-    remainder = remainder - TFloat(decimal);
+    // floor the value before processing and manually ceil based on the float calc above
+    // increments by 1 if the remainder >= 0.5 (imprecise, possibly changing the resulting float)
+    auto decimal = value_type(remainder);
+    remainder -= TFloat(decimal);
+    decimal += value_type(remainder * 2);
 
-    // rounding:
-    // increment by 1 if remainder >= 0.5
-    int16_t exponent = normalized.powersOf10;
-    decimal += uint32_t(remainder * 2);
+    auto exponent = normalized.powersOf10;
     if (decimal >= maxDecimalPart) {
       decimal = 0;
       integral++;
@@ -61,13 +81,13 @@ struct FloatParts {
   template <typename TFloat>
   struct NormalizedValue {
     TFloat value;
-    int16_t powersOf10;
+    exponent_type powersOf10;
   };
 
   template <typename TFloat>
   static NormalizedValue<TFloat> normalize(TFloat value) {
     typedef FloatTraits<TFloat> traits;
-    int16_t powersOf10 = 0;
+    exponent_type powersOf10 = 0;
 
     int8_t index = sizeof(TFloat) == 8 ? 8 : 5;
     int bit = 1 << index;
