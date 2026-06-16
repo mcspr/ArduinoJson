@@ -57,14 +57,14 @@ TEST_CASE("JsonWriter::writeFloat(double)") {
   }
 
   SECTION("Min double") {
-    auto minval = std::numeric_limits<double>::min();
-    check<double>(minval, "2.225073859e-308");
+    constexpr auto minval = std::numeric_limits<double>::min(); // 2.2250738585072014e-308
+    check<double>(minval, "2.225073859e-308"); // rounded up by the serializer
     check<double>(-minval, "-2.225073859e-308");
   }
 
   SECTION("Max double") {
-    auto maxval = std::numeric_limits<double>::max();
-    check<double>(maxval, "1.797693135e308");
+    constexpr auto maxval = std::numeric_limits<double>::max(); // 1.7976931348623157e308
+    check<double>(maxval, "1.797693135e308"); // rounded up by the serializer
     check<double>(-maxval, "-1.797693135e308");
   }
 
@@ -96,7 +96,7 @@ TEST_CASE("JsonWriter::writeFloat(double)") {
     check<double>(0.9999999996, "1");
   }
 
-  SECTION("9 decimal places") {
+  SECTION("9 decimal places w/o rounding") {
     check<double>(0.100000001, "0.100000001");
     check<double>(0.999999999, "0.999999999");
 
@@ -104,7 +104,7 @@ TEST_CASE("JsonWriter::writeFloat(double)") {
     check<double>(9.999999999, "9.999999999");
   }
 
-  SECTION("10 decimal places") {
+  SECTION("10 decimal places w/ rounding") {
     check<double>(0.1000000001, "0.1");
     check<double>(0.9999999999, "1");
 
@@ -115,21 +115,22 @@ TEST_CASE("JsonWriter::writeFloat(double)") {
 
 TEST_CASE("JsonWriter::writeFloat(float)") {
   SECTION("Pi") {
-    check<float>(std::acos(-1.0f), "3.141593");
+    // aka M_PI 3.14159265358979323846
+    check<float>(std::acos(-1.0f), "3.141593"); // rounded up by the serializer
   }
 
   SECTION("Signaling NaN") {
-    auto nan = std::numeric_limits<float>::signaling_NaN();
+    constexpr auto nan = std::numeric_limits<float>::signaling_NaN();
     check<float>(nan, "NaN");
   }
 
   SECTION("Quiet NaN") {
-    auto nan = std::numeric_limits<float>::quiet_NaN();
+    constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
     check<float>(nan, "NaN");
   }
 
   SECTION("Infinity") {
-    auto inf = std::numeric_limits<float>::infinity();
+    constexpr auto inf = std::numeric_limits<float>::infinity();
     check<float>(inf, "Infinity");
     check<float>(-inf, "-Infinity");
   }
@@ -140,28 +141,28 @@ TEST_CASE("JsonWriter::writeFloat(float)") {
   }
 
   SECTION("Epsilon") {
-    auto epsilon = std::numeric_limits<float>::epsilon();
-    check<float>(epsilon, "1.192093e-7");
+    constexpr auto epsilon = std::numeric_limits<float>::epsilon(); // 1.19209290e-7F
+    check<float>(epsilon, "1.192093e-7"); // rounded up by the serializer
     check<float>(-epsilon, "-1.192093e-7");
   }
 
   SECTION("Min float") {
-    auto minval = std::numeric_limits<float>::min();
+    constexpr auto minval = std::numeric_limits<float>::min(); // 1.17549435e-38F
     check<float>(minval, "1.175494e-38");
     check<float>(-minval, "-1.175494e-38");
   }
 
   SECTION("Max float") {
-    auto maxval = std::numeric_limits<float>::max();
+    constexpr auto maxval = std::numeric_limits<float>::max(); // 3.40282347e+38F
     check<float>(maxval, "3.402823e38");
     check<float>(-maxval, "-3.402823e38");
   }
 
-  SECTION("999.9") {  // issue #543
+  SECTION("999.9") {  // issue #543, number of decimal places reduced
     check<float>(999.9f, "999.9");
   }
 
-  SECTION("24.3") {  // # issue #588
+  SECTION("24.3") {  // # issue #588, resulting value is rounded up
     check<float>(24.3f, "24.3");
   }
 }
