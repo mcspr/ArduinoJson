@@ -179,12 +179,11 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   // Returns the list node that matches the specified key.
   template <typename TKey>
   iterator findKey(TKey&& key) {
-    iterator it;
-    for (it = begin(); it != end(); ++it) {
+    for (auto it = begin(); it != end(); ++it) {
       if (Internals::StringTraits<TKey>::Equals::Operator(key, it->key))
-        break;
+        return it;
     }
-    return it;
+    return end();
   }
 
   template <typename TKey>
