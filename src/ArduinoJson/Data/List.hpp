@@ -6,7 +6,7 @@
 
 #include "../JsonBuffer.hpp"
 #include "../EmptyJsonBuffer.hpp"
-#include "ListConstIterator.hpp"
+#include "ListNode.hpp"
 #include "ListIterator.hpp"
 
 namespace ArduinoJson {
@@ -18,17 +18,20 @@ namespace Internals {
 template <typename T>
 class List {
  public:
-  typedef T value_type;
-  typedef ListNode<T> node_type;
-  typedef ListIterator<T> iterator;
-  typedef ListConstIterator<T> const_iterator;
+  using value_type = T;
+  using node_type = ListNode<T>;
+  using iterator = ListIterator<T>;
+  using const_iterator = ListIterator<const T>;
 
   // Creates an empty List<T> attached to a JsonBuffer.
   // The JsonBuffer allows to allocate new nodes.
   // When buffer is invalid, the List is not able to grow and success() returns
   // false. This is used to identify bad memory allocations and parsing
   // failures.
-  explicit List(JsonBuffer *buffer) : _buffer(buffer), _firstNode(nullptr) {}
+  explicit List(JsonBuffer *buffer) :
+    _buffer(buffer),
+    _firstNode(nullptr)
+  {}
 
   // Returns true if the object is valid
   // Would return false in the following situation:
@@ -76,7 +79,7 @@ class List {
     return const_iterator(nullptr);
   }
 
-  void remove(iterator it) {
+  void remove(const_iterator it) {
     node_type *nodeToRemove = it._node;
     if (!nodeToRemove) return;
     if (nodeToRemove == _firstNode) {
@@ -85,6 +88,10 @@ class List {
       for (node_type *node = _firstNode; node; node = node->next)
         if (node->next == nodeToRemove) node->next = nodeToRemove->next;
     }
+  }
+
+  void remove(iterator it) {
+    remove(const_iterator(it));
   }
 
  protected:

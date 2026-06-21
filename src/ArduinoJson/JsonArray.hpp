@@ -87,14 +87,14 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // Gets the value at the specified index.
   template <typename T>
   typename Internals::JsonVariantAs<T>::type get(size_t index) const {
-    const_iterator it = begin() + index;
+    const auto it = begin() + index;
     return it != end() ? it->as<T>() : Internals::JsonVariantDefault<T>::get();
   }
 
   // Check the type of the value at specified index.
   template <typename T>
   bool is(size_t index) const {
-    const_iterator it = begin() + index;
+    const auto it = begin() + index;
     return it != end() ? it->is<typename Internals::JsonVariantAs<T>::type>() : false;
   }
 
@@ -159,7 +159,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   template <typename T>
   size_t copyTo(T *array, size_t len) const {
     size_t i = 0;
-    for (const_iterator it = begin(); it != end() && i < len; ++it)
+    for (auto it = begin(); it != end() && i < len; ++it)
       array[i++] = *it;
     return i;
   }
@@ -168,7 +168,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   template <typename T, size_t N1, size_t N2>
   void copyTo(T (&array)[N1][N2]) const {
     size_t i = 0;
-    for (const_iterator it = begin(); it != end() && i < N1; ++it) {
+    for (auto it = begin(); it != end() && i < N1; ++it) {
       it->as<JsonArray>().copyTo(array[i++]);
     }
   }
