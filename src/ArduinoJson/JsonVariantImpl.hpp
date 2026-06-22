@@ -115,10 +115,7 @@ inline bool JsonVariant::variantAsBoolean() const {
 }
 
 inline const char *JsonVariant::variantAsString() const {
-  using Internals::JsonVariantType;
-
-  if (_type == JsonVariantType::JSON_STRING ||
-      _type == JsonVariantType::JSON_UNPARSED)
+  if (variantIsString())
     return _content.asString;
 
   return nullptr;

@@ -185,9 +185,21 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   typename Internals::EnableIf<
     Internals::Or<Internals::IsSame<T, const char *>,
                   Internals::IsSame<T, char *>>::value,
-  const char *>::type
+    const char *>::type
   as() const {
     return variantAsString();
+  }
+  //
+  // allow `const char*` conversion for types that could hold a reference to our data
+  template <typename T>
+  typename Internals::EnableIf<
+    Internals::And<Internals::Not<Internals::IsSame<T, const char *>>,
+                   Internals::Not<Internals::IsSame<T, char *>>,
+                   Internals::CanReference<Internals::StringTraits<T>>>::value,
+    T>::type
+  as() const {
+    using reference_for = typename Internals::StringTraits<T>::Reference;
+    return reference_for::Operator(variantAsString());
   }
 
   // Any string type that is implemented in Internals::StringTraits and provides Append implementation
