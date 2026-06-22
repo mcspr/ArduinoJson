@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Data/JsonBufferAllocated.hpp"
+#include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"
 #include "Data/ReferenceType.hpp"
 #include "Data/ValueSaver.hpp"

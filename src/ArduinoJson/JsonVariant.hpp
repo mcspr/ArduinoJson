@@ -5,7 +5,6 @@
 #pragma once
 
 #include "Data/JsonVariantContent.hpp"
-#include "Data/JsonVariantDefault.hpp"
 #include "Data/JsonVariantType.hpp"
 #include "JsonVariantBase.hpp"
 #include "RawJson.hpp"
@@ -18,7 +17,7 @@
 #include "TypeTraits/IsSame.hpp"
 #include "TypeTraits/IsSignedIntegral.hpp"
 #include "TypeTraits/IsUnsignedIntegral.hpp"
-#include "TypeTraits/RemoveConst.hpp"
+#include "TypeTraits/RemoveConstReference.hpp"
 #include "TypeTraits/RemoveReference.hpp"
 
 #include "TypeTraits/Or.hpp"
