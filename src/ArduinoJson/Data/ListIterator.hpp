@@ -27,8 +27,8 @@ class ListIterator {
  public:
   using value_type = typename RemoveConst<T>::type;
   using node_type = ListNode<value_type>;
-  using pointer_type = ConditionalType<IsConst<T>::value, const value_type*, value_type*>;
-  using reference_type = ConditionalType<IsConst<T>::value, const value_type&, value_type&>;
+  using pointer_type = Conditional<IsConst<T>::value, const value_type*, value_type*>;
+  using reference_type = Conditional<IsConst<T>::value, const value_type&, value_type&>;
 
   ListIterator() = delete;
   explicit ListIterator(ListNode<value_type> *node) :

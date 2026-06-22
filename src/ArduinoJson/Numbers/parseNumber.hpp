@@ -22,9 +22,6 @@
 namespace ArduinoJson {
 namespace Internals {
 
-template <typename A, typename B>
-using LargestType = ConditionalType<(sizeof(A) > sizeof(B)), A, B>;
-
 enum class NumberType : uint8_t {
   Invalid,
   Float,
@@ -151,6 +148,8 @@ static constexpr bool floatWithinRange(TMantissa mantissa, TExponent exponent) {
 }
 
 struct JsonNumberParser {
+  template <typename A, typename B>
+  using LargestType = Conditional<(sizeof(A) > sizeof(B)), A, B>;
 
   template <typename T>
   static ParsedNumberResult fixedResult(char sign, T value) {
