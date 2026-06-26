@@ -4,6 +4,8 @@
 //
 // clang-format off
 
+#pragma once
+
 #ifdef __GNUC__
 
 #define ARDUINOJSON_PRAGMA(x) _Pragma(#x)
