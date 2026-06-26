@@ -207,5 +207,48 @@ inline bool JsonParser<TReader, TWriter>::parseStringTo(
   return false;
 }
 
+template <typename TReader, typename TWriter>
+template <typename T>
+inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
+  if (this->_nestingLimit == 0) return false;
+  this->_nestingLimit--;
+
+  // Check opening brace
+  if (!eat('{')) goto ERROR_MISSING_BRACE;
+  if (eat('}')) goto SUCCESS_EMPTY_OBJECT;
+
+  // Read each key value pair
+  for (;;) {
+    // 1 - Parse key
+    const char *key = parseString();
+    if (!key) goto ERROR_INVALID_KEY;
+    if (!eat(':')) goto ERROR_MISSING_COLON;
+
+    // 2 - Parse value
+    JsonVariant value;
+    if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
+
+    // 3 - Execute user callback and possibly stop
+    if (keyValueCallback(std::forward<T>(callback), key, value)) goto SUCCESS_STOP;
+
+    // 4 - Process more keys/values?
+    if (eat('}')) goto SUCCESS_NON_EMPTY_OBJECT;
+    if (!eat(',')) goto ERROR_MISSING_COMMA;
+  }
+
+SUCCESS_STOP:
+SUCCESS_EMPTY_OBJECT:
+SUCCESS_NON_EMPTY_OBJECT:
+  this->_nestingLimit++;
+  return true;
+
+ERROR_INVALID_KEY:
+ERROR_INVALID_VALUE:
+ERROR_MISSING_BRACE:
+ERROR_MISSING_COLON:
+ERROR_MISSING_COMMA:
+  return false;
+}
+
 }
 }

@@ -8,6 +8,7 @@ add_executable(JsonBufferTests
 	parse.cpp
 	parseArray.cpp
 	parseObject.cpp
+	parseKeyValue.cpp
 )
 
 target_link_libraries(JsonBufferTests catch)

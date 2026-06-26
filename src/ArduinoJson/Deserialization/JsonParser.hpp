@@ -16,10 +16,43 @@
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemovePointer.hpp"
 
+#include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/VoidType.hpp"
+#include "../TypeTraits/Declval.hpp"
+
+#include "JsonParserStopToken.hpp"
 #include "StringWriter.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+namespace JsonParserImpl {
+
+template <typename T, typename = void>
+struct StopTokenCallback : FalseType {
+};
+
+template <typename T>
+struct StopTokenCallback<T, VoidType<decltype(
+  Declval<T>()(Declval<JsonParserStopToken>(),
+               Declval<const char*>(),
+               Declval<JsonVariant>()))>>
+
+  : TrueType {
+};
+
+template <typename T, typename = void>
+struct BasicCallback : FalseType {
+};
+
+template <typename T>
+struct BasicCallback<T, VoidType<decltype(
+  Declval<T>()(Declval<const char*>(),
+               Declval<JsonVariant>()))>>
+
+  : TrueType {
+};
+
+}
 
 // Parse JSON string to create JsonArrays and JsonObjects
 // This internal class is not indended to be used directly.
@@ -49,8 +82,7 @@ class JsonParser {
     return result;
   }
 
- private:
-
+ protected:
   static bool eat(TReader &, char charToSkip);
   ARDUINOJSON_FORCE_INLINE bool eat(char charToSkip) {
     return eat(_reader, charToSkip);
@@ -82,14 +114,51 @@ class JsonParser {
   uint8_t _nestingLimit;
 };
 
+template <typename TReader, typename TWriter>
+class JsonKeyValueParser final :
+  public JsonParser<TReader, TWriter>,
+  protected JsonParserStoppable {
+
+ public:
+  using JsonParser<TReader, TWriter>::JsonParser;
+
+  template <typename T>
+  bool parseKeyValue(T&&);
+
+ private:
+  template <typename T, typename EnableIf<JsonParserImpl::StopTokenCallback<T>::value>::type* = nullptr>
+  inline bool keyValueCallback(T&& callback, const char* key, JsonVariant val) {
+    auto stop = makeStopToken();
+    callback(stop, key, val);
+    return stop.is_stopped();
+  }
+
+  template <typename T, typename EnableIf<JsonParserImpl::BasicCallback<T>::value>::type* = nullptr>
+  inline bool keyValueCallback(T&& callback, const char* key, JsonVariant val) const {
+    callback(key, val);
+    return false;
+  }
+
+  using JsonParser<TReader, TWriter>::eat;
+  using JsonParser<TReader, TWriter>::parseString;
+  using JsonParser<TReader, TWriter>::parseAnythingTo;
+
+  using JsonParser<TReader, TWriter>::parseObject;
+  using JsonParser<TReader, TWriter>::parseArray;
+  using JsonParser<TReader, TWriter>::parseVariant;
+};
+
 // internals set up 'writer' a bit differently, depending on the type of input
 // generic reader, always uses TJsonBuffer as backing storage when escaped characters are encountered
-template <typename TJsonBuffer, typename TJson, typename Enable = void>
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer,
+  typename TJson,
+  typename Enable = void>
 struct JsonParserBuilder {
   typedef typename RemoveConstReference<TJson>::type TJsonNoCref;
 
   typedef ReaderImpl<TJsonNoCref> TReader;
-  typedef JsonParser<TReader, TJsonBuffer &> TParser;
+  typedef TJsonParser<TReader, TJsonBuffer &> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TJson &&json,
                             uint8_t nestingLimit) {
@@ -102,8 +171,10 @@ struct JsonParserBuilder {
 
 // reuse input buffer instead of duplicating data in the TJsonBuffer. note that this causes input to be thrashed
 // only enabled when string view data pointer is not marked as const
-template <typename TJsonBuffer, typename TChar, size_t Size>
-struct JsonParserBuilder<TJsonBuffer, JsonSpan<TChar, Size>> {
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer,
+  typename TChar, size_t Size>
+struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<TChar, Size>> {
 
   static_assert(!Internals::IsConst<TChar>::value, "");
   typedef Internals::JsonSpan<TChar, Size> TSpan;
@@ -111,7 +182,7 @@ struct JsonParserBuilder<TJsonBuffer, JsonSpan<TChar, Size>> {
   typedef typename StringTraits<const TChar *>::Reader TReader;
   typedef StringWriter<TChar> TWriter;
 
-  typedef JsonParser<TReader, TWriter> TParser;
+  typedef TJsonParser<TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TSpan json,
                             uint8_t nestingLimit) {
@@ -123,13 +194,15 @@ struct JsonParserBuilder<TJsonBuffer, JsonSpan<TChar, Size>> {
 };
 
 // points to existing data when no escaped characters encountered
-template <typename TJsonBuffer, typename TChar, size_t Size>
-struct JsonParserBuilder<TJsonBuffer, JsonSpan<const TChar, Size>> {
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer,
+  typename TChar, size_t Size>
+struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<const TChar, Size>> {
 
   typedef Internals::JsonSpan<const TChar, Size> TSpan;
 
   typedef typename StringTraits<TChar *>::Reader TReader;
-  typedef JsonParser<TReader, TJsonBuffer &> TParser;
+  typedef TJsonParser<TReader, TJsonBuffer &> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TSpan json, uint8_t nestingLimit) {
     return TParser(buffer,
@@ -139,33 +212,46 @@ struct JsonParserBuilder<TJsonBuffer, JsonSpan<const TChar, Size>> {
   }
 };
 
-template <typename TJsonBuffer, typename TJson,
-  typename TJsonNoCref = typename RemoveConstReference<TJson>::type,
-  typename TBuilder = JsonParserBuilder<TJsonBuffer, TJson>>
-inline typename TBuilder::TParser makeParser(
-    TJsonBuffer *buffer, TJson &&json, uint8_t nestingLimit) {
-  return TBuilder::makeParser(buffer, std::forward<TJson>(json), nestingLimit);
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer, typename TJson>
+inline typename JsonParserBuilder<TJsonParser, TJsonBuffer, TJson>::TParser
+makeParser(TJsonBuffer *buffer, TJson &&json, uint8_t nestingLimit) {
+  return JsonParserBuilder<TJsonParser, TJsonBuffer, TJson>::makeParser(
+    buffer, std::forward<TJson>(json), nestingLimit);
 }
 
-template <typename TJsonBuffer, typename TChar, size_t Size,
-  typename TBuilder = JsonParserBuilder<TJsonBuffer, Internals::JsonSpan<TChar, Size>>>
-inline typename TBuilder::TParser makeParser(
-    TJsonBuffer *buffer, TChar (&json)[Size], uint8_t nestingLimit) {
-  return TBuilder::makeParser(buffer, Internals::JsonSpan<TChar, Size>(json), nestingLimit);
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer, typename TChar, size_t Size>
+using JsonSpanParserBuilder =
+  JsonParserBuilder<TJsonParser, TJsonBuffer, Internals::JsonSpan<TChar, Size>>;
+
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer, typename TChar, size_t Size>
+inline typename JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::TParser
+makeParser(TJsonBuffer *buffer, TChar (&json)[Size], uint8_t nestingLimit) {
+  return JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::makeParser(
+    buffer, Internals::JsonSpan<TChar, Size>(json), nestingLimit);
 }
 
-template <typename TJsonBuffer, typename TChar, size_t Size,
-  typename TBuilder = JsonParserBuilder<TJsonBuffer, Internals::JsonSpan<TChar, Size>>>
-inline typename TBuilder::TParser makeParser(
-    TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, uint8_t nestingLimit) {
-  return TBuilder::makeParser(buffer, json, nestingLimit);
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer, typename TChar, size_t Size>
+inline typename JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::TParser
+makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, uint8_t nestingLimit) {
+  return JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::makeParser(
+    buffer, json, nestingLimit);
 }
 
-template <typename TJsonBuffer, typename TChar,
-  typename TBuilder = JsonParserBuilder<TJsonBuffer, JsonDynamicSpan<TChar>>>
-inline typename TBuilder::TParser makeParser(
-    TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, uint8_t nestingLimit) {
-  return TBuilder::makeParser(buffer, json, nestingLimit);
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer, typename TChar>
+using JsonDynamicSpanParserBuilder =
+  JsonParserBuilder<TJsonParser, TJsonBuffer, JsonDynamicSpan<TChar>>;
+
+template <template <typename, typename> class TJsonParser,
+  typename TJsonBuffer, typename TChar>
+inline typename JsonDynamicSpanParserBuilder<TJsonParser, TJsonBuffer, TChar>::TParser
+makeParser(TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, uint8_t nestingLimit) {
+  return JsonDynamicSpanParserBuilder<TJsonParser, TJsonBuffer, TChar>::makeParser(
+    buffer, json, nestingLimit);
 }
 
 }  // namespace Internals

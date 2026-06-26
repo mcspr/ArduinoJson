@@ -16,6 +16,7 @@ using ArduinoJson::JsonSpan;
 
 using ArduinoJson::DynamicJsonBuffer;
 using ArduinoJson::StaticJsonBuffer;
+using ArduinoJson::JsonParserStopToken;
 
 using ArduinoJson::RawJson;
 
