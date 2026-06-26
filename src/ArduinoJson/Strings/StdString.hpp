@@ -71,7 +71,7 @@ struct Append<TString,
 #if ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
     if (Strings::FlashString::Probe(other)) {
       str.resize(len);
-      Strings::FlashString::Copy(const_cast<char *>(str.data()), other, len); 
+      Strings::FlashString::Copy::Operator(const_cast<char *>(str.data()), other, len);
     } else
 #endif
       str.append(other, len);
