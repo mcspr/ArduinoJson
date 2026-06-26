@@ -15,8 +15,7 @@ inline JsonArray &JsonObject::createNestedArray_impl(TKey&& key) {
   JsonArray &array = _buffer->createArray();
   if (set(std::forward<TKey>(key), array))
     return array;
-  else
-    return JsonArray::invalid();
+  return JsonArray::invalid();
 }
 
 template <typename TKey>
@@ -24,8 +23,7 @@ inline JsonObject &JsonObject::createNestedObject_impl(TKey&& key) {
   JsonObject &object = _buffer->createObject();
   if (set(std::forward<TKey>(key), object))
     return object;
-  else
-    return JsonObject::invalid();
+  return JsonObject::invalid();
 }
 template <typename TChar, size_t Size>
 Internals::JsonObjectSubscript<TChar*>

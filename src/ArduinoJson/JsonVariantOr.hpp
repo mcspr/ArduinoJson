@@ -28,8 +28,7 @@ class JsonVariantOr {
       const T &defaultValue) const {
     if (impl()->template is<T>())
       return impl()->template as<T>();
-    else
-      return defaultValue;
+    return defaultValue;
   }
 
   // Returns the default value if the JsonVariant is undefined of incompatible
@@ -47,8 +46,7 @@ class JsonVariantOr {
     operator|(const Integral &defaultValue) const {
     if (impl()->template is<Internals::JsonFloat>())
       return impl()->template as<Integral>();
-    else
-      return defaultValue;
+    return defaultValue;
   }
 
   template <typename T>
@@ -56,8 +54,7 @@ class JsonVariantOr {
       T defaultValue) const {
     if (impl()->template is<bool>())
       return impl()->template as<bool>();
-    else
-      return defaultValue;
+    return defaultValue;
   }
 
  private:

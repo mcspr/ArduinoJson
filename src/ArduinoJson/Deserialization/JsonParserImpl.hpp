@@ -197,11 +197,10 @@ inline bool JsonParser<TReader, TWriter>::parseStringTo(
   if (value != nullptr) {
     if (hasQuotes) {
       *destination = value;
-      return true;
     } else {
       *destination = RawJson(value);
-      return true;
     }
+    return true;
   }
 
   return false;

@@ -32,9 +32,9 @@ class StaticJsonBufferBase : public JsonBufferBase<StaticJsonBufferBase> {
         char* last = static_cast<char*>(_parent->doAlloc(1));
         *last = '\0';
         return _start;
-      } else {
-        return nullptr;
       }
+
+      return nullptr;
     }
 
    private:
