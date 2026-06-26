@@ -24,7 +24,8 @@ static constexpr auto Base10UIntDigits =
 
 // writer currently padding only for writeFloat(), reuse existing buffer for extra data
 static constexpr auto Base10FloatDecimalPlaces =
-    size_t{ FloatParts::decimalPlacesForType<JsonFloat>() };
+    FloatParts::decimalPlacesForType<JsonFloat>();
+static_assert(Base10FloatDecimalPlaces > 0, "");
 
 struct Base10 {
   using buffer_type = char[1 + Base10UIntDigits + Base10FloatDecimalPlaces];
@@ -79,7 +80,7 @@ struct PaddedBase10 : public Base10 {
   PaddedBase10(JsonUInt value, size_t padding) :
     Base10(value)
   {
-    padding = Min(Base10FloatDecimalPlaces, padding);
+    padding = Min(static_cast<size_t>(Base10FloatDecimalPlaces), padding);
     if (Base10::length() < padding) {
       const auto left = padding - Base10::length();
       const auto* left_begin = _data - left;
