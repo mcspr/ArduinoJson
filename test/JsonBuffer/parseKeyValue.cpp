@@ -122,6 +122,7 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE(result);
     REQUIRE(0 == n);
+    REQUIRE(0 == jsonBuffer.size());
   }
 
   SECTION("Empty array") {
@@ -137,6 +138,7 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE_FALSE(result);
     REQUIRE(0 == n);
+    REQUIRE(0 == jsonBuffer.size());
   }
 
   SECTION("Random string") {
@@ -152,5 +154,6 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE_FALSE(result);
     REQUIRE(0 == n);
+    REQUIRE(0 == jsonBuffer.size());
   }
 }
