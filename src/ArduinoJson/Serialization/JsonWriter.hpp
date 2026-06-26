@@ -252,6 +252,7 @@ class JsonWriter {
     if (s)
       _length += _sink.print(s);
   }
+
   void writeRaw(char c) {
     _length += _sink.print(c);
   }

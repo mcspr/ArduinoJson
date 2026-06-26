@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "JsonWriter.hpp"
-
 namespace ArduinoJson {
 
 class JsonArray;
