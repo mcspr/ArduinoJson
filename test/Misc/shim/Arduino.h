@@ -17,3 +17,17 @@ inline char pgm_read_byte_near(const void* ptr) {
 
 class __FlashStringHelper;
 class String;
+
+namespace ArduinoJson {
+namespace Internals {
+namespace Strings {
+namespace FlashString {
+
+static constexpr inline bool Probe(const void*) {
+  return true;
+}
+
+}
+}
+}
+}

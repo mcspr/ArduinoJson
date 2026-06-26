@@ -28,7 +28,7 @@ static inline bool __attribute__((const)) Probe(const void*);
 static inline bool Probe(const void* ptr) {
   return (reinterpret_cast<uintptr_t>(ptr) & FlashStringAddressMask) > 0;
 }
-#else
+#elif !ARDUINOJSON_PROGMEM_PROBE_IMPLEMENTED
 static constexpr inline bool Probe(const void*) {
   return false;
 }
@@ -112,7 +112,7 @@ struct Equals {
         static_cast<unsigned char>(Copy::Operator(rhs_ptr + offset));
       if (lhs_char != rhs_char)
         return lhs_char - rhs_char;
-      ++len;
+      ++offset;
     }
 
     return 0;
