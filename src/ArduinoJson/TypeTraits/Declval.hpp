@@ -1,5 +1,7 @@
 // MIT License
 
+#pragma once
+
 #include "RemoveConstReference.hpp"
 
 namespace ArduinoJson {
