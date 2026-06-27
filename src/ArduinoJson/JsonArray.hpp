@@ -57,31 +57,31 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   // Adds the specified value at the end of the array.
   template <typename TValue>
-  bool add(TValue &&value) {
+  ARDUINOJSON_FORCE_INLINE bool add(TValue &&value) {
     return add_impl(std::forward<TValue>(value));
   }
 
   template <typename TChar, size_t Size>
-  bool add(TChar (&value)[Size]) {
+  ARDUINOJSON_FORCE_INLINE bool add(TChar (&value)[Size]) {
     return add_impl(&value[0]);
   }
   bool add(std::nullptr_t) = delete;
 
   // Sets the value at specified index.
   template <typename TValue>
-  bool set(size_t index, TValue &&value) {
+  ARDUINOJSON_FORCE_INLINE bool set(size_t index, TValue &&value) {
     return set_impl(index, std::forward<TValue>(value));
   }
 
   template <typename TChar, size_t Size>
-  bool set(size_t index, TChar (&value)[Size]) {
+  ARDUINOJSON_FORCE_INLINE bool set(size_t index, TChar (&value)[Size]) {
     return set_impl(index, &value[0]);
   }
   bool set(size_t, std::nullptr_t) = delete;
 
   template <typename T>
   typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value, bool>::type
-  set(size_t index, T value, uint8_t decimals) {
+  ARDUINOJSON_FORCE_INLINE set(size_t index, T value, uint8_t decimals) {
     return set_impl(index, JsonVariant(value, decimals));
   }
 
@@ -176,21 +176,19 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
  private:
   template <typename TValue>
-  bool set_impl(size_t index, TValue &&value) {
+  bool set_impl(size_t index, const TValue &value) {
     iterator it = begin() + index;
     if (it != end())
-      return Internals::ValueSaver<TValue>::save(
-        _buffer, *it, std::forward<TValue>(value));
+      return Internals::ValueSaver<TValue>::save(_buffer, *it, value);
 
     return false;
   }
 
   template <typename TValue>
-  bool add_impl(TValue &&value) {
+  bool add_impl(const TValue &value) {
     auto it = Internals::List<JsonVariant>::add();
     if (it != end()) {
-      if (Internals::ValueSaver<TValue>::save(
-            _buffer, *it, std::forward<TValue>(value)))
+      if (Internals::ValueSaver<TValue>::save(_buffer, *it, value))
         return true;
 
       remove(it);

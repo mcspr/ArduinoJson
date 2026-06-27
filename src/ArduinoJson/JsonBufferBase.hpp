@@ -42,7 +42,7 @@ class JsonBufferBase : public JsonBuffer {
   }
 
   // Simplified version of parseObject(..., nestingLimit=1) w/o implicit object allocation
-  // CAUTION: only works for plain objects {key1: val1, key2: val2, ...}
+  // CAUTION: only works for flat objects {key1: val1, key2: val2, ...}
   template <typename TData, typename TCallback>
   JsonVariant parseKeyValue(TData&& json, TCallback&& callback) {
     return Internals::makeParser<Internals::JsonKeyValueParser>(

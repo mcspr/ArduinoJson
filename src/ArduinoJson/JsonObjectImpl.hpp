@@ -11,17 +11,17 @@
 namespace ArduinoJson {
 
 template <typename TKey>
-inline JsonArray &JsonObject::createNestedArray_impl(TKey&& key) {
+inline JsonArray &JsonObject::createNestedArray_impl(const TKey& key) {
   JsonArray &array = _buffer->createArray();
-  if (set(std::forward<TKey>(key), array))
+  if (set(key, array))
     return array;
   return JsonArray::invalid();
 }
 
 template <typename TKey>
-inline JsonObject &JsonObject::createNestedObject_impl(TKey&& key) {
+inline JsonObject &JsonObject::createNestedObject_impl(const TKey& key) {
   JsonObject &object = _buffer->createObject();
-  if (set(std::forward<TKey>(key), object))
+  if (set(key, object))
     return object;
   return JsonObject::invalid();
 }
