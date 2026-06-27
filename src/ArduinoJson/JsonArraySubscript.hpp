@@ -29,7 +29,7 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   JsonArraySubscript(JsonArraySubscript &&) = default;
 
   // Everything else is interpreted as array assignment w/ the index attached to the subscript object
-  JsonArraySubscript& operator=(const JsonArraySubscript& src) {
+  ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(const JsonArraySubscript& src) {
     _array.set(_index, src);
     return *this;
   }
@@ -46,7 +46,7 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
     return *this;
   }
 
-  ARDUINOJSON_FORCE_INLINE bool success() const {
+  bool success() const {
     return _index < _array.size();
   }
 

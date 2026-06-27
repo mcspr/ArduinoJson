@@ -60,19 +60,19 @@ class JsonObjectSubscript final
 
   // Everything else is interpreted as object assignment w/ the key attached to the subscript object
   template <typename TValue>
-  JsonObjectSubscript& operator=(TValue&& src) {
+  ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(TValue&& src) {
     _object.set(_key.get(), std::forward<TValue>(src));
     return *this;
   }
 
   template <typename TChar, size_t Size>
-  JsonObjectSubscript& operator=(TChar (&src)[Size]) {
+  ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(TChar (&src)[Size]) {
     _object.set(_key.get(), src);
     return *this;
   }
 
   // class copy is disallowed, interpret it as an assignment operation
-  JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
+  ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
     _object.set(_key.get(), other);
     return *this;
   }
