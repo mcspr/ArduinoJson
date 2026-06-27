@@ -103,28 +103,86 @@ struct PaddedBase10 : public Base10 {
 
 }
 
+class JsonWriterSinkBase {
+ public:
+  virtual size_t writeRaw(const char *) const = 0;
+  virtual size_t writeRaw(char) const = 0;
+ protected:
+  ~JsonWriterSinkBase() = default;
+};
+
 // Writes the JSON tokens to a Print implementation
+// This class currently expects:
+// - size_t Print::print(const char *)
+// - size_t Print::print(c)
+template <typename Print>
+class JsonWriterSink final : public JsonWriterSinkBase {
+ private:
+  Print& _sink;
+
+ public:
+  explicit JsonWriterSink(Print &sink) :
+    _sink(sink)
+  {}
+
+  ~JsonWriterSink() = default;
+
+  JsonWriterSink &operator=(const JsonWriterSink &) = delete;
+  JsonWriterSink(const JsonWriterSink &) = delete;
+
+  JsonWriterSink(JsonWriterSink &&) = delete;
+  JsonWriterSink &operator=(JsonWriterSink &&) = delete;
+
+  size_t writeRaw(const char *s) const override {
+    if (s)
+      return _sink.print(s);
+
+    return 0;
+  }
+
+  size_t writeRaw(char c) const override {
+    return _sink.print(c);
+  }
+};
+
+// Writes the JSON tokens to a class providing sink interface
 // This class is used by:
 // - JsonArray::writeTo()
 // - JsonObject::writeTo()
 // - JsonVariant::writeTo()
-// Its derived by PrettyJsonWriter that overrides some members to add
-// indentation.
-template <typename Print>
 class JsonWriter {
+ private:
+  JsonWriterSinkBase *_sink;
+  size_t _bytesWritten{};
+
  public:
-  explicit JsonWriter(Print &sink) :
+  JsonWriter() = delete;
+
+  explicit JsonWriter(JsonWriterSinkBase *sink) :
     _sink(sink)
   {}
 
+  ~JsonWriter() = default;
+
+  JsonWriter(const JsonWriter &) = default;
   JsonWriter &operator=(const JsonWriter &) = delete;
+
+  JsonWriter(JsonWriter &&) = default;
   JsonWriter &operator=(JsonWriter &&) = delete;
 
   // Returns the number of bytes sent to the Print implementation.
   // This is very handy for implementations of printTo() that must return the
   // number of bytes written.
   size_t bytesWritten() const {
-    return _length;
+    return _bytesWritten;
+  }
+
+  void writeRaw(const char *s) {
+    _bytesWritten += _sink->writeRaw(s);
+  }
+
+  void writeRaw(char c) {
+    _bytesWritten += _sink->writeRaw(c);
   }
 
   void beginArray() {
@@ -248,19 +306,6 @@ class JsonWriter {
     const auto repr = JsonNumberWriter::PaddedBase10(value, padding);
     writeRaw(repr.c_str());
   }
-
-  void writeRaw(const char *s) {
-    if (s)
-      _length += _sink.print(s);
-  }
-
-  void writeRaw(char c) {
-    _length += _sink.print(c);
-  }
-
- protected:
-  Print &_sink;
-  size_t _length{};
 };
 }  // namespace Internals
 }  // namespace ArduinoJson

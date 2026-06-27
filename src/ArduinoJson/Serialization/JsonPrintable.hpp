@@ -31,8 +31,9 @@ class JsonPrintable {
   template <typename Print>
   typename EnableIf<Not<HasAppend<StringTraits<Print>>>::value, size_t>::type
   printTo(Print &print) const {
-    JsonWriter<Print> writer(print);
-    JsonSerializer<JsonWriter<Print> >::serialize(downcast(), writer);
+    JsonWriterSink<Print> sink(print);
+    JsonWriter writer(&sink);
+    JsonSerializer<JsonWriter>::serialize(downcast(), writer);
     return writer.bytesWritten();
   }
 

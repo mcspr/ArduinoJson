@@ -13,12 +13,14 @@
 
 using ArduinoJson::Internals::DynamicStringBuilder;
 using ArduinoJson::Internals::JsonWriter;
+using ArduinoJson::Internals::JsonWriterSink;
 
 template <typename TFloat>
 void check(TFloat input, const std::string& expected) {
   std::string output;
   DynamicStringBuilder<std::string> sb(output);
-  JsonWriter<DynamicStringBuilder<std::string> > writer(sb);
+  JsonWriterSink<DynamicStringBuilder<std::string> > sink(sb);
+  JsonWriter writer(&sink);
   writer.writeFloat(input);
   REQUIRE(writer.bytesWritten() == output.size());
   CHECK(expected == output);
