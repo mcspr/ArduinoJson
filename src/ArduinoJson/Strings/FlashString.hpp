@@ -110,8 +110,10 @@ struct Equals {
         static_cast<unsigned char>(Copy::Operator(lhs_ptr + offset));
       const auto rhs_char =
         static_cast<unsigned char>(Copy::Operator(rhs_ptr + offset));
+
       if (lhs_char != rhs_char)
         return lhs_char - rhs_char;
+
       ++offset;
     }
 
@@ -129,15 +131,19 @@ struct Equals {
   }
 
   static int NaiveStrcmp(const char* lhs, const char* rhs) {
+    size_t offset = 0;
+
     for (;;) {
       const auto lhs_char =
-        static_cast<unsigned char>(Copy::Operator(lhs++));
+        static_cast<unsigned char>(Copy::Operator(lhs + offset));
       const auto rhs_char =
-        static_cast<unsigned char>(Copy::Operator(rhs++));
+        static_cast<unsigned char>(Copy::Operator(rhs + offset));
 
       if ((!lhs_char || !rhs_char) ||
           (lhs_char != rhs_char))
         return lhs_char - rhs_char;
+
+      ++offset;
     }
 
     return 0;
