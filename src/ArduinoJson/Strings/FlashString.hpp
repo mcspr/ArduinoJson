@@ -20,13 +20,18 @@ namespace Internals {
 namespace Strings {
 namespace FlashString {
 
-#ifdef ESP8266
+#if defined(ESP8266)
 // anything above 0x4xxxxxx should use pgmspace.h helpers
 static constexpr uintptr_t FlashStringAddressMask { 1 << 30 };
 
 static inline bool __attribute__((const)) Probe(const void*);
 static inline bool Probe(const void* ptr) {
   return (reinterpret_cast<uintptr_t>(ptr) & FlashStringAddressMask) > 0;
+}
+#elif defined(ESP32)
+// sdk already puts strings in flash (...w/ an exception of some other explicit things like psram)
+static constexpr inline bool Probe(const void*) {
+  return false;
 }
 #elif !ARDUINOJSON_PROGMEM_PROBE_IMPLEMENTED
 static constexpr inline bool Probe(const void*) {
