@@ -109,6 +109,45 @@ TEST_CASE("JsonBuffer kv objects") {
        std::strlen(vals[1]) + 4));
   }
 
+  SECTION("Stop token & multiple callbacks") {
+    StaticJsonBuffer<200> jsonBuffer;
+    char tmp1[] = "{hello: world}";
+
+    size_t n = 0;
+    auto result = jsonBuffer.parseKeyValue(
+      tmp1,
+      [&](const char*, JsonVariant) {
+        n++;
+      });
+
+    REQUIRE(result);
+    REQUIRE(1 == n);
+    REQUIRE(0 == jsonBuffer.size());
+
+    char tmp2[] = "{key1: val1, key2: val2}";
+    result = jsonBuffer.parseKeyValue(
+      tmp2,
+      [&](JsonParserStopToken stop, const char*, JsonVariant) {
+        stop();
+        n++;
+      });
+
+    REQUIRE(result);
+    REQUIRE(2 == n);
+    REQUIRE(0 == jsonBuffer.size());
+
+    const char tmp3[] = "{another: object, another: val}";
+    result = jsonBuffer.parseKeyValue(
+      tmp3,
+      [&](const char*, JsonVariant) {
+        n++;
+      });
+
+    REQUIRE(result);
+    REQUIRE(4 == n);
+    REQUIRE(jsonBuffer.size() > 0);
+  }
+
   SECTION("Empty object") {
     DynamicJsonBuffer jsonBuffer;
     char jsonString[] = "{}";
