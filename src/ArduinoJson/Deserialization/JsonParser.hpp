@@ -95,19 +95,6 @@ class JsonParser {
   inline bool parseObjectTo(JsonVariant *destination);
   inline bool parseStringTo(JsonVariant *destination);
 
-  static inline bool isBetween(char c, char min, char max) {
-    return min <= c && c <= max;
-  }
-
-  static inline bool canBeInNonQuotedString(char c) {
-    return isBetween(c, '0', '9') || isBetween(c, '_', 'z') ||
-           isBetween(c, 'A', 'Z') || c == '+' || c == '-' || c == '.';
-  }
-
-  static inline bool isQuote(char c) {
-    return c == '\'' || c == '\"';
-  }
-
   JsonBuffer *_buffer;
   TReader _reader;
   TWriter _writer;

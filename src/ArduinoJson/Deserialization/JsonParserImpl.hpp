@@ -13,6 +13,19 @@
 namespace ArduinoJson {
 namespace Internals {
 
+static constexpr bool isBetween(char c, char min, char max) {
+  return min <= c && c <= max;
+}
+
+static constexpr bool canBeInNonQuotedString(char c) {
+  return isBetween(c, '0', '9') || isBetween(c, '_', 'z') ||
+         isBetween(c, 'A', 'Z') || c == '+' || c == '-' || c == '.';
+}
+
+static constexpr bool isQuote(char c) {
+  return c == '\'' || c == '\"';
+}
+
 template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::eat(
     TReader &reader, char charToSkip) {
