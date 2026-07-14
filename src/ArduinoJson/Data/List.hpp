@@ -28,7 +28,7 @@ class List {
   // When buffer is invalid, the List is not able to grow and success() returns
   // false. This is used to identify bad memory allocations and parsing
   // failures.
-  explicit List(JsonBuffer *buffer) :
+  explicit List(JsonBuffer *buffer) noexcept :
     _buffer(buffer),
     _firstNode(nullptr)
   {}

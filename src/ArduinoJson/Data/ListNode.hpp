@@ -13,9 +13,9 @@ namespace Internals {
 // Used by List<T> and its iterators.
 template <typename T>
 struct ListNode : public Internals::JsonBufferAllocated {
-  ListNode() throw() : next(nullptr) {}
+  ListNode() noexcept = default;
 
-  ListNode<T> *next;
+  ListNode<T> *next{nullptr};
   T content;
 };
 }  // namespace Internals
