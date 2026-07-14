@@ -13,20 +13,33 @@ namespace Internals {
 // Decorator on top of Print to allow indented output.
 // This class is used by JsonPrintable::prettyPrintTo() but can also be used
 // for your own purpose, like logging.
+
+struct IndentedPrintOptions {
+  uint8_t level : 4;
+  uint8_t tabSize : 3;
+  bool isNewLine : 1;
+};
+
+static constexpr uint8_t MaxIndentedPrintLevel = 15;  // 0b1111
+static constexpr uint8_t MaxIndentedPrintTabSize = 7; // 0b111
+
+static_assert(sizeof(IndentedPrintOptions) == 1, "");
+static constexpr auto DefaultIndentedOptions =
+  IndentedPrintOptions{ 0, 2, true };
+
 template <typename Print>
 class IndentedPrint {
  public:
-  explicit IndentedPrint(Print &p) : sink(&p) {
-    level = 0;
-    tabSize = 2;
-    isNewLine = true;
-  }
+  explicit IndentedPrint(Print &p) :
+    _sink(&p)
+  {}
 
   size_t print(char c) {
     size_t n = 0;
-    if (isNewLine) n += writeTabs();
-    n += sink->print(c);
-    isNewLine = c == '\n';
+    if (_isNewLine())
+      n += writeTabs();
+    n += _sink->print(c);
+    _isNewLine(c == '\n');
     return n;
   }
 
@@ -39,33 +52,62 @@ class IndentedPrint {
 
   // Adds one level of indentation
   void indent() {
-    if (level < MAX_LEVEL) level++;
+    const auto level = _level();
+    if (level < MaxIndentedPrintLevel)
+      _level(level + 1);
   }
 
   // Removes one level of indentation
   void unindent() {
-    if (level > 0) level--;
+    const auto level = _level();
+    if (level > 0)
+      _level(level - 1);
   }
 
   // Set the number of space printed for each level of indentation
   void setTabSize(uint8_t n) {
-    if (n < MAX_TAB_SIZE) tabSize = n & MAX_TAB_SIZE;
+    if (n < MaxIndentedPrintTabSize)
+      _tabSize(n);
   }
 
  private:
-  Print *sink;
-  uint8_t level : 4;
-  uint8_t tabSize : 3;
-  bool isNewLine : 1;
+  uint8_t _level() const {
+    return _opts.level;
+  }
+
+  void _level(uint8_t value) {
+    _opts.level = value;
+  }
+
+  uint8_t _tabSize() const {
+    return _opts.tabSize;
+  }
+
+  void _tabSize(uint8_t value) {
+    _opts.tabSize = value;
+  }
+
+  bool _isNewLine() const {
+    return _opts.isNewLine;
+  }
+
+  void _isNewLine(bool value) {
+    _opts.isNewLine = value;
+  }
 
   size_t writeTabs() {
+    const auto level = _level();
+    const auto tabSize = _tabSize();
+
     size_t n = 0;
-    for (int i = 0; i < level * tabSize; i++) n += sink->print(' ');
+    for (int i = 0; i < level * tabSize; i++)
+      n += _sink->print(' ');
+
     return n;
   }
 
-  static const int MAX_LEVEL = 15;    // because it's only 4 bits
-  static const int MAX_TAB_SIZE = 7;  // because it's only 3 bits
+  Print* _sink;
+  IndentedPrintOptions _opts = DefaultIndentedOptions;
 };
 }  // namespace Internals
 }  // namespace ArduinoJson

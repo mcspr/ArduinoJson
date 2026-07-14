@@ -157,7 +157,6 @@ inline bool JsonVariantComparisonsHelper::equals(
     const JsonVariantComparisons<TFirst>& left,
     const JsonVariantComparisons<TSecond>& right)
 {
-    using namespace Internals;
     if (left.template is<bool>() && right.template is<bool>())
       return left.template as<bool>() == right.template as<bool>();
     if (left.template is<JsonInteger>() && right.template is<JsonInteger>())
