@@ -72,6 +72,10 @@ struct JsonSpan {
     return _data;
   }
 
+  T* data() {
+    return _data;
+  }
+
   constexpr bool is_null() const {
     return _data == nullptr;
   }

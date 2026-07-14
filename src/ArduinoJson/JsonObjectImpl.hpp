@@ -11,29 +11,32 @@
 namespace ArduinoJson {
 
 template <typename TKey>
-inline JsonArray &JsonObject::createNestedArray_impl(const TKey& key) {
-  JsonArray &array = _buffer->createArray();
-  if (set(key, array))
-    return array;
+inline JsonArray &JsonObject::createNestedArray_impl(TKey key) {
+  auto &ref = _buffer->createArray();
+  if (set_impl(key, JsonVariant(ref)))
+    return ref;
   return JsonArray::invalid();
 }
 
 template <typename TKey>
-inline JsonObject &JsonObject::createNestedObject_impl(const TKey& key) {
-  JsonObject &object = _buffer->createObject();
-  if (set(key, object))
-    return object;
+inline JsonObject &JsonObject::createNestedObject_impl(TKey key) {
+  JsonObject &ref = _buffer->createObject();
+  if (set_impl(key, JsonVariant(ref)))
+    return ref;
   return JsonObject::invalid();
 }
-template <typename TChar, size_t Size>
-Internals::JsonObjectSubscript<TChar*>
-inline JsonObject::operator[](TChar (&key)[Size]) {
-  return this->operator[](&key[0]);
+
+template <typename TKey>
+typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
+inline JsonObject::operator[](TKey&& key) {
+  return typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type(
+    *this, std::forward<TKey>(key));
 }
 
-template <typename TChar, size_t Size>
-const Internals::JsonObjectSubscript<TChar*>
-inline JsonObject::operator[](TChar (&key)[Size]) const {
-  return this->operator[](&key[0]);
+template <typename TKey>
+typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
+inline JsonObject::operator[](TKey&& key) const {
+  return typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type(
+    const_cast<JsonObject&>(*this), std::forward<TKey>(key));
 }
 }  // namespace ArduinoJson

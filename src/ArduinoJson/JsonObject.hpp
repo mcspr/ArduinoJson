@@ -9,11 +9,16 @@
 #include "Data/List.hpp"
 #include "Data/ReferenceType.hpp"
 #include "Data/ValueSaver.hpp"
+#include "Data/StringView.hpp"
+
 #include "JsonPair.hpp"
+
 #include "Serialization/JsonPrintable.hpp"
-#include "StringTraits/StringTraits.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsChar.hpp"
+
+#include "StringTraits/StringTraits.hpp"
 
 // Returns the size (in bytes) of an object with n elements.
 // Can be very handy to determine the size of a StaticJsonBuffer.
@@ -23,11 +28,15 @@
 namespace ArduinoJson {
 
 // Forward declarations
+
 class JsonArray;
 class JsonBuffer;
+
 namespace Internals {
+
 template <typename>
-class JsonObjectSubscript;
+struct JsonObjectSubscriptHelper;
+
 }
 
 // A dictionary of JsonVariant indexed by string (char*)
@@ -50,120 +59,120 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   // Gets or sets the value associated with the specified key.
   template <typename TKey>
-  Internals::JsonObjectSubscript<TKey> operator[](
-      TKey&& key) {
-    return Internals::JsonObjectSubscript<TKey>(*this, std::forward<TKey>(key));
-  }
-
-  template <typename TChar, size_t Size>
-  inline Internals::JsonObjectSubscript<TChar*> operator[](
-      TChar (&)[Size]);
+  typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
+  operator[](TKey&&);
 
   // Gets the value associated with the specified key.
   template <typename TKey>
-  const Internals::JsonObjectSubscript<TKey> operator[](
-      TKey&& key) const {
-    return Internals::JsonObjectSubscript<TKey>(
-        *const_cast<JsonObject*>(this), std::forward<TKey>(key));
-  }
-
-  template <typename TChar, size_t Size>
-  const Internals::JsonObjectSubscript<TChar*> operator[](
-      TChar (&key)[Size]) const;
+  typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
+  operator[](TKey&&) const;
 
   // Sets the specified key with the specified value.
   // Both TKey and TValue allow for arbitrary string types.
   template <typename TValue, typename TKey>
-  ARDUINOJSON_FORCE_INLINE bool set(TKey&& key, TValue&& value) {
-    return set_impl(std::forward<TKey>(key), std::forward<TValue>(value));
+  typename Internals::EnableIf<
+    Internals::Or<Internals::IsVariant<TValue>,
+                  Internals::IsIntegral<TValue>,
+                  Internals::IsFloatingPoint<TValue>,
+                  Internals::IsSame<JsonNull, TValue>>::value,
+    bool>::type
+  ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue value) {
+    return set_impl(Internals::MakeStringRef(std::forward<TKey>(key)), value);
   }
 
-  template <typename TValue, typename TChar, size_t Size,
-    typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type* = nullptr>
-  ARDUINOJSON_FORCE_INLINE bool set(TChar (&key)[Size], TValue&& value) {
-    return set_impl(&key[0], std::forward<TValue>(value));
+  template <typename TKey, typename TValue>
+  typename Internals::EnableIf<
+    Internals::IsSame<std::nullptr_t, TValue>::value, bool>::type
+  set(TKey&&, TValue) {
+    static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
+      "ambiguous set(..., nullptr)");
   }
 
-  template <typename TValue, size_t ValueSize, typename TKey, size_t KeySize,
-    typename Internals::EnableIf<Internals::IsChar<TValue>::value>::type* = nullptr,
-    typename Internals::EnableIf<Internals::IsChar<TKey>::value>::type* = nullptr>
-  ARDUINOJSON_FORCE_INLINE bool set(TKey (&key)[KeySize], TValue (&value)[ValueSize]) {
-    return set_impl(&key[0], &value[0]);
+  template <typename TKey, typename TValue>
+  typename Internals::EnableIf<
+    Internals::Or<Internals::IsSame<JsonArray, TValue>,
+                  Internals::IsSame<JsonObject, TValue>>::value,
+    bool>::type
+  ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue& ref) {
+    return set_impl(
+      Internals::MakeStringRef(std::forward<TKey>(key)),
+      JsonVariant(ref));
   }
 
-  template <typename TValue, size_t ValueSize, typename TKey,
-    typename Internals::EnableIf<Internals::IsChar<TValue>::value>::type* = nullptr>
-  ARDUINOJSON_FORCE_INLINE bool set(TKey &&key, TValue (&value)[ValueSize]) {
-    return set_impl(std::forward<TKey>(key), &value[0]);
+  template <typename TValue, typename TKey>
+  typename Internals::EnableIf<Internals::HasStringTraits<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue&& value) {
+    return set_impl(
+      Internals::MakeStringRef(std::forward<TKey>(key)),
+      Internals::MakeStringRef(std::forward<TValue>(value)));
   }
 
   // Gets the value associated with the specified key.
   template <typename TValue, typename TKey>
-  typename Internals::JsonVariantAs<TValue>::type get(
-      TKey&& key) const {
+  typename Internals::JsonVariantAs<TValue>::type
+  ARDUINOJSON_FORCE_INLINE get(TKey&& key) const {
     return get_impl<typename Internals::JsonVariantAs<TValue>::type>(
-      std::forward<TKey>(key));
+      Internals::MakeStringRef(std::forward<TKey>(key)));
+  }
+
+  template <typename TValue, typename TKey,
+    typename Internals::EnableIf<
+      Internals::IsSame<std::nullptr_t, TValue>::value>::type>
+  typename Internals::JsonVariantAs<TValue>::type
+  get(TKey&&) const {
+    static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
+      "ambiguous get<std::nullptr_t>(...)");
   }
 
   template <typename TValue>
-  typename Internals::JsonVariantAs<TValue>::type get(
-      std::nullptr_t) const = delete;
+  typename Internals::JsonVariantAs<TValue>::type
+  get(std::nullptr_t) const {
+    static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
+      "ambiguous get(nullptr)");
+  }
 
   // Checks the type of the value associated with the specified key.
   template <typename TValue, typename TKey>
-  bool is(TKey&& key) const {
+  bool ARDUINOJSON_FORCE_INLINE is(TKey&& key) const {
     return is_impl<typename Internals::JsonVariantAs<TValue>::type>(
-            std::forward<TKey>(key));
+            Internals::MakeStringRef(std::forward<TKey>(key)));
   }
 
-  template <typename TValue, typename TChar, size_t Size>
-  bool is(TChar (&key)[Size]) const {
-    return is_impl<typename Internals::JsonVariantAs<TValue>::type>(&key[0]);
+  template <typename TValue, typename TKey,
+    typename Internals::EnableIf<
+      Internals::IsSame<std::nullptr_t, TValue>::value>::type>
+  typename Internals::JsonVariantAs<TValue>::type
+  is(TKey&&) const {
+    static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
+      "ambiguous is<std::nullptr_t>(...)");
   }
 
   // Creates and adds an object entry containing JsonArray.
   template <typename TKey>
-  JsonArray& createNestedArray(TKey&& key) {
-    return createNestedArray_impl(std::forward<TKey>(key));
-  }
-
-  template <typename TChar, size_t Size>
-  JsonArray& createNestedArray(TChar (&key)[Size]) {
-    return createNestedArray_impl(&key[0]);
+  JsonArray& ARDUINOJSON_FORCE_INLINE createNestedArray(TKey&& key) {
+    return createNestedArray_impl(
+      Internals::MakeStringRef(std::forward<TKey>(key)));
   }
 
   // Creates and adds an object entry containing JsonObject.
   template <typename TKey>
-  JsonObject& createNestedObject(TKey&& key) {
-    return createNestedObject_impl(std::forward<TKey>(key));
-  }
-
-  template <typename TChar, size_t Size>
-  JsonObject& createNestedObject(TChar (&key)[Size]) {
-    return createNestedObject_impl(&key[0]);
+  JsonObject& ARDUINOJSON_FORCE_INLINE createNestedObject(TKey&& key) {
+    return createNestedObject_impl(
+      Internals::MakeStringRef(std::forward<TKey>(key)));
   }
 
   // Tells weither the specified key is present and associated with a value.
   template <typename TKey>
-  bool containsKey(TKey&& key) const {
-    return findKey(std::forward<TKey>(key)) != end();
-  }
-
-  template <typename TChar, size_t Size>
-  bool containsKey(TChar (&key)[Size]) const {
-    return findKey(&key[0]) != end();
+  bool ARDUINOJSON_FORCE_INLINE containsKey(TKey&& key) const {
+    return contains_impl(Internals::MakeStringRef(std::forward<TKey>(key)));
   }
 
   // Removes the specified key and the associated value.
   template <typename TKey>
-  void remove(TKey&& key) {
-    remove(findKey(std::forward<TKey>(key)));
+  void ARDUINOJSON_FORCE_INLINE remove(TKey&& key) {
+    remove(find_impl(Internals::MakeStringRef(std::forward<TKey>(key))));
   }
 
-  template <typename TChar, size_t Size>
-  void remove(TChar (&key)[Size]) {
-    remove(findKey(&key[0]));
-  }
   //
   // void remove(iterator)
   using Internals::List<JsonPair>::remove;
@@ -179,7 +188,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
  private:
   // Returns the list node that matches the specified key.
   template <typename TKey>
-  iterator findKey(const TKey& key) {
+  iterator find_impl(TKey key) {
     for (auto it = begin(); it != end(); ++it) {
       if (Internals::StringTraits<TKey>::Equals::Operator(key, it->key))
         return it;
@@ -188,25 +197,24 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   }
 
   template <typename TKey>
-  const_iterator findKey(const TKey& key) const {
-    return const_cast<JsonObject*>(this)->findKey(key);
+  const_iterator find_impl(TKey key) const {
+    return const_cast<JsonObject*>(this)->find_impl(std::move(key));
   }
 
   template <typename TValue, typename TKey>
-  typename Internals::JsonVariantAs<TValue>::type get_impl(
-      const TKey& key) const {
-    const_iterator it = findKey(key);
+  TValue get_impl(TKey key) const {
+    const_iterator it = find_impl(key);
     return it != end() ? it->value.as<TValue>()
                        : Internals::JsonVariantDefault<TValue>::get();
   }
 
   template <typename TKey, typename TValue>
-  bool set_impl(const TKey& key, const TValue& value) {
+  bool set_impl(TKey key, TValue value) {
     // when creating a key, prune failed list entry before returning
     bool out = false;
 
     // search for existing or add another kv object
-    auto it = findKey(key);
+    auto it = find_impl(key);
     if (it == end()) {
       it = add();
       if (it == end())
@@ -239,16 +247,24 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   }
 
   template <typename TValue, typename TKey>
-  bool is_impl(const TKey& key) const {
-    const_iterator it = findKey(key);
+  bool is_impl(TKey key) const {
+    const_iterator it = find_impl(key);
     return it != end() ? it->value.is<TValue>() : false;
   }
 
   template <typename TKey>
-  JsonArray& createNestedArray_impl(const TKey& key);
+  bool contains_impl(TKey key) const {
+    return find_impl(key) != end();
+  }
 
   template <typename TKey>
-  JsonObject& createNestedObject_impl(const TKey& key);
+  JsonArray& createNestedArray_impl(TKey);
+
+  template <typename TKey>
+  JsonObject& createNestedObject_impl(TKey);
+
+  template <typename>
+  friend class Internals::JsonObjectSubscript;
 };
 
 namespace Internals {

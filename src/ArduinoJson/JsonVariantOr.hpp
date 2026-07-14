@@ -24,8 +24,7 @@ class JsonVariantOr {
  public:
   // Returns the default value if the JsonVariant is undefined of incompatible
   template <typename T>
-  typename EnableIf<!IsIntegral<T>::value, T>::type operator|(
-      const T &defaultValue) const {
+  typename EnableIf<!IsIntegral<T>::value, T>::type operator|(T &&defaultValue) const {
     if (impl()->template is<T>())
       return impl()->template as<T>();
     return defaultValue;
@@ -43,7 +42,7 @@ class JsonVariantOr {
   template <typename Integral>
   typename EnableIf<And<IsIntegral<Integral>,
                     Not<IsSame<Integral, bool>>>::value, Integral>::type
-    operator|(const Integral &defaultValue) const {
+    operator|(Integral defaultValue) const {
     if (impl()->template is<Internals::JsonFloat>())
       return impl()->template as<Integral>();
     return defaultValue;

@@ -13,9 +13,11 @@ namespace ArduinoJson {
 namespace Internals {
 
 // Forward declarations.
+
 class JsonArraySubscript;
 template <typename TKey>
-class JsonObjectSubscript;
+
+struct JsonObjectSubscriptHelper;
 
 template <typename TImpl>
 class JsonVariantSubscripts {
@@ -31,40 +33,24 @@ class JsonVariantSubscripts {
   // Mimics an array.
   // Returns the element at specified index if the variant is an array.
   // Returns JsonVariant::invalid() if the variant is not an array.
-  ARDUINOJSON_FORCE_INLINE const JsonArraySubscript operator[](size_t index) const;
-  ARDUINOJSON_FORCE_INLINE JsonArraySubscript operator[](size_t index);
+  JsonArraySubscript operator[](size_t index) const;
+  JsonArraySubscript operator[](size_t index);
 
   // Mimics an object.
   // Returns the value associated with the specified key if the variant is an object.
   // Return JsonVariant::invalid() if the variant is not an object.
   template <typename TKey>
-  ARDUINOJSON_FORCE_INLINE
-      typename EnableIf<HasEquals<StringTraits<TKey>>::value,
-                        const JsonObjectSubscript<TKey> >::type
-      operator[](TKey &&key) const {
+  typename EnableIf<HasEquals<StringTraits<TKey>>::value,
+    typename JsonObjectSubscriptHelper<TKey>::subscript_type >::type
+  ARDUINOJSON_FORCE_INLINE operator[](TKey &&key) const {
     return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
-  }
-
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE
-      typename EnableIf<HasEquals<StringTraits<TChar[Size]>>::value,
-                        const JsonObjectSubscript<TChar*> >::type
-      operator[](TChar (&key)[Size]) const {
-    return impl()->template as<JsonObject>()[key];
   }
 
   template <typename TKey>
-  ARDUINOJSON_FORCE_INLINE typename EnableIf<HasEquals<StringTraits<TKey>>::value,
-                                 JsonObjectSubscript<TKey> >::type
-  operator[](TKey &&key) {
+  typename EnableIf<HasEquals<StringTraits<TKey>>::value,
+    typename JsonObjectSubscriptHelper<TKey>::subscript_type >::type
+  ARDUINOJSON_FORCE_INLINE operator[](TKey &&key) {
     return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
-  }
-
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE typename EnableIf<HasEquals<StringTraits<TChar[Size]>>::value,
-                                 JsonObjectSubscript<TChar*> >::type
-  operator[](TChar (&key)[Size]) {
-    return impl()->template as<JsonObject>()[key];
   }
 
  private:

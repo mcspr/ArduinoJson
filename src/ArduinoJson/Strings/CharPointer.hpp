@@ -16,6 +16,11 @@ struct Length {
   static size_t Operator(const void* str) {
     return std::strlen(reinterpret_cast<const char *>(str));
   }
+
+  template <typename TChar, size_t Size>
+  static size_t Operator(TChar (&)[Size]) {
+    return Size - 1;
+  }
 };
 
 struct Copy {
@@ -42,6 +47,11 @@ struct Reference {
   static const char* Operator(const void* str) {
     return reinterpret_cast<const char *>(str);
   }
+
+  template <typename TChar, size_t Size>
+  static const char* Operator(TChar (&str)[Size]) {
+    return Operator(&str[0]);
+  }
 };
 
 struct Equals {
@@ -53,6 +63,16 @@ struct Equals {
       return std::memcmp(actual, expected, str_len) == 0;
   
     return false;
+  }
+
+  template <typename TActual, size_t ActualSize, typename TExpected, size_t ExpectedSize>
+  static bool Operator(TActual (&actual)[ActualSize], TExpected (&expected)[ExpectedSize]) {
+    return Operator(&actual[0], ActualSize - 1, &expected[0], ExpectedSize - 1);
+  }
+
+  template <typename TChar, size_t Size>
+  static bool Operator(TChar (&actual)[Size], const char* expected, size_t expected_len) {
+    return Operator(&actual[0], Size - 1, expected, expected_len);
   }
   
   static bool Operator(const void* str, size_t str_len, const char* expected) {

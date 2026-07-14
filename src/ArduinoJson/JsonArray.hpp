@@ -4,18 +4,24 @@
 
 #pragma once
 
+#include "ArduinoJson/Polyfills/attributes.hpp"
+#include "ArduinoJson/StringTraits/StringTraitsBase.hpp"
+#include "ArduinoJson/TypeTraits/IsVariant.hpp"
 #include "Data/JsonBufferAllocated.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"
 #include "Data/ReferenceType.hpp"
 #include "Data/ValueSaver.hpp"
+#include "Data/StringRef.hpp"
+#include "Data/StringView.hpp"
 #include "JsonVariant.hpp"
 #include "Serialization/JsonPrintable.hpp"
 #include "StringTraits/StringTraits.hpp"
 #include "TypeTraits/EnableIf.hpp"
-#include "TypeTraits/IsArray.hpp"
+#include "TypeTraits/IsIntegral.hpp"
 #include "TypeTraits/IsFloatingPoint.hpp"
 #include "TypeTraits/IsSame.hpp"
+#include "TypeTraits/Or.hpp"
 
 // Returns the size (in bytes) of an array with n elements.
 // Can be very handy to determine the size of a StaticJsonBuffer.
@@ -57,27 +63,74 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   // Adds the specified value at the end of the array.
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE bool add(TValue &&value) {
-    return add_impl(std::forward<TValue>(value));
+  typename Internals::EnableIf<
+      Internals::Or<Internals::IsVariant<TValue>,
+                    Internals::IsIntegral<TValue>,
+                    Internals::IsFloatingPoint<TValue>,
+                    Internals::IsSame<JsonNull, TValue>>::value,
+    bool>::type
+  ARDUINOJSON_FORCE_INLINE add(TValue value) {
+    return add_impl(value);
   }
 
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE bool add(TChar (&value)[Size]) {
-    return add_impl(&value[0]);
+  template <typename TValue>
+  typename Internals::EnableIf<
+    Internals::IsSame<std::nullptr_t, TValue>::value, bool>::type
+  add(TValue) {
+    static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
+      "ambiguous add(nullptr)");
   }
-  bool add(std::nullptr_t) = delete;
+
+  template <typename TValue>
+  typename Internals::EnableIf<
+    Internals::Or<Internals::IsSame<JsonArray, TValue>,
+                  Internals::IsSame<JsonObject, TValue>>::value,
+    bool>::type
+  ARDUINOJSON_FORCE_INLINE add(TValue &ref) {
+    return add_impl(JsonVariant(ref));
+  }
+
+  template <typename TValue>
+  typename Internals::EnableIf<
+    Internals::HasStringTraits<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE add(TValue &&value) {
+    return add_impl(Internals::MakeStringRef(std::forward<TValue>(value)));
+  }
 
   // Sets the value at specified index.
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE bool set(size_t index, TValue &&value) {
-    return set_impl(index, std::forward<TValue>(value));
+  typename Internals::EnableIf<
+      Internals::Or<Internals::IsVariant<TValue>,
+                    Internals::IsIntegral<TValue>,
+                    Internals::IsFloatingPoint<TValue>,
+                    Internals::IsSame<JsonNull, TValue>>::value,
+      bool>::type
+  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue value) {
+    return set_impl(index, value);
   }
 
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE bool set(size_t index, TChar (&value)[Size]) {
-    return set_impl(index, &value[0]);
+  template <typename TValue>
+  typename Internals::EnableIf<
+    Internals::IsSame<std::nullptr_t, TValue>::value, bool>::type
+  set(size_t, TValue) {
+    static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
+      "ambiguous set(..., nullptr)");
   }
-  bool set(size_t, std::nullptr_t) = delete;
+
+  template <typename TValue>
+  typename Internals::EnableIf<Internals::HasStringTraits<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue &&value) {
+    return set_impl(index, Internals::MakeStringRef(std::forward<TValue>(value)));
+  }
+
+  template <typename TValue>
+  typename Internals::EnableIf<
+    Internals::Or<Internals::IsSame<JsonArray, TValue>,
+                  Internals::IsSame<JsonObject, TValue>>::value,
+    bool>::type
+  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue &ref) {
+    return set_impl(index, JsonVariant(ref));
+  }
 
   template <typename T>
   typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value, bool>::type
@@ -87,7 +140,8 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   // Gets the value at the specified index.
   template <typename T>
-  typename Internals::JsonVariantAs<T>::type get(size_t index) const {
+  typename Internals::JsonVariantAs<T>::type
+  get(size_t index) const {
     const auto it = begin() + index;
     return it != end() ? it->as<T>() : Internals::JsonVariantDefault<T>::get();
   }
@@ -96,7 +150,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   template <typename T>
   bool is(size_t index) const {
     const auto it = begin() + index;
-    return it != end() ? it->is<typename Internals::JsonVariantAs<T>::type>() : false;
+    return it != end() ? it->is<T>() : false;
   }
 
   // Creates a JsonArray and adds a reference at the end of the array.
@@ -176,19 +230,19 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
  private:
   template <typename TValue>
-  bool set_impl(size_t index, const TValue &value) {
+  bool set_impl(size_t index, TValue value) {
     iterator it = begin() + index;
     if (it != end())
-      return Internals::ValueSaver<TValue>::save(_buffer, *it, value);
+      return Internals::ValueSaver<TValue>::save(_buffer, *it, std::move(value));
 
     return false;
   }
 
   template <typename TValue>
-  bool add_impl(const TValue &value) {
+  bool add_impl(TValue value) {
     auto it = Internals::List<JsonVariant>::add();
     if (it != end()) {
-      if (Internals::ValueSaver<TValue>::save(_buffer, *it, value))
+      if (Internals::ValueSaver<TValue>::save(_buffer, *it, std::move(value)))
         return true;
 
       remove(it);
@@ -196,6 +250,8 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
     return false;
   }
+
+  friend class Internals::JsonArraySubscript;
 };
 
 namespace Internals {

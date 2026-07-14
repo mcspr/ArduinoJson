@@ -24,7 +24,7 @@ struct ValueSaverImpl {
   typedef Source duplicate_type;
 
   template <typename Destination>
-  static bool save(JsonBuffer*, Destination& dst, const Source& src) {
+  static bool save(JsonBuffer*, Destination& dst, Source src) {
     dst = src;
     return true;
   }
@@ -33,15 +33,28 @@ struct ValueSaverImpl {
 // output dup'ed to JsonBuffer, or stored in the object directly
 template <typename T>
 struct ValueStringDuplicate {
-  typedef T type;
-  typedef const char* duplicate_type;
+  using type = T;
+  using duplicate_type = const char*;
+};
+
+// preserve refs until the duplication
+template <typename T>
+struct ValueStringDuplicate<Internals::StringRefWrapper<T>> {
+  using type = T;
+  using duplicate_type = const char *;
 };
 
 // same as above, but convert into RawJson<JsonString>
 template <typename T>
 struct ValueStringDuplicate<Internals::RawJsonString<T>> {
-  typedef T type;
-  typedef Internals::RawJsonString<const char*> duplicate_type;
+  using type = T;
+  using duplicate_type = Internals::RawJsonString<const char *>;
+};
+
+template <typename T, size_t Size>
+struct ValueStringDuplicate<Internals::RawJsonString<T[Size]>> {
+  using type = T[Size];
+  using duplicate_type = Internals::RawJsonString<const char *>;
 };
 
 // source and destination are strings (i.e. Duplicate present from specialization)
@@ -53,9 +66,10 @@ struct ValueSaverImpl<
   typedef typename value_string_type::type source_type;
   typedef typename value_string_type::duplicate_type duplicate_type;
 
+  typedef typename StringTraits<source_type>::Duplicate Duplicate;
+
   template <typename Destination>
-  static bool save(JsonBuffer* buffer, Destination& dst, const Source& src) {
-    using Duplicate = typename StringTraits<source_type>::Duplicate;
+  static bool save(JsonBuffer* buffer, Destination& dst, Source src) {
     auto* dup = Duplicate::Operator(buffer, src);
     if (dup) {
       dst = duplicate_type(dup);
@@ -71,7 +85,7 @@ struct ValueSaverImpl<
 // const char[], const signed char[], const unsigned char[]
 template <typename T>
 struct ValueSaverNullableView
-  : And<IsBaseOf<StringTraitsTag, T>,
+  : And<HasStringTraitsTag<T>,
         CanReference<T>,
         IsNullable<T>,
         Not<ShouldDuplicate<T>>>::type {
@@ -85,7 +99,7 @@ struct ValueSaverImpl<
   typedef typename value_string_type::duplicate_type duplicate_type;
 
   template <typename Destination>
-  static bool save(JsonBuffer*, Destination& dst, const Source& src) {
+  static bool save(JsonBuffer*, Destination& dst, Source src) {
     using traits_type = StringTraits<Source>;
 
     using is_null = typename traits_type::IsNull;
@@ -101,7 +115,7 @@ struct ValueSaverImpl<
 
 template <typename T>
 struct ValueSaverNonNullableView
-  : And<IsBaseOf<StringTraitsTag, T>,
+  : And<HasStringTraitsTag<T>,
         CanReference<T>,
         Not<IsNullable<T>>,
         Not<ShouldDuplicate<T>>>::type {
@@ -115,7 +129,7 @@ struct ValueSaverImpl<
   typedef typename value_string_type::duplicate_type duplicate_type;
 
   template <typename Destination>
-  static bool save(JsonBuffer*, Destination& dst, const Source& src) {
+  static bool save(JsonBuffer*, Destination& dst, Source src) {
     using traits_type = StringTraits<Source>;
     using take_reference = typename traits_type::Reference;
     dst = duplicate_type(take_reference::Operator(src));

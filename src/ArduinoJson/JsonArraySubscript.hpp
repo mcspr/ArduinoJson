@@ -29,8 +29,9 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   JsonArraySubscript(JsonArraySubscript &&) = default;
 
   // Everything else is interpreted as array assignment w/ the index attached to the subscript object
-  ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(const JsonArraySubscript& src) {
-    _array.set(_index, src);
+  JsonArraySubscript&
+  ARDUINOJSON_FORCE_INLINE operator=(const JsonArraySubscript& src) {
+    _array.set_impl(_index, src.template as<JsonVariant>());
     return *this;
   }
 
@@ -40,18 +41,13 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
     return *this;
   }
 
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(TChar (&value)[Size]) {
-    _array.set(_index, &value[0]);
-    return *this;
-  }
-
   bool success() const {
     return _index < _array.size();
   }
 
   template <typename T>
-  ARDUINOJSON_FORCE_INLINE typename JsonVariantAs<T>::type as() const {
+  typename JsonVariantAs<T>::type
+  ARDUINOJSON_FORCE_INLINE as() const {
     return _array.get<T>(_index);
   }
 
@@ -66,25 +62,19 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
     return _array.set(_index, std::forward<TValue>(value));
   }
 
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE bool set(TChar (&value)[Size]) {
-    return _array.set(_index, value);
-  }
-
  private:
   JsonArray& _array;
   size_t _index;
 };
 
 template <typename TImpl>
-inline JsonArraySubscript JsonVariantSubscripts<TImpl>::operator[](
-    size_t index) {
+inline JsonArraySubscript JsonVariantSubscripts<TImpl>::operator[](size_t index) {
   return impl()->template as<JsonArray>()[index];
 }
 
 template <typename TImpl>
-inline const JsonArraySubscript JsonVariantSubscripts<TImpl>::operator[](
-    size_t index) const {
+inline JsonArraySubscript
+ARDUINOJSON_FORCE_INLINE JsonVariantSubscripts<TImpl>::operator[](size_t index) const {
   return impl()->template as<JsonArray>()[index];
 }
 

@@ -31,7 +31,7 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
 
 template <typename Writer>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
-    const JsonArraySubscript& arraySubscript, Writer& writer) {
+    JsonArraySubscript arraySubscript, Writer& writer) {
   serialize(arraySubscript.as<JsonVariant>(), writer);
 }
 
@@ -58,13 +58,13 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
 template <typename Writer>
 template <typename TKey>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
-    const JsonObjectSubscript<TKey>& objectSubscript, Writer& writer) {
+    JsonObjectSubscript<TKey> objectSubscript, Writer& writer) {
   serialize(objectSubscript.template as<JsonVariant>(), writer);
 }
 
 template <typename Writer>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
-    const JsonVariant& variant, Writer& writer) {
+    JsonVariant variant, Writer& writer) {
   switch (variant._type) {
     case JsonVariantType::JSON_FLOAT:
       writer.writeFloat(variant._content.asFloat);

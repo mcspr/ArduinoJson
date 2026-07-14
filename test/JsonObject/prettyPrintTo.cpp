@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 #include <string>
+#include "ArduinoJson/StringTraits/StringTraitsBase.hpp"
 
 void check(const JsonObject &obj, const std::string expected) {
   char json[256];

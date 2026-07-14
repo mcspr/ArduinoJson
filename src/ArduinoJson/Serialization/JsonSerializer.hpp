@@ -20,11 +20,11 @@ template <typename Writer>
 class JsonSerializer {
  public:
   static void serialize(const JsonArray &, Writer &);
-  static void serialize(const JsonArraySubscript &, Writer &);
+  static void serialize(JsonArraySubscript, Writer &);
   static void serialize(const JsonObject &, Writer &);
   template <typename TKey>
-  static void serialize(const JsonObjectSubscript<TKey> &, Writer &);
-  static void serialize(const JsonVariant &, Writer &);
+  static void serialize(JsonObjectSubscript<TKey>, Writer &);
+  static void serialize(JsonVariant, Writer &);
 };
 }  // namespace Internals
 }  // namespace ArduinoJson

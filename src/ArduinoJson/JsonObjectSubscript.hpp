@@ -8,8 +8,14 @@
 
 #include "JsonVariantBase.hpp"
 
+#include "Data/JsonNull.hpp"
+#include "Data/StringRef.hpp"
+#include "Data/StringView.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsPointer.hpp"
+#include "TypeTraits/IsFloatingPoint.hpp"
+#include "TypeTraits/IsIntegral.hpp"
 #include "TypeTraits/RemoveReference.hpp"
 
 #include "Data/StringRef.hpp"
@@ -17,23 +23,9 @@
 namespace ArduinoJson {
 namespace Internals {
 
-// strip useless qualifiers before attempting to create a key type
-
-template <typename TKey, typename = void>
-struct JsonObjectSubscriptHelper {
-  typedef TKey raw_key_type;
-  typedef TKey key_type;
-  typedef StringRefWrapper<key_type> subscript_key_type;
-};
-
 template <typename TKey>
-struct JsonObjectSubscriptHelper<TKey,
-  typename EnableIf<IsPointer<typename RemoveReference<TKey>::type>::value, void>::type> {
-
-  typedef TKey raw_key_type;
-  typedef typename RemoveConstReference<TKey>::type key_type;
-  typedef StringRefWrapper<key_type> subscript_key_type;
-};
+using TJsonObjectSubscriptKeyType =
+  typename StringRefWrapperHelper<TKey>::wrapper_type;
 
 template <typename TKey>
 class JsonObjectSubscript final
@@ -50,7 +42,13 @@ class JsonObjectSubscript final
   template <typename TKeyRef>
   JsonObjectSubscript(JsonObject& object, TKeyRef&& key) :
     _object(object),
-    _key(std::forward<TKeyRef>(key))
+    _key(MakeStringRef(std::forward<TKeyRef>(key)))
+  {}
+
+  template <typename TRef>
+  JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key) :
+    _object(object),
+    _key(key)
   {}
 
   // Allow to construct the object, but disallow changes after construction
@@ -61,35 +59,29 @@ class JsonObjectSubscript final
   // Everything else is interpreted as object assignment w/ the key attached to the subscript object
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(TValue&& src) {
-    _object.set(_key.get(), std::forward<TValue>(src));
-    return *this;
-  }
-
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(TChar (&src)[Size]) {
-    _object.set(_key.get(), src);
+    set(std::forward<TValue>(src));
     return *this;
   }
 
   // class copy is disallowed, interpret it as an assignment operation
   ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
-    _object.set(_key.get(), other);
+    _object.set_impl(_key, other.template as<JsonVariant>());
     return *this;
   }
 
   bool success() const {
-    return _object.containsKey(_key.get());
+    return _object.contains_impl(_key);
   }
 
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE typename JsonVariantAs<TValue>::type as() const {
-    return _object.get<TValue>(_key.get());
+    return _object.get_impl<typename JsonVariantAs<TValue>::type>(_key);
   }
 
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE
   bool is() const {
-    return _object.is<typename JsonVariantAs<TValue>::type>(_key.get());
+    return _object.is_impl<typename JsonVariantAs<TValue>::type>(_key);
   }
 
   template <typename TValue>
@@ -97,16 +89,15 @@ class JsonObjectSubscript final
     return _object.set(_key.get(), std::forward<TValue>(value));
   }
 
-  template <typename TChar, size_t Size>
-  ARDUINOJSON_FORCE_INLINE bool set(TChar (&value)[Size]) {
-    return _object.set(_key.get(), value);
-  }
-
  private:
-  typedef typename StringRefWrapperHelper<TKey>::wrapper_type TKeyType;
-
   JsonObject& _object;
-  TKeyType _key;
+  TJsonObjectSubscriptKeyType<TKey> _key;
+};
+
+template <typename TKey>
+struct JsonObjectSubscriptHelper {
+  typedef TJsonObjectSubscriptKeyType<TKey> key_type;
+  typedef JsonObjectSubscript<typename key_type::string_type> subscript_type;
 };
 
 #if ARDUINOJSON_ENABLE_STD_STREAM

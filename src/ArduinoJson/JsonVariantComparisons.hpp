@@ -6,6 +6,10 @@
 
 #include "StringTraits/StringTraits.hpp"
 
+#include "Data/JsonFloat.hpp"
+#include "Data/JsonInteger.hpp"
+#include "Data/JsonVariantAs.hpp"
+
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsVariant.hpp"
 
@@ -117,7 +121,7 @@ class JsonVariantComparisons {
 
   template <typename T>
   typename JsonVariantAs<T>::type as() const {
-    return impl()->template as<T>();
+    return impl()->template as<typename JsonVariantAs<T>::type>();
   }
 
   template <typename T>
@@ -126,8 +130,8 @@ class JsonVariantComparisons {
   }
 
   template <typename TString>
-  typename EnableIf<HasEquals<StringTraits<TString>>::value, bool>::type equals(
-      const TString &comparand) const {
+  typename EnableIf<HasEquals<StringTraits<TString>>::value, bool>::type
+  equals(const TString &comparand) const {
     return StringTraits<TString>::Equals::Operator(comparand, as<const char *>());
   }
 
@@ -135,7 +139,7 @@ class JsonVariantComparisons {
   typename EnableIf<
     And<Not<IsVariant<TComparand>>,
         Not<HasEquals<StringTraits<TComparand>>>>::value,
-  bool>::type
+    bool>::type
   equals(const TComparand &comparand) const {
     return as<TComparand>() == comparand;
   }

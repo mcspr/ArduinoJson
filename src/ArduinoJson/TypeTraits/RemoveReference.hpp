@@ -12,8 +12,14 @@ template <typename T>
 struct RemoveReference {
   typedef T type;
 };
+
 template <typename T>
 struct RemoveReference<T&> {
+  typedef T type;
+};
+
+template <typename T>
+struct RemoveReference<T&&> {
   typedef T type;
 };
 

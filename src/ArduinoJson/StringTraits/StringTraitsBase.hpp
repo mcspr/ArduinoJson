@@ -3,16 +3,20 @@
 #pragma once
 
 #include "../TypeTraits/Constant.hpp"
-#include "../TypeTraits/VoidType.hpp"
-#include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsArray.hpp"
+#include "../TypeTraits/IsBaseOf.hpp"
+#include "../TypeTraits/RemoveConstReference.hpp"
+#include "../TypeTraits/VoidType.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 
 struct StringTraitsTag {
 };
+
+template <typename T>
+using HasStringTraitsTag = IsBaseOf<StringTraitsTag, T>;
 
 // type can be constructed from cstring and allows appending char & cstring by value
 
@@ -90,12 +94,13 @@ struct StringTraitsHelper<TString,
   typedef StringTraitsImpl<string_type> traits_type;
 };
 
-template <typename TString,
-  typename Enable = void,
-  typename Helper = StringTraitsHelper<TString>>
-struct StringTraits : public Helper::traits_type {
-  using helper_type = Helper;
+template <typename TString, typename Enable = void>
+struct StringTraits : public StringTraitsHelper<TString>::traits_type {
+  using helper_type = StringTraitsHelper<TString>;
 };
+
+template <typename T>
+using HasStringTraits = HasStringTraitsTag<StringTraits<T>>;
 
 }  // namespace Internals
 }  // namespace ArduinoJson

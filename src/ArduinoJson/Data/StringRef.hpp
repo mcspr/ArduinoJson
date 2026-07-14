@@ -3,9 +3,12 @@
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
-#include "../TypeTraits/RemoveExtent.hpp"
 #include "../TypeTraits/IsPointer.hpp"
 #include "../TypeTraits/IsArray.hpp"
+
+#include "../TypeTraits/IsInstantiationOf.hpp"
+#include "../TypeTraits/IsBaseInstantiationOf.hpp"
+#include "../TypeTraits/Or.hpp"
 
 #include <utility>
 
@@ -24,6 +27,7 @@ template <typename TString>
 class StringRefWrapper {
  public:
   typedef const TString& ref_type;
+  typedef TString string_type;
 
   StringRefWrapper() = default;
   explicit StringRefWrapper(TString str) :
@@ -42,17 +46,13 @@ class StringRefWrapper {
   TString _str;
 };
 
-template <typename TString>
-class StringRefWrapper<TString&&> :
-  public StringRefWrapper<TString> {
-};
-
 // generic containers like std::string passed by ref
 
 template <typename TString>
 class StringRefWrapper<const TString&> {
  public:
   typedef const TString& ref_type;
+  typedef TString string_type;
 
   StringRefWrapper() = delete;
   explicit StringRefWrapper(TString& ref) :
@@ -68,81 +68,64 @@ class StringRefWrapper<const TString&> {
   }
 
   operator ref_type() const {
-    return _ref;
+    return get();
   }
 
  private:
   const TString& _ref;
 };
 
-template <typename TString>
-class StringRefWrapper<TString&> :
-  public StringRefWrapper<const TString&> {
-
- public:
-  using StringRefWrapper<const TString&>::StringRefWrapper;
-};
-
-// literals, stack or globals
-
-template <typename TChar>
-class StringRefWrapper<TChar*> {
- public:
-  using ref_type = TChar*;
-
-  StringRefWrapper() = default;
-  explicit StringRefWrapper(TChar* str) :
-    _str(str)
-  {}
-
-  template <size_t Size>
-  explicit StringRefWrapper(TChar (&str)[Size]) :
-    _str(&str[0])
-  {}
-
-  ref_type get() const {
-    return _str;
-  }
-
-  operator ref_type() const {
-    return _str;
-  }
-
- private:
-  TChar *_str{};
-};
-
-// vla is whatever
+// by default, lose qualifiers before generating template instances
 
 template <typename T>
-class StringRefWrapper<T[]>;
+struct StringRefReference {
+  typedef T type;
+};
 
-// lose qualifiers before generating template instances
+template <typename T>
+struct StringRefReference<T&&> {
+  typedef T type;
+};
+
+template <typename T>
+struct StringRefReference<T&> {
+  typedef const T &type;
+};
+
+template <typename T>
+struct StringRefReference<const T&> {
+  typedef const T &type;
+};
+
+template <typename T, typename = void>
+struct StringRefType {
+  typedef StringRefWrapper<T> type;
+};
+
+template <typename T>
+struct StringRefType<StringRefWrapper<T>> {
+  typedef T type;
+};
+
+template <typename T>
+using IsStringRefInstance = IsBaseInstantiationOf<StringRefWrapper, T>;
+
+template <typename T>
+struct StringRefType<T, typename EnableIf<IsStringRefInstance<T>::value>::type> {
+  typedef T type;
+};
 
 template <typename TString, typename = void>
 struct StringRefWrapperHelper {
   typedef TString raw_string_type;
-  typedef TString string_type;
-  typedef StringRefWrapper<string_type> wrapper_type;
+  typedef typename StringRefReference<TString>::type string_type;
+  typedef typename StringRefType<string_type>::type wrapper_type;
 };
 
-template <typename TString>
-struct StringRefWrapperHelper<TString,
-  typename EnableIf<IsPointer<typename RemoveReference<TString>::type>::value, void>::type> {
-
-  typedef TString raw_string_type;
-  typedef typename RemoveConstReference<TString>::type string_type;
-  typedef StringRefWrapper<string_type> wrapper_type;
-};
-
-template <typename TString>
-struct StringRefWrapperHelper<TString,
-  typename EnableIf<IsArray<typename RemoveReference<TString>::type>::value, void>::type> {
-
-  typedef TString raw_string_type;
-  typedef typename RemoveExtent<typename RemoveReference<TString>::type>::type* string_type;
-  typedef StringRefWrapper<string_type> wrapper_type;
-};
+template <typename T>
+typename StringRefWrapperHelper<T>::wrapper_type MakeStringRef(T&& ref) {
+  return typename StringRefWrapperHelper<T>::wrapper_type(std::forward<T>(ref));
+}
 
 }
 }

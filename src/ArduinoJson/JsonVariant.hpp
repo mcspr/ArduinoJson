@@ -127,7 +127,8 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
  {}
 
   // Create a JsonVariant containing an unparsed string
-  JsonVariant(Internals::RawJsonString<const char *> value) :
+  template <typename T>
+  JsonVariant(Internals::RawJsonString<T> value) :
     _type(Internals::JsonVariantType::JSON_UNPARSED),
     _content(value.get())
   {}

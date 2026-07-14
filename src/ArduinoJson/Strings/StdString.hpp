@@ -105,8 +105,12 @@ struct Append<TString,
 
 template <typename TString>
 struct Duplicate {
+  static const char* Operator(JsonBuffer* buffer, const TString& str, size_t length) {
+    return Strings::CharPointer::Duplicate::Operator(buffer, str.c_str(), length);
+  }
+
   static const char* Operator(JsonBuffer* buffer, const TString& str) {
-    return Strings::CharPointer::Duplicate::Operator(buffer, str.c_str(), str.length());
+    return Operator(buffer, str, str.length());
   }
 };
 
