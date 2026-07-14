@@ -21,6 +21,14 @@ template <typename T>
 struct IsPointer<T* const> : TrueType {
 };
 
+template <typename T>
+struct IsPointer<T* volatile> : TrueType {
+};
+
+template <typename T>
+struct IsPointer<T* const volatile> : TrueType {
+};
+
 template <>
 struct IsPointer<std::nullptr_t> : TrueType {
 };

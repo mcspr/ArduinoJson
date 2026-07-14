@@ -17,18 +17,18 @@ struct RemovePointer<T*> {
 };
 
 template <typename T>
-struct RemovePointer<const T*> {
+struct RemovePointer<T* const> {
+  typedef const T type;
+};
+
+template <typename T>
+struct RemovePointer<T* volatile> {
   typedef T type;
 };
 
 template <typename T>
-struct RemovePointer<volatile T*> {
-  typedef T type;
-};
-
-template <typename T>
-struct RemovePointer<const volatile T*> {
-  typedef T type;
+struct RemovePointer<T* const volatile> {
+  typedef const T type;
 };
 
 }  // namespace Internals
