@@ -8,31 +8,40 @@
 #include <cstdint>
 
 using ArduinoJson::Internals::JsonNumberParser;
+using ArduinoJson::Internals::ParsedNumberResult;
 
 // 5.x branch does usually doesn't check for conversion validity and numbers would fall back to 0
 // Numbers/parseNumber.hpp is backported from v7, allowing to perform some extra sanity checks
 
-template <typename T, size_t Size>
-void shouldParseAndConvert(const char (&input)[Size], T expected) {
+static ParsedNumberResult parseNumber(const char* input, size_t length) {
+  return JsonNumberParser::parse(input, length);
+}
+
+static ParsedNumberResult parseNumber(const char* input) {
+  return parseNumber(input, std::strlen(input));
+}
+
+template <typename T>
+void shouldParseAndConvert(const char* input, T expected) {
   CAPTURE(input);
-  const auto parse = JsonNumberParser::parse(&input[0], Size - 1);
+  const auto parse = parseNumber(input);
   REQUIRE(parse);
   const auto convert = parse.template convertTo<T>();
   REQUIRE(convert);
   REQUIRE(convert.value == expected);
 }
 
-template <typename T, size_t Size>
-void shouldNotParse(const char (&input)[Size]) {
+template <typename T>
+void shouldNotParse(const char* input) {
   CAPTURE(input);
-  const auto parse = JsonNumberParser::parse(&input[0], Size - 1);
+  const auto parse = parseNumber(input);
   REQUIRE_FALSE(parse);
 }
 
-template <typename T, size_t Size>
-void shouldNotConvert(const char (&input)[Size]) {
+template <typename T>
+void shouldNotConvert(const char* input) {
   CAPTURE(input);
-  const auto parse = JsonNumberParser::parse(&input[0], Size - 1);
+  const auto parse = parseNumber(input);
   REQUIRE(parse);
   const auto convert = parse.template convertTo<T>();
   REQUIRE_FALSE(convert);
