@@ -13,7 +13,7 @@ namespace ArduinoJson {
 template <typename TKey>
 inline JsonArray &JsonObject::createNestedArray_impl(TKey key) {
   auto &ref = _buffer->createArray();
-  if (set_impl(key, JsonVariant(ref)))
+  if (set_impl(std::move(key), JsonVariant(ref)))
     return ref;
   return JsonArray::invalid();
 }
@@ -21,7 +21,7 @@ inline JsonArray &JsonObject::createNestedArray_impl(TKey key) {
 template <typename TKey>
 inline JsonObject &JsonObject::createNestedObject_impl(TKey key) {
   JsonObject &ref = _buffer->createObject();
-  if (set_impl(key, JsonVariant(ref)))
+  if (set_impl(std::move(key), JsonVariant(ref)))
     return ref;
   return JsonObject::invalid();
 }

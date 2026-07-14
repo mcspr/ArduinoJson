@@ -23,7 +23,7 @@ class JsonSerializer {
   static void serialize(JsonArraySubscript, Writer &);
   static void serialize(const JsonObject &, Writer &);
   template <typename TKey>
-  static void serialize(JsonObjectSubscript<TKey>, Writer &);
+  static void serialize(const JsonObjectSubscript<TKey>&, Writer &);
   static void serialize(JsonVariant, Writer &);
 };
 }  // namespace Internals

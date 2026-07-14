@@ -48,7 +48,7 @@ class JsonObjectSubscript final
   template <typename TRef>
   JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key) :
     _object(object),
-    _key(key)
+    _key(std::move(key))
   {}
 
   // Allow to construct the object, but disallow changes after construction
@@ -65,23 +65,23 @@ class JsonObjectSubscript final
 
   // class copy is disallowed, interpret it as an assignment operation
   ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
-    _object.set_impl(_key, other.template as<JsonVariant>());
+    _object.set(_key.get(), other.template as<JsonVariant>());
     return *this;
   }
 
   bool success() const {
-    return _object.contains_impl(_key);
+    return _object.containsKey(_key.get());
   }
 
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE typename JsonVariantAs<TValue>::type as() const {
-    return _object.get_impl<typename JsonVariantAs<TValue>::type>(_key);
+    return _object.get<TValue>(_key.get());
   }
 
   template <typename TValue>
   ARDUINOJSON_FORCE_INLINE
   bool is() const {
-    return _object.is_impl<typename JsonVariantAs<TValue>::type>(_key);
+    return _object.is<TValue>(_key.get());
   }
 
   template <typename TValue>

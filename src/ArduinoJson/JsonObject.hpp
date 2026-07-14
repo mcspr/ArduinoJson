@@ -204,7 +204,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   template <typename TValue, typename TKey>
   TValue get_impl(TKey key) const {
-    const_iterator it = find_impl(key);
+    const_iterator it = find_impl(std::move(key));
     return it != end() ? it->value.as<TValue>()
                        : Internals::JsonVariantDefault<TValue>::get();
   }
@@ -215,14 +215,14 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
     bool out = false;
 
     // search for existing or add another kv object
-    auto it = find_impl(key);
+    auto it = find_impl(Internals::MakeStringRef(key.get()));
     if (it == end()) {
       it = add();
       if (it == end())
         return false;
 
       if (!Internals::ValueSaver<TKey>::save(
-        _buffer, it->key, key))
+        _buffer, it->key, std::move(key)))
       {
         remove(it);
         return false;
@@ -233,7 +233,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
     if (it != end()) {
       if (!Internals::ValueSaver<TValue>::save(
-        _buffer, it->value, value))
+        _buffer, it->value, std::move(value)))
       {
         if (out)
           remove(it);
@@ -249,13 +249,13 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   template <typename TValue, typename TKey>
   bool is_impl(TKey key) const {
-    const_iterator it = find_impl(key);
+    const_iterator it = find_impl(std::move(key));
     return it != end() ? it->value.is<TValue>() : false;
   }
 
   template <typename TKey>
   bool contains_impl(TKey key) const {
-    return find_impl(key) != end();
+    return find_impl(std::move(key)) != end();
   }
 
   template <typename TKey>

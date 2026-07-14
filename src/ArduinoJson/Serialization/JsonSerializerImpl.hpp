@@ -58,7 +58,7 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
 template <typename Writer>
 template <typename TKey>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
-    JsonObjectSubscript<TKey> objectSubscript, Writer& writer) {
+    const JsonObjectSubscript<TKey>& objectSubscript, Writer& writer) {
   serialize(objectSubscript.template as<JsonVariant>(), writer);
 }
 

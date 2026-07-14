@@ -34,6 +34,12 @@ class StringRefWrapper {
     _str(std::move(str))
   {}
 
+  StringRefWrapper(const StringRefWrapper&) = delete;
+  StringRefWrapper& operator=(const StringRefWrapper&) = delete;
+
+  StringRefWrapper(StringRefWrapper&&) noexcept = default;
+  StringRefWrapper& operator=(StringRefWrapper&&) noexcept = default;
+
   ref_type get() const {
     return _str;
   }
@@ -52,7 +58,7 @@ template <typename TString>
 class StringRefWrapper<const TString&> {
  public:
   typedef const TString& ref_type;
-  typedef TString string_type;
+  typedef const TString& string_type;
 
   StringRefWrapper() = delete;
   explicit StringRefWrapper(TString& ref) :

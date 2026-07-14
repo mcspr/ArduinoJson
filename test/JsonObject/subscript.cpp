@@ -174,4 +174,47 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(_object.size() == 1);
     REQUIRE_FALSE(_object[const_char_nullptr].success());
   }
+
+  // impl detail. while subscript references the object, key is a separate entity and has its own lifetime
+
+  SECTION("std::string& key not duplicated in subscript") {
+    std::string key = "dummy";
+
+    auto subscript = _object[key];
+    subscript = "12345";
+
+    REQUIRE(_object.size() == 1);
+    REQUIRE(subscript.success());
+    REQUIRE(_object["dummy"] == std::string("12345"));
+    REQUIRE(subscript.as<const char*>() == std::string("12345"));
+
+    key = "ymmud";
+
+    REQUIRE(_object.size() == 1);
+    REQUIRE(_object["dummy"] == std::string("12345"));
+    REQUIRE_FALSE(subscript.success());
+  }
+
+  SECTION("std::string duplicated by value") {
+    std::string val = "12345";
+
+    auto subscript = _object["dummy"];
+    subscript = val;
+
+    REQUIRE(_object.size() == 1);
+    REQUIRE(subscript.as<const char*>() == std::string("12345"));
+
+    val = "67890";
+
+    REQUIRE(_object.size() == 1);
+    REQUIRE(subscript.as<const char*>() == std::string("12345"));
+  }
+
+  SECTION("std::string key constructed inplace") {
+    auto subscript = _object[std::string("dummy")];
+    subscript = "23456";
+
+    REQUIRE(_object.size() == 1);
+    REQUIRE(_object["dummy"] == std::string("23456"));
+  }
 }
