@@ -41,6 +41,11 @@ struct JsonVariantAs<TChar[Size]> {
   typedef const char* type;
 };
 
+template <typename TChar, size_t Size>
+struct JsonVariantAs<TChar(&)[Size]> {
+  typedef const char* type;
+};
+
 template <>
 struct JsonVariantAs<JsonArray> {
   typedef JsonArray& type;
