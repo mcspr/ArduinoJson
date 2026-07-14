@@ -11,12 +11,15 @@ namespace Internals {
 
 // Converts a compact JSON string into an indented one.
 template <typename Print>
-class Prettyfier {
+class Prettifier {
  public:
-  explicit Prettyfier(IndentedPrint<Print>& p) : _sink(p) {
-    _previousChar = 0;
-    _inString = false;
-  }
+  explicit Prettifier(IndentedPrint<Print>* p) :
+    _sink(*p)
+  {}
+
+  explicit Prettifier(IndentedPrint<Print>& p) :
+    _sink(p)
+  {}
 
   size_t print(char c) {
     size_t n = _inString ? handleStringChar(c) : handleMarkupChar(c);
@@ -32,7 +35,7 @@ class Prettyfier {
   }
 
  private:
-  Prettyfier& operator=(const Prettyfier&);  // cannot be assigned
+  Prettifier& operator=(const Prettifier&);  // cannot be assigned
 
   bool inEmptyBlock() {
     return _previousChar == '{' || _previousChar == '[';
@@ -125,9 +128,10 @@ class Prettyfier {
     return _sink.print("\r\n");
   }
 
-  char _previousChar;
   IndentedPrint<Print>& _sink;
-  bool _inString;
+
+  char _previousChar = 0;
+  bool _inString = false;
 };
 }  // namespace Internals
 }  // namespace ArduinoJson

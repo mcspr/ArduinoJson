@@ -11,7 +11,7 @@
 #include "IndentedPrint.hpp"
 #include "JsonSerializer.hpp"
 #include "JsonWriter.hpp"
-#include "Prettyfier.hpp"
+#include "Prettifier.hpp"
 #include "StaticStringBuilder.hpp"
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
@@ -21,6 +21,17 @@
 namespace ArduinoJson {
 namespace Internals {
 
+template <typename T, typename = void>
+struct HasPrint : FalseType {
+};
+
+template <typename T>
+struct HasPrint<T, VoidType<
+    decltype((Declval<T>().print)(Declval<const char*>())),
+    decltype((Declval<T>().print)(Declval<char>()))>>
+  : TrueType {
+};
+
 // Implements all the overloads of printTo() and prettyPrintTo()
 // Caution: this class use a template parameter to avoid virtual methods.
 // This is a bit curious but allows to reduce the size of JsonVariant, JsonArray
@@ -28,9 +39,9 @@ namespace Internals {
 template <typename T>
 class JsonPrintable {
  public:
-  template <typename Print>
-  typename EnableIf<Not<HasAppend<StringTraits<Print>>>::value, size_t>::type
-  printTo(Print &print) const {
+  template <typename Print,
+    typename EnableIf<HasPrint<Print>::value>::type* = nullptr>
+  size_t printTo(Print &print) const {
     JsonWriterSink<Print> sink(print);
     JsonWriter writer(&sink);
     JsonSerializer<JsonWriter>::serialize(downcast(), writer);
@@ -55,17 +66,13 @@ class JsonPrintable {
     return printTo(buffer, N);
   }
 
-  template <typename TString>
-  typename EnableIf<HasAppend<StringTraits<TString>>::value, size_t>::type
-  printTo(TString &str) const {
+  template <typename TString,
+    typename EnableIf<
+      And<HasStringTraits<TString>,
+          HasAppend<StringTraits<TString>>>::value>::type* = nullptr>
+  size_t printTo(TString &str) const {
     DynamicStringBuilder<TString> sb(str);
     return printTo(sb);
-  }
-
-  template <typename Print>
-  size_t prettyPrintTo(IndentedPrint<Print> &print) const {
-    Prettyfier<Print> p(print);
-    return printTo(p);
   }
 
   size_t prettyPrintTo(char *buffer, size_t bufferSize) const {
@@ -78,16 +85,20 @@ class JsonPrintable {
     return prettyPrintTo(buffer, N);
   }
 
-  template <typename Print>
-  typename EnableIf<Not<HasAppend<StringTraits<Print>>>::value, size_t>::type
-  prettyPrintTo(Print &print) const {
-    IndentedPrint<Print> indentedPrint(print);
-    return prettyPrintTo(indentedPrint);
+  template <typename Print,
+    typename EnableIf<HasPrint<Print>::value>::type* = nullptr>
+  size_t prettyPrintTo(Print &print) const {
+    IndentedPrint<Print> indent(print);
+    Prettifier<Print> prettify(indent);
+    return printTo(prettify);
   }
 
-  template <typename TString>
-  typename EnableIf<HasAppend<StringTraits<TString>>::value, size_t>::type
-  prettyPrintTo(TString &str) const {
+  template <typename TString,
+    typename EnableIf<
+      And<HasStringTraits<TString>,
+          HasAppend<StringTraits<TString>>>::value,
+      size_t>::type* = nullptr>
+  size_t prettyPrintTo(TString &str) const {
     DynamicStringBuilder<TString> sb(str);
     return prettyPrintTo(sb);
   }
