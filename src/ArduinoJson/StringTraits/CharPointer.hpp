@@ -50,6 +50,9 @@ struct StringTraitsImpl<TChar*, typename EnableIf<IsChar<TChar>::value>::type>
 template <typename TChar, size_t Size>
 struct StringTraitsImpl<TChar[Size], typename EnableIf<IsChar<TChar>::value>::type>
     : public StringTraitsImpl<TChar*> {
+
+ private:
+  typedef typename StringTraitsImpl<TChar*>::IsNull IsNull;
 };
 
 }  // namespace Internals
