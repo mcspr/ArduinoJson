@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 #include <string>
+#include "ArduinoJson/Data/StringView.hpp"
 
 TEST_CASE("JsonObject::set()") {
   DynamicJsonBuffer jb;
@@ -136,6 +137,25 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(first->value.as<const char*>() != nullptr);
     REQUIRE(first->value.as<const char*>() != val);
     REQUIRE(first->value == std::string(val));
+  }
+
+  SECTION("mutable view would duplicate part of the value") {
+    char val[] = "helloworld";
+    _object.set("hello", ArduinoJson::MakeStringView(&val[0], 5));
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
+    auto first = _object.begin();
+    REQUIRE(first->key == std::string("hello"));
+    REQUIRE(first->value == std::string("hello"));
+  }
+
+  SECTION("immutable view would reference pointer as-is") {
+    // TODO cstring pointer unaffected by size
+    const char val[] = "helloworld";
+    _object.set("hello", ArduinoJson::MakeStringView(&val[5], 1));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
+    auto first = _object.begin();
+    REQUIRE(first->key == std::string("hello"));
+    REQUIRE(first->value == std::string("world"));
   }
 
   SECTION("should duplicate std::string value") {
