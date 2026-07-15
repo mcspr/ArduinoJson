@@ -14,7 +14,6 @@ namespace Internals {
 template <typename T>
 struct ListNode : public Internals::JsonBufferAllocated {
   ListNode() noexcept = default;
-
   ListNode<T> *next{nullptr};
   T content;
 };

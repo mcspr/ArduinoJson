@@ -18,31 +18,31 @@ namespace Internals {
 // A union that defines the actual content of a JsonVariant.
 // The enum JsonVariantType determines which member is in use.
 union JsonVariantContent {
-  JsonVariantContent() :
+  JsonVariantContent() noexcept :
     undefined{}
   {}
 
-  explicit JsonVariantContent(JsonNull) :
+  explicit JsonVariantContent(JsonNull) noexcept :
     null{}
   {}
 
-  explicit JsonVariantContent(JsonFloat value) :
+  explicit JsonVariantContent(JsonFloat value) noexcept :
     asFloat(value)
   {}
 
-  explicit JsonVariantContent(JsonUInt value) :
+  explicit JsonVariantContent(JsonUInt value) noexcept :
     asInteger(value)
   {}
 
-  explicit JsonVariantContent(const char* value) :
+  explicit JsonVariantContent(const char* value) noexcept :
     asString(value)
   {}
 
-  explicit JsonVariantContent(JsonArray* ptr) :
+  explicit JsonVariantContent(JsonArray* ptr) noexcept :
     asArray(ptr)
   {}
 
-  explicit JsonVariantContent(JsonObject* ptr) :
+  explicit JsonVariantContent(JsonObject* ptr) noexcept :
     asObject(ptr)
   {}
 

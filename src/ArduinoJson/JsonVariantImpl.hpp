@@ -24,12 +24,12 @@
 
 namespace ArduinoJson {
 
-inline JsonVariant::JsonVariant(const JsonArray &array) :
+inline JsonVariant::JsonVariant(const JsonArray &array) noexcept :
   _type(Internals::JsonVariantType::JSON_ARRAY),
   _content(const_cast<JsonArray *>(std::addressof(array)))
 {}
 
-inline JsonVariant::JsonVariant(const JsonObject &object) :
+inline JsonVariant::JsonVariant(const JsonObject &object) noexcept :
   _type(Internals::JsonVariantType::JSON_OBJECT),
   _content(const_cast<JsonObject *>(std::addressof(object)))
 {}

@@ -50,20 +50,20 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
 
  public:
   // Creates an empty variant by default
-  JsonVariant() :
+  JsonVariant() noexcept :
     _type(Internals::JsonVariantType::JSON_UNDEFINED),
     _content()
   {}
 
   // Create a JsonVariant containing a null value
-  JsonVariant(JsonNull) :
+  JsonVariant(JsonNull) noexcept :
     _type(Internals::JsonVariantType::JSON_NULL),
     _content(JsonNull{})
   {}
 
   // Create a JsonVariant containing a boolean value.
   // It will be serialized as "true" or "false" in JSON.
-  JsonVariant(bool value) :
+  JsonVariant(bool value) noexcept :
     _type(Internals::JsonVariantType::JSON_BOOLEAN),
     _content(static_cast<Internals::JsonUInt>(value))
   {}
@@ -73,7 +73,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(double value);
   template <typename T>
   JsonVariant(T value,
-      typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value>::type* = nullptr) :
+      typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value>::type* = nullptr) noexcept :
 
     _type(Internals::JsonVariantType::JSON_FLOAT),
     _content(static_cast<Internals::JsonFloat>(value))
@@ -88,7 +88,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // JsonVariant(signed long long)
   template <typename T>
   JsonVariant(T value,
-      typename Internals::EnableIf<Internals::IsSignedIntegral<T>::value>::type* = nullptr) :
+      typename Internals::EnableIf<Internals::IsSignedIntegral<T>::value>::type* = nullptr) noexcept :
 
     _type((value >= 0)
             ? Internals::JsonVariantType::JSON_POSITIVE_INTEGER
@@ -106,7 +106,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
       typename Internals::EnableIf<
         Internals::And<
           Internals::IsUnsignedIntegral<T>,
-          Internals::Not<Internals::IsSame<T, bool>>>::value>::type* = nullptr) :
+          Internals::Not<Internals::IsSame<T, bool>>>::value>::type* = nullptr) noexcept :
 
     _type(Internals::JsonVariantType::JSON_POSITIVE_INTEGER),
     _content(static_cast<Internals::JsonUInt>(value))
@@ -120,7 +120,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename TChar>
   JsonVariant(
       const TChar *value,
-      typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type* = nullptr) :
+      typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type* = nullptr) noexcept :
 
     _type(Internals::JsonVariantType::JSON_STRING),
     _content(reinterpret_cast<const char *>(value))
@@ -128,7 +128,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
 
   // Create a JsonVariant containing an unparsed string
   template <typename T>
-  JsonVariant(Internals::RawJsonString<T> value) :
+  JsonVariant(Internals::RawJsonString<T> value) noexcept :
     _type(Internals::JsonVariantType::JSON_UNPARSED),
     _content(value.get())
   {}
@@ -136,12 +136,12 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // Create a JsonVariant containing a reference to an array.
   // CAUTION: we are lying about constness, because the array can be modified if
   // the variant is converted back to a JsonArray&
-  JsonVariant(const JsonArray &array);
+  JsonVariant(const JsonArray &array) noexcept;
 
   // Create a JsonVariant containing a reference to an object.
   // CAUTION: we are lying about constness, because the object can be modified
   // if the variant is converted back to a JsonObject&
-  JsonVariant(const JsonObject &object);
+  JsonVariant(const JsonObject &object) noexcept;
 
   // Get the variant as the specified type.
   //
