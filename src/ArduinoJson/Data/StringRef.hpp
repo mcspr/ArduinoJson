@@ -37,8 +37,8 @@ class StringRefWrapper {
   StringRefWrapper(const StringRefWrapper&) = delete;
   StringRefWrapper& operator=(const StringRefWrapper&) = delete;
 
-  StringRefWrapper(StringRefWrapper&&) noexcept = default;
-  StringRefWrapper& operator=(StringRefWrapper&&) noexcept = default;
+  StringRefWrapper(StringRefWrapper&&) = default;
+  StringRefWrapper& operator=(StringRefWrapper&&) = default;
 
   ref_type get() const {
     return _str;
