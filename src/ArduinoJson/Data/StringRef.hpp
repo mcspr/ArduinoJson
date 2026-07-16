@@ -61,11 +61,11 @@ class StringRefWrapper<const TString&> {
   typedef const TString& string_type;
 
   StringRefWrapper() = delete;
-  explicit StringRefWrapper(TString& ref) :
+  explicit StringRefWrapper(TString& ref) noexcept :
     _ref(ref)
   {}
 
-  explicit StringRefWrapper(const TString& ref) :
+  explicit StringRefWrapper(const TString& ref) noexcept :
     _ref(ref)
   {}
 
