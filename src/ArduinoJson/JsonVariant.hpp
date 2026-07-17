@@ -6,6 +6,7 @@
 
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonVariantType.hpp"
+#include "Data/JsonVariantString.hpp"
 #include "JsonVariantBase.hpp"
 #include "RawJson.hpp"
 #include "Serialization/JsonPrintable.hpp"
@@ -42,30 +43,24 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename Print>
   friend class Internals::JsonSerializer;
 
-  // The current type of the variant
-  Internals::JsonVariantType _type;
-
-  // The various alternatives for the value of the variant.
+  // The various alternatives for the value of the variant
   Internals::JsonVariantContent _content;
 
  public:
   // Creates an empty variant by default
   JsonVariant() noexcept :
-    _type(Internals::JsonVariantType::JSON_UNDEFINED),
     _content()
   {}
 
   // Create a JsonVariant containing a null value
   JsonVariant(JsonNull) noexcept :
-    _type(Internals::JsonVariantType::JSON_NULL),
     _content(JsonNull{})
   {}
 
   // Create a JsonVariant containing a boolean value.
   // It will be serialized as "true" or "false" in JSON.
   JsonVariant(bool value) noexcept :
-    _type(Internals::JsonVariantType::JSON_BOOLEAN),
-    _content(static_cast<Internals::JsonUInt>(value))
+    _content(value)
   {}
 
   // Create a JsonVariant containing a floating point value.
@@ -75,7 +70,6 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   JsonVariant(T value,
       typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value>::type* = nullptr) noexcept :
 
-    _type(Internals::JsonVariantType::JSON_FLOAT),
     _content(static_cast<Internals::JsonFloat>(value))
   {}
 
@@ -89,14 +83,9 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   JsonVariant(T value,
       typename Internals::EnableIf<Internals::IsSignedIntegral<T>::value>::type* = nullptr) noexcept :
-
-    _type((value >= 0)
-            ? Internals::JsonVariantType::JSON_POSITIVE_INTEGER
-            : Internals::JsonVariantType::JSON_NEGATIVE_INTEGER),
-    _content((value >= 0)
-            ? static_cast<Internals::JsonUInt>(value)
-            : -static_cast<Internals::JsonUInt>(value))
+    _content(static_cast<Internals::JsonInteger>(value))
   {}
+
   // JsonVariant(unsigned short)
   // JsonVariant(unsigned int)
   // JsonVariant(unsigned long)
@@ -108,8 +97,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
           Internals::IsUnsignedIntegral<T>,
           Internals::Not<Internals::IsSame<T, bool>>>::value>::type* = nullptr) noexcept :
 
-    _type(Internals::JsonVariantType::JSON_POSITIVE_INTEGER),
-    _content(static_cast<Internals::JsonUInt>(value))
+    _content(static_cast<Internals::JsonUnsignedInteger>(value))
   {}
 
   // Create a JsonVariant containing a string.
@@ -122,15 +110,13 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
       const TChar *value,
       typename Internals::EnableIf<Internals::IsChar<TChar>::value>::type* = nullptr) noexcept :
 
-    _type(Internals::JsonVariantType::JSON_STRING),
     _content(reinterpret_cast<const char *>(value))
  {}
 
   // Create a JsonVariant containing an unparsed string
   template <typename T>
   JsonVariant(Internals::RawJsonString<T> value) noexcept :
-    _type(Internals::JsonVariantType::JSON_UNPARSED),
-    _content(value.get())
+    _content(value.get(), false)
   {}
 
   // Create a JsonVariant containing a reference to an array.
@@ -279,7 +265,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   typename Internals::EnableIf<Internals::IsSame<T, JsonNull>::value, bool>::type
   is() const {
-    return variantIsNull();
+    return variantMaybeNull();
   }
 
   // Returns true if the variant has type type T, false otherwise.
@@ -301,7 +287,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
                        typename Internals::Not<Internals::IsSame<T, bool>>>::value,
   bool>::type
   is() const {
-    return variantIsInteger();
+    return variantMaybeInteger();
   }
   //
   // bool is<double>() const;
@@ -309,14 +295,14 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value, bool>::type
   is() const {
-    return variantIsFloat();
+    return variantMaybeFloat();
   }
   //
   // bool is<bool>() const
   template <typename T>
   typename Internals::EnableIf<Internals::IsSame<T, bool>::value, bool>::type
   is() const {
-    return variantIsBoolean();
+    return variantMaybeBoolean();
   }
   //
   // bool is<char*>() const;
@@ -361,20 +347,80 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // bool is<std::nullptr_t> const;
   // Explicitly deleted to avoid bogus T* conversion checks
   template <typename T>
-  typename Internals::EnableIf<
-      Internals::IsSame<T, std::nullptr_t>::value,
-      bool>::type
+  typename Internals::EnableIf<Internals::IsSame<T, std::nullptr_t>::value, bool>::type
   is() const = delete;
 
   // Returns true if the variant has a value
   bool success() const;
 
  private:
-  JsonArray &variantAsArray() const;
-  JsonObject &variantAsObject() const;
+  // sometimes types are implicitly convertible, even when they don't exactly match
+
+  bool variantIsUndefined() const {
+    return _content.undefined.type ==
+      Internals::JsonVariantType::JSON_UNDEFINED;
+  }
+
+  bool variantMaybeNull() const; // for types other than JSON_NULL
+  bool variantIsNull() const {
+    return _content.null.type ==
+      Internals::JsonVariantType::JSON_NULL;
+  }
+
+  bool variantMaybeBoolean() const; // for types other than JSON_BOOLEAN
+  bool variantIsBoolean() const {
+    return _content.asBoolean.type ==
+      Internals::JsonVariantType::JSON_BOOLEAN;
+  }
+
+  bool variantMaybeFloat() const; // for types other that JSON_FLOAT
+  bool variantIsFloat() const {
+    return _content.asFloat.type ==
+      Internals::JsonVariantType::JSON_FLOAT;
+  }
+
+  bool variantIsSignedInteger() const {
+    return _content.asSignedInteger.type ==
+      Internals::JsonVariantType::JSON_SIGNED_INTEGER;
+  }
+
+  bool variantIsUnsignedInteger() const {
+    return _content.asUnsignedInteger.type ==
+      Internals::JsonVariantType::JSON_UNSIGNED_INTEGER;
+  }
+
+  bool variantMaybeInteger() const; // for types other than JSON_{SIGNED,UNSIGNED}_INTEGER
+  bool variantIsInteger() const {
+    return variantIsSignedInteger() || variantIsUnsignedInteger();
+  }
+
+  // not implicitly convertible, match the exact type
+
+  bool variantIsObject() const {
+    return _content.asObject.type ==
+      Internals::JsonVariantType::JSON_OBJECT;
+  }
+
+  bool variantIsArray() const {
+    return _content.asArray.type ==
+      Internals::JsonVariantType::JSON_ARRAY;
+  }
+
+  bool variantIsString() const {
+    return _content.asString.type ==
+      Internals::JsonVariantType::JSON_STRING;
+  }
+
+  // delegate '_content' values access
+  template <typename R, typename T>
+  R visit(T&& visitor) const;
+
+  // return exact or implicitly converted values
 
   bool variantAsBoolean() const;
-  const char *variantAsString() const;
+
+  JsonObject &variantAsObject() const;
+  JsonArray &variantAsArray() const;
 
   template <typename T>
   T variantAsFloat() const;
@@ -382,26 +428,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   template <typename T>
   T variantAsInteger() const;
 
-  bool variantIsUndefined() const {
-    return _type == Internals::JsonVariantType::JSON_UNDEFINED;
-  }
-
-  bool variantIsNull() const;
-  bool variantIsBoolean() const;
-  bool variantIsFloat() const;
-  bool variantIsInteger() const;
-  bool variantIsArray() const {
-    return _type == Internals::JsonVariantType::JSON_ARRAY;
-  }
-
-  bool variantIsObject() const {
-    return _type == Internals::JsonVariantType::JSON_OBJECT;
-  }
-
-  bool variantIsString() const {
-    return _type == Internals::JsonVariantType::JSON_STRING ||
-           _type == Internals::JsonVariantType::JSON_UNPARSED;
-  }
+  const char *variantAsString() const;
 };
 
 }  // namespace ArduinoJson

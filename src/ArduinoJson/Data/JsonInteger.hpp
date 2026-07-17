@@ -9,15 +9,25 @@
 namespace ArduinoJson {
 namespace Internals {
 
+using JsonInteger =
 #if ARDUINOJSON_USE_LONG_LONG
-typedef long long JsonInteger;
-typedef unsigned long long JsonUInt;
+  long long
 #elif ARDUINOJSON_USE_INT64
-typedef __int64 JsonInteger;
-typedef unsigned _int64 JsonUInt;
+  __int64
 #else
-typedef long JsonInteger;
-typedef unsigned long JsonUInt;
+  long
 #endif
+  ;
+
+using JsonUnsignedInteger =
+#if ARDUINOJSON_USE_LONG_LONG
+  unsigned long long
+#elif ARDUINOJSON_USE_INT64
+  unsigned __int64
+#else
+  unsigned long
+#endif
+  ;
+
 }  // namespace Internals
 }  // namespace ArduinoJson

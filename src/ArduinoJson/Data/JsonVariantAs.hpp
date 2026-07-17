@@ -7,6 +7,11 @@
 #include <cstddef>
 
 namespace ArduinoJson {
+
+// Forward declarations
+class JsonObject;
+class JsonArray;
+
 namespace Internals {
 
 // A metafunction that returns the type of the value returned by

@@ -36,13 +36,13 @@ union NumberValue {
   NumberValue() {}
   NumberValue(float x) : asFloat(x) {}
   NumberValue(JsonInteger x) : asSignedInteger(x) {}
-  NumberValue(JsonUInt x) : asUnsignedInteger(x) {}
+  NumberValue(JsonUnsignedInteger x) : asUnsignedInteger(x) {}
 #if ARDUINOJSON_USE_DOUBLE
   NumberValue(double x) : asDouble(x) {}
 #endif
 
   JsonInteger asSignedInteger;
-  JsonUInt asUnsignedInteger;
+  JsonUnsignedInteger asUnsignedInteger;
   float asFloat;
 #if ARDUINOJSON_USE_DOUBLE
   double asDouble;
@@ -68,7 +68,7 @@ class Number {
     _value(value)
   {}
 
-  Number(JsonUInt value) :
+  Number(JsonUnsignedInteger value) :
     _type(NumberType::UnsignedInteger),
     _value(value)
   {}
@@ -108,7 +108,7 @@ class Number {
     return _value.asSignedInteger;
   }
 
-  JsonUInt asUnsignedInteger() const {
+  JsonUnsignedInteger asUnsignedInteger() const {
     return _value.asUnsignedInteger;
   }
 
@@ -175,7 +175,7 @@ struct JsonNumberParser {
 
   static ParsedNumberResult parse(const char* s, size_t len) {
     typedef FloatTraits<JsonFloat> traits;
-    typedef LargestType<typename traits::mantissa_type, JsonUInt> mantissa_t;
+    typedef LargestType<typename traits::mantissa_type, JsonUnsignedInteger> mantissa_t;
     typedef typename traits::exponent_type exponent_t;
 
     ParsedNumberResult out;
@@ -235,7 +235,7 @@ struct JsonNumberParser {
 
     mantissa_t mantissa = 0;
     exponent_t exponent_offset = 0;
-    const mantissa_t maxUint = JsonUInt(-1);
+    const mantissa_t maxUint = JsonUnsignedInteger(-1);
 
     while (it != end) {
       c = Strings::Copy::Operator(it);
@@ -260,7 +260,7 @@ struct JsonNumberParser {
           out.value = Number(JsonInteger(~mantissa + 1));
         }
       } else {
-        out.value = Number(JsonUInt(mantissa));
+        out.value = Number(JsonUnsignedInteger(mantissa));
       }
 
       if (out)

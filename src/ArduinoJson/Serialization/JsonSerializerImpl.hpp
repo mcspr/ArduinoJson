@@ -9,6 +9,7 @@
 #include "../JsonObject.hpp"
 #include "../JsonObjectSubscript.hpp"
 #include "../JsonVariant.hpp"
+
 #include "JsonSerializer.hpp"
 
 template <typename Writer>
@@ -59,49 +60,56 @@ template <typename Writer>
 template <typename TKey>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
     const JsonObjectSubscript<TKey>& objectSubscript, Writer& writer) {
+
   serialize(objectSubscript.template as<JsonVariant>(), writer);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonNull) {
+  _writer.writeNull();
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(bool value) {
+  _writer.writeBoolean(value);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonObject* object) {
+  serialize(*object, _writer);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonArray* array) {
+  serialize(*array, _writer);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonFloat value) {
+  _writer.writeFloat(value);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonInteger value) {
+  _writer.writeInteger(value);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonUnsignedInteger value) {
+  _writer.writeUnsignedInteger(value);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonVariantString str) {
+  if (str.parsed)
+    _writer.writeString(str.data);
+  else
+    _writer.writeRaw(str.data);
 }
 
 template <typename Writer>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
     JsonVariant variant, Writer& writer) {
-  switch (variant._type) {
-    case JsonVariantType::JSON_FLOAT:
-      writer.writeFloat(variant._content.asFloat);
-      return;
 
-    case JsonVariantType::JSON_ARRAY:
-      serialize(*variant._content.asArray, writer);
-      return;
-
-    case JsonVariantType::JSON_OBJECT:
-      serialize(*variant._content.asObject, writer);
-      return;
-
-    case JsonVariantType::JSON_STRING:
-      writer.writeString(variant._content.asString);
-      return;
-
-    case JsonVariantType::JSON_NULL:
-      writer.writeNull();
-      return;
-
-    case JsonVariantType::JSON_UNPARSED:
-      writer.writeRaw(variant._content.asString);
-      return;
-
-    case JsonVariantType::JSON_NEGATIVE_INTEGER:
-      writer.writeRaw('-');  // Falls through.
-
-    case JsonVariantType::JSON_POSITIVE_INTEGER:
-      writer.writeInteger(variant._content.asInteger);
-      return;
-
-    case JsonVariantType::JSON_BOOLEAN:
-      writer.writeBoolean(variant._content.asInteger != 0);
-      return;
-
-    case JsonVariantType::JSON_UNDEFINED:
-      break;
-  }
+  variant.visit<void>(VariantVisitor(writer));
 }

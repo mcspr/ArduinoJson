@@ -21,5 +21,6 @@ struct IsChar : IntegralConstant<bool,
 template <typename T>
 struct IsChar<const T> : IsChar<T> {
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

@@ -6,6 +6,7 @@
 
 #include "../Strings/Strings.hpp"
 #include "../Data/Encoding.hpp"
+#include "../Data/JsonLiterals.hpp"
 #include "../Data/JsonInteger.hpp"
 #include "../Data/JsonFloat.hpp"
 #include "../Serialization/FloatParts.hpp"
@@ -20,7 +21,7 @@ namespace JsonNumberWriter {
 
 // writer is expecting a fixed type unsigned value regardless of the original type
 static constexpr auto Base10UIntDigits =
-    size_t{ 3 + std::numeric_limits<JsonUInt>::digits10 };
+    size_t{ 3 + std::numeric_limits<JsonUnsignedInteger>::digits10 };
 
 // writer currently padding only for writeFloat(), reuse existing buffer for extra data
 static constexpr auto Base10FloatDecimalPlaces =
@@ -30,16 +31,16 @@ static_assert(Base10FloatDecimalPlaces > 0, "");
 struct Base10 {
   using buffer_type = char[1 + Base10UIntDigits + Base10FloatDecimalPlaces];
 
-  explicit Base10(JsonUInt value) {
+  explicit Base10(JsonUnsignedInteger value) {
     auto* it = wend();
 
     *(it--) = '\0';
-    while (value >= JsonUInt(10)) {
-      *(it--) = char('0' + (value % JsonUInt(10)));
-      value = JsonUInt(value / JsonUInt(10));
+    while (value >= JsonUnsignedInteger(10)) {
+      *(it--) = char('0' + (value % JsonUnsignedInteger(10)));
+      value = JsonUnsignedInteger(value / JsonUnsignedInteger(10));
     }
 
-    *it = char('0' + (value % JsonUInt(10)));
+    *it = char('0' + (value % JsonUnsignedInteger(10)));
     _data = it;
   }
 
@@ -77,7 +78,7 @@ struct Base10 {
 };
 
 struct PaddedBase10 : public Base10 {
-  PaddedBase10(JsonUInt value, size_t padding) :
+  PaddedBase10(JsonUnsignedInteger value, size_t padding) :
     Base10(value)
   {
     padding = Min(static_cast<size_t>(Base10FloatDecimalPlaces), padding);
@@ -207,11 +208,11 @@ class JsonWriter {
   }
 
   void writeBoolean(bool value) {
-    writeRaw(value ? "true" : "false");
+    writeRaw(value ? JsonLiterals::True : JsonLiterals::False);
   }
 
   void writeNull() {
-    writeRaw("null");
+    writeRaw(JsonLiterals::Null);
   }
 
   void writeString(const char *value) {
@@ -273,13 +274,13 @@ class JsonWriter {
   }
 
   void writeFloat(FloatParts parts) {
-    writeInteger(parts.integral);
+    writeUnsignedInteger(parts.integral);
     if (parts.decimalPlaces > 0) {
       writeRaw('.');
-      writeInteger(parts.decimal, static_cast<size_t>(parts.decimalPlaces));
+      writeUnsignedInteger(parts.decimal, static_cast<size_t>(parts.decimalPlaces));
     }
 
-    const auto exponent = static_cast<unsigned>(
+    const auto exponent = static_cast<JsonUnsignedInteger>(
         parts.exponent < 0
             ? -parts.exponent
             : parts.exponent);
@@ -287,22 +288,35 @@ class JsonWriter {
     if (parts.exponent < 0) {
       writeRaw('e');
       writeRaw('-');
-      writeInteger(exponent);
+      writeUnsignedInteger(exponent);
     }
 
     if (parts.exponent > 0) {
       writeRaw('e');
-      writeInteger(exponent);
+      writeUnsignedInteger(exponent);
     }
   }
 
-  template <typename UInt>
-  void writeInteger(UInt value) {
+  template <typename Unsigned>
+  void writeUnsignedInteger(Unsigned value) {
     const auto repr = JsonNumberWriter::Base10(value);
     writeRaw(repr.c_str());
   }
 
-  void writeInteger(uint32_t value, size_t padding) {
+  template <typename Signed>
+  void writeInteger(Signed value) {
+    JsonUnsignedInteger tmp;
+    if (value < Signed(0)) {
+      writeRaw('-');
+      tmp = -static_cast<JsonUnsignedInteger>(value);
+    } else {
+      tmp = static_cast<JsonUnsignedInteger>(value);
+    }
+
+    writeUnsignedInteger(tmp);
+  }
+
+  void writeUnsignedInteger(uint32_t value, size_t padding) {
     const auto repr = JsonNumberWriter::PaddedBase10(value, padding);
     writeRaw(repr.c_str());
   }
