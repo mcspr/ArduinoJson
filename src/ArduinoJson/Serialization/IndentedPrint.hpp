@@ -54,14 +54,14 @@ class IndentedPrint {
   void indent() {
     const auto level = _level();
     if (level < MaxIndentedPrintLevel)
-      _level(level + 1);
+      _level(static_cast<uint8_t>(level + 1));
   }
 
   // Removes one level of indentation
   void unindent() {
     const auto level = _level();
     if (level > 0)
-      _level(level - 1);
+      _level(static_cast<uint8_t>(level - 1));
   }
 
   // Set the number of space printed for each level of indentation
