@@ -76,7 +76,7 @@ class IndentedPrint {
   }
 
   void _level(uint8_t value) {
-    _opts.level = value;
+    _opts.level = static_cast<uint8_t>(value & MaxIndentedPrintLevel);
   }
 
   uint8_t _tabSize() const {
@@ -84,7 +84,7 @@ class IndentedPrint {
   }
 
   void _tabSize(uint8_t value) {
-    _opts.tabSize = value;
+    _opts.tabSize = static_cast<uint8_t>(value & MaxIndentedPrintTabSize);
   }
 
   bool _isNewLine() const {
