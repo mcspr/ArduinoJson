@@ -121,12 +121,12 @@ struct ValueSaverImpl<Source, typename EnableIf<
   using duplicate_type = typename value_string_type::duplicate_type;
 
   using make_reference = typename value_string_type::string_traits::Reference;
-  using is_null = ValueSaverIsNull<Source>;
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, Source src) {
-    if (!is_null::Operator(src)) {
-      dst = duplicate_type(make_reference::Operator(src));
+    auto src_ref = MakeStringRef(src.get());
+    if (!ValueSaverIsNull<decltype(src_ref)>::Operator(std::move(src_ref))) {
+      dst = duplicate_type(make_reference::Operator(std::move(src)));
       return true;
     }
 
