@@ -166,14 +166,18 @@ struct Equals {
 };
 
 struct Duplicate {
+  static void Operator(void* dup, const void* str, size_t len) {
+    memcpy_P(dup, str, len);
+    reinterpret_cast<char *>(dup)[len] = '\0';
+  }
+
   static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
     void* dup = nullptr;
     if (str != nullptr) {
       auto* ptr = reinterpret_cast<const char *>(str);
       dup = buffer->alloc(len + 1);
       if (dup != nullptr) {
-        memcpy_P(dup, ptr, len);
-        reinterpret_cast<char *>(dup)[len] = '\0';
+        Operator(dup, ptr, len);
       }
     }
 

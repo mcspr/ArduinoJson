@@ -5,24 +5,26 @@
 #pragma once
 
 #include "../JsonBuffer.hpp"
-
-#include "../StringTraits/StringTraits.hpp"
 #include "../RawJson.hpp"
 
 #include "../TypeTraits/EnableIf.hpp"
-#include "../TypeTraits/IsBaseOf.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
 #include "../TypeTraits/And.hpp"
 #include "../TypeTraits/Not.hpp"
 
+#include "../StringTraits/StringTraits.hpp"
+
 namespace ArduinoJson {
+
+// Forward declarations
+class JsonVariant;
+
 namespace Internals {
 
+// generic case just assigns to the dst
 template <typename Source, typename = void>
 struct ValueSaverImpl {
-  typedef Source duplicate_type;
-
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, Source src) {
     dst = src;
@@ -30,53 +32,74 @@ struct ValueSaverImpl {
   }
 };
 
-// output dup'ed to JsonBuffer, or stored in the object directly
+// valuesaver prefers non-nullable string-like types
+template <typename T, typename = void>
+struct ValueSaverIsNull {
+  static bool Operator(T) {
+    return false;
+  }
+};
+
+// but making sure those are checked through the traits impl
 template <typename T>
+struct ValueSaverIsNull<T,
+  typename EnableIf<IsNullable<StringTraits<T>>::value>::type> {
+
+  static bool Operator(T src) {
+    return StringTraits<T>::IsNull::Operator(src);
+  }
+};
+
+// output dup'ed to JsonBuffer, or stored in the object directly
+template <typename T, typename = void>
 struct ValueStringDuplicate {
+  using is_raw_json = FalseType;
+  using string_traits = StringTraits<T>;
   using type = T;
   using duplicate_type = const char*;
 };
 
-// preserve refs until the duplication
 template <typename T>
-struct ValueStringDuplicate<Internals::StringRefWrapper<T>> {
+struct ValueStringDuplicate<T,
+    typename EnableIf<IsRawJsonInstance<T>::value>::type> {
+
+  using is_raw_json = TrueType;
+  using string_traits = StringTraits<T>;
   using type = T;
-  using duplicate_type = const char *;
+  using duplicate_type =
+    Internals::RawJsonString<typename ValueStringDuplicate<typename type::ref_type>::duplicate_type>;
 };
 
-// same as above, but convert into RawJson<JsonString>
-template <typename T>
-struct ValueStringDuplicate<Internals::RawJsonString<T>> {
-  using type = T;
-  using duplicate_type = Internals::RawJsonString<const char *>;
-};
+// generic case. attempts to allocate and assigns resulting copy to the dst
+template <typename Destination, typename Source>
+bool valueSaverDuplicate(JsonBuffer* buffer, Destination& dst, Source src) {
+  using value_string_type = ValueStringDuplicate<Source>;
 
-template <typename T, size_t Size>
-struct ValueStringDuplicate<Internals::RawJsonString<T[Size]>> {
-  using type = T[Size];
-  using duplicate_type = Internals::RawJsonString<const char *>;
-};
+  using duplicate_type = typename value_string_type::duplicate_type;
+  using make_duplicate = typename value_string_type::string_traits::Duplicate;
+
+  auto* dup = make_duplicate::Operator(buffer, src);
+  if (dup) {
+    dst = duplicate_type(dup);
+    return true;
+  }
+
+  return false;
+}
+
+// special case for jsonvariant, dispatching one of two ways that variant could duplicate the value
+// - through the inline string, w/o allocating anything
+// - through the jsonbuffer allocation
+template <typename Source>
+bool valueSaverDuplicate(JsonBuffer* buffer, JsonVariant& dst, Source src);
 
 // source and destination are strings (i.e. Duplicate present from specialization)
 template <typename Source>
 struct ValueSaverImpl<
     Source, typename EnableIf<ShouldDuplicate<StringTraits<Source>>::value>::type> {
-
-  typedef ValueStringDuplicate<Source> value_string_type;
-  typedef typename value_string_type::type source_type;
-  typedef typename value_string_type::duplicate_type duplicate_type;
-
-  typedef typename StringTraits<source_type>::Duplicate Duplicate;
-
   template <typename Destination>
   static bool save(JsonBuffer* buffer, Destination& dst, Source src) {
-    auto* dup = Duplicate::Operator(buffer, src);
-    if (dup) {
-      dst = duplicate_type(dup);
-      return true;
-    }
-
-    return false;
+    return valueSaverDuplicate(buffer, dst, std::move(src));
   }
 };
 
@@ -84,56 +107,30 @@ struct ValueSaverImpl<
 // const char*, const signed char*, const unsigned char*
 // const char[], const signed char[], const unsigned char[]
 template <typename T>
-struct ValueSaverNullableView
+struct ValueSaverView
   : And<HasStringTraitsTag<T>,
         CanReference<T>,
-        IsNullable<T>,
         Not<ShouldDuplicate<T>>>::type {
 };
 
 template <typename Source>
-struct ValueSaverImpl<
-    Source, typename EnableIf<ValueSaverNullableView<StringTraits<Source>>::value>::type> {
+struct ValueSaverImpl<Source, typename EnableIf<
+    ValueSaverView<StringTraits<Source>>::value>::type> {
 
-  typedef ValueStringDuplicate<Source> value_string_type;
-  typedef typename value_string_type::duplicate_type duplicate_type;
+  using value_string_type = ValueStringDuplicate<Source>;
+  using duplicate_type = typename value_string_type::duplicate_type;
+
+  using make_reference = typename value_string_type::string_traits::Reference;
+  using is_null = ValueSaverIsNull<Source>;
 
   template <typename Destination>
   static bool save(JsonBuffer*, Destination& dst, Source src) {
-    using traits_type = StringTraits<Source>;
-
-    using is_null = typename traits_type::IsNull;
     if (!is_null::Operator(src)) {
-      using take_reference = typename traits_type::Reference;
-      dst = duplicate_type(take_reference::Operator(src));
+      dst = duplicate_type(make_reference::Operator(src));
       return true;
     }
 
     return false;
-  }
-};
-
-template <typename T>
-struct ValueSaverNonNullableView
-  : And<HasStringTraitsTag<T>,
-        CanReference<T>,
-        Not<IsNullable<T>>,
-        Not<ShouldDuplicate<T>>>::type {
-};
-
-template <typename Source>
-struct ValueSaverImpl<
-    Source, typename EnableIf<ValueSaverNonNullableView<StringTraits<Source>>::value>::type> {
-
-  typedef ValueStringDuplicate<Source> value_string_type;
-  typedef typename value_string_type::duplicate_type duplicate_type;
-
-  template <typename Destination>
-  static bool save(JsonBuffer*, Destination& dst, Source src) {
-    using traits_type = StringTraits<Source>;
-    using take_reference = typename traits_type::Reference;
-    dst = duplicate_type(take_reference::Operator(src));
-    return true;
   }
 };
 

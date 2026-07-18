@@ -42,66 +42,80 @@ namespace Internals {
 // 'type' is expected to be fairly small (u8 currently)
 //
 // note that implementation *may* fit some extra data in-between 'type' and any following member fields
-// main use-case currently are various flags that would fit in the otherwise unused unnamed struct padding 
-
-// default variant state
-struct JsonVariantContentUndefined {
-  JsonVariantType type;
-};
-
-// value is absent, but explicitly so
-struct JsonVariantContentNull {
-  JsonVariantType type;
-};
-
-struct JsonVariantContentBoolean {
-  JsonVariantType type;
-  bool value;
-};
-
-// pointer to an allocated JsonObject
-// *DOES NOT* store nullptr
-struct JsonVariantContentObject {
-  JsonVariantType type;
-  JsonObject* pointer;
-};
-
-// pointer to an allocated JsonArray
-// *DOES NOT* store nullptr
-struct JsonVariantContentArray {
-  JsonVariantType type;
-  JsonArray* pointer;
-};
-
-// float, double
-struct JsonVariantContentFloat {
-  JsonVariantType type;
-  JsonFloat value;
-};
-
-// char, short, int, long, long long
-struct JsonVariantContentInteger {
-  JsonVariantType type;
-  JsonInteger value;
-};
-
-// -//- as above, but for unsigned types
-struct JsonVariantContentUnsignedInteger {
-  JsonVariantType type;
-  JsonUnsignedInteger value;
-};
-
-// pointer to an allocated string (either parsed or unparsed)
-// *COULD* store nullptr
-struct JsonVariantContentString {
-  JsonVariantType type;
-  bool parsed;
-  const char* pointer;
-};
+// main use-case currently are various flags that would fit in the otherwise unused unnamed struct padding
 
 // The enum JsonVariantType determines which member is in use.
 // Take care and only access the active union member data fields other than 'type'.
 union JsonVariantContent {
+  // default variant state
+  struct Undefined {
+    JsonVariantType type;
+  };
+
+  // value is absent, but explicitly so
+  struct Null {
+    JsonVariantType type;
+  };
+
+  struct Boolean {
+    JsonVariantType type;
+    bool value;
+  };
+
+  // pointer to an allocated JsonObject
+  // *DOES NOT* store nullptr
+  struct Object {
+    JsonVariantType type;
+    JsonObject* pointer;
+  };
+
+  // pointer to an allocated JsonArray
+  // *DOES NOT* store nullptr
+  struct Array {
+    JsonVariantType type;
+    JsonArray* pointer;
+  };
+
+  // float, double
+  struct Float {
+    JsonVariantType type;
+    JsonFloat value;
+  };
+
+  // char, short, int, long, long long
+  struct Integer {
+    JsonVariantType type;
+    JsonInteger value;
+  };
+
+  // -//- as above, but for unsigned types
+  struct UnsignedInteger {
+    JsonVariantType type;
+    JsonUnsignedInteger value;
+  };
+
+  // pointer to an allocated string (either parsed or unparsed)
+  // *COULD* store nullptr
+  struct StringPointer {
+    JsonVariantType type;
+    bool parsed;
+    const char* pointer;
+  };
+
+  struct StringBufferValue {
+    char value[
+      sizeof(StringPointer) -
+      sizeof(JsonVariantType) -
+      sizeof(bool)];
+  };
+
+  // inline string buffer
+  struct StringBuffer {
+    JsonVariantType type;
+    bool parsed;
+    StringBufferValue buffer;
+  };
+
   JsonVariantContent() noexcept :
     undefined({JsonVariantType::JSON_UNDEFINED})
   {}
@@ -135,18 +149,25 @@ union JsonVariantContent {
   {}
 
   explicit JsonVariantContent(const char* pointer, bool parsed = true) noexcept :
-    asString({JsonVariantType::JSON_STRING, parsed, pointer})
+
+    asStringPointer({JsonVariantType::JSON_STRING, parsed, pointer})
   {}
 
-  JsonVariantContentUndefined undefined;
-  JsonVariantContentNull null;
-  JsonVariantContentBoolean asBoolean;
-  JsonVariantContentObject asObject;
-  JsonVariantContentArray asArray;
-  JsonVariantContentFloat asFloat;
-  JsonVariantContentInteger asSignedInteger;
-  JsonVariantContentUnsignedInteger asUnsignedInteger;
-  JsonVariantContentString asString;
+  explicit JsonVariantContent(StringBufferValue buffer_value, bool parsed = true) noexcept :
+
+    asStringBuffer({JsonVariantType::JSON_STRING_BUFFER, parsed, buffer_value})
+  {}
+
+  Undefined undefined;
+  Null null;
+  Boolean asBoolean;
+  Object asObject;
+  Array asArray;
+  Float asFloat;
+  Integer asSignedInteger;
+  UnsignedInteger asUnsignedInteger;
+  StringPointer asStringPointer;
+  StringBuffer asStringBuffer;
 };
 
 }  // namespace Internals

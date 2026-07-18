@@ -113,6 +113,12 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
     _content(reinterpret_cast<const char *>(value))
  {}
 
+  // Internally used overload when data is managed by JsonVariant
+  // JsonVariant(JsonVariantStringBufferValue{const char[]});
+  JsonVariant(Internals::JsonVariantContent::StringBufferValue buffer_value) :
+    _content(buffer_value)
+ {}
+
   // Create a JsonVariant containing an unparsed string
   template <typename T>
   JsonVariant(Internals::RawJsonString<T> value) noexcept :
@@ -407,11 +413,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   }
 
   bool variantIsString() const {
-    return _content.asString.type ==
+    return _content.asStringPointer.type ==
       Internals::JsonVariantType::JSON_STRING;
   }
 
-  // delegate '_content' values access
+  // delegate read-only '_content' values access
   template <typename R, typename T>
   R visit(T&& visitor) const;
 

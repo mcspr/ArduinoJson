@@ -24,6 +24,7 @@ enum class JsonVariantType : uint8_t {
   JSON_SIGNED_INTEGER,    // JsonVariant stores a JsonInteger
   JSON_UNSIGNED_INTEGER,  // JsonVariant stores a JsonUnsignedIntger
   JSON_STRING,            // JsonVariant stores a const char* to either parsed or unparsed string
+  JSON_STRING_BUFFER,     // JsonVariant stores a small const char* data, either parsed or unparsed string
 };
 
 }  // namespace Internals

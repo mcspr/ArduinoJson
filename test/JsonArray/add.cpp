@@ -86,20 +86,40 @@ TEST_CASE("JsonArray::add()") {
     REQUIRE(_array[0].as<const char*>() == data);
   }
 
-  SECTION("should duplicate char*") {
+  SECTION("should use variant string buffer for short char*") {
     const char* data = "world";
     _array.add(const_cast<char*>(data));
-    REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
+    REQUIRE(_jsonBuffer.size() == JSON_ARRAY_SIZE(1));
     REQUIRE(_array.size() == 1);
     REQUIRE(_array[0].as<const char*>() != data);
   }
 
-  SECTION("should duplicate std::string") {
+  SECTION("should duplicate long char*") {
+    const char* data = "allocatethisstringontheheapinsteadofthevariantstringbuffer";
+    _array.add(const_cast<char*>(data));
+    REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != nullptr);
+    REQUIRE(_array[0].as<const char*>() != data);
+    REQUIRE(_array[0].as<const char*>() == std::string(data));
+  }
+
+  SECTION("should use variant string buffer for short std::string") {
     std::string data("world");
+    _array.add(data);
+    REQUIRE(_jsonBuffer.size() == JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != data.c_str());
+  }
+
+  SECTION("should duplicate long std::string") {
+    std::string data("thisstringwouldbeallocatedonheapandnotbeinplace");
     _array.add(data);
     REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
     REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != nullptr);
     REQUIRE(_array[0].as<const char*>() != data.c_str());
+    REQUIRE(_array[0].as<const char*>() == data);
   }
 
   SECTION("should not duplicate RawJson(const char*)") {
@@ -110,11 +130,36 @@ TEST_CASE("JsonArray::add()") {
     REQUIRE(_array[0].as<const char*>() == data);
   }
 
-  SECTION("should duplicate RawJson(char*)") {
+  SECTION("should use variant string buffer for short RawJson(char*)") {
     const char* data = "{}";
+    _array.add(RawJson(const_cast<char*>(data)));
+    REQUIRE(_jsonBuffer.size() == JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != data);
+  }
+
+  SECTION("should duplicate long RawJson(char*)") {
+    const char* data = "{hello1: world1, hello2: world2, hello3: world3, hello4: world4}";
     _array.add(RawJson(const_cast<char*>(data)));
     REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
     REQUIRE(_array.size() == 1);
     REQUIRE(_array[0].as<const char*>() != data);
+  }
+
+  SECTION("should use variant string buffer for short RawJson(std::string)") {
+    _array.add(RawJson(std::string("{}")));
+    REQUIRE(_jsonBuffer.size() == JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != nullptr);
+    REQUIRE(_array[0].as<const char*>() == std::string("{}"));
+  }
+
+  SECTION("should duplicate long RawJson(std::string)") {
+    std::string data = "{hello1: world1, hello2: world2, hello3: world3, hello4: world4}";
+    _array.add(RawJson(data));
+    REQUIRE(_jsonBuffer.size() > JSON_ARRAY_SIZE(1));
+    REQUIRE(_array.size() == 1);
+    REQUIRE(_array[0].as<const char*>() != data.c_str());
+    REQUIRE(_array[0].as<const char*>() == data);
   }
 }

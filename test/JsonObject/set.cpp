@@ -81,18 +81,45 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(42 == _object["a"]);
   }
 
-  SECTION("returns true when allocation succeeds") {
-    StaticJsonBuffer<JSON_OBJECT_SIZE(1) + 15> jsonBuffer;
+  SECTION("returns true when jsonvariant buffers string value") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
 
-    REQUIRE(true == obj.set(std::string("hello"), std::string("world")));
+    REQUIRE(obj.set("hello", std::string("world")));
+  }
+
+  SECTION("returns false when jsonvariant buffers string value but not the key") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+
+    REQUIRE_FALSE(obj.set(std::string("hello"), std::string("world")));
+  }
+
+  SECTION("returns true when allocation succeeds") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1) + 64> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+
+    REQUIRE(obj.set(
+      std::string("hello"),
+      std::string("thisstringistoolongforvariantstringbuffer")));
   }
 
   SECTION("returns false when allocation fails") {
     StaticJsonBuffer<JSON_OBJECT_SIZE(1) + 10> jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
 
-    REQUIRE(false == obj.set(std::string("hello"), std::string("world")));
+    REQUIRE_FALSE(obj.set(
+      std::string("hello"),
+      std::string("thisstringistoolongforvariantstringbuffer")));
+  }
+
+  SECTION("returns false when allocation fails") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1) + 10> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+
+    REQUIRE_FALSE(obj.set(
+      std::string("hello"),
+      std::string("thisstringistoolongforvariantstringbuffer")));
   }
 
   SECTION("should not duplicate const char*") {
@@ -100,29 +127,43 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(JSON_OBJECT_SIZE(1) == jb.size());
   }
 
-  SECTION("should duplicate char* value") {
+  SECTION("should use variant string buffer instead of duplicating char* value") {
     const char* key = "hello";
     const char* val = "world";
-    _object.set(key, const_cast<char*>(val));
+    REQUIRE(_object.set(key, const_cast<char*>(val)));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
+    REQUIRE(_object.size() == 1);
+    auto it = _object.begin();
+    REQUIRE(it->key == key);
+    REQUIRE(it->key == std::string(key));
+    REQUIRE(it->value.as<const char*>() != nullptr);
+    REQUIRE(it->value.as<const char*>() != val);
+    REQUIRE(it->value == std::string(val));
+  }
+
+  SECTION("should duplicate char* value") {
+    const char* key = "hello";
+    const char* val = "thisstringisaprettylongsentencethatdoesnothaveanyspaces";
+    REQUIRE(_object.set(key, const_cast<char*>(val)));
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
     REQUIRE(_object.size() == 1);
-    auto first = _object.begin();
-    REQUIRE(first->key == key);
-    REQUIRE(first->key == std::string(key));
-    REQUIRE(first->value.as<const char*>() != nullptr);
-    REQUIRE(first->value.as<const char*>() != val);
-    REQUIRE(first->value == std::string(val));
+    auto it = _object.begin();
+    REQUIRE(it->key == key);
+    REQUIRE(it->key == std::string(key));
+    REQUIRE(it->value.as<const char*>() != nullptr);
+    REQUIRE(it->value.as<const char*>() != val);
+    REQUIRE(it->value == std::string(val));
   }
 
   SECTION("should duplicate char* key") {
     const char* key = "hello";
-    _object.set(const_cast<char*>(key), "world");
+    REQUIRE(_object.set(const_cast<char*>(key), "world"));
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
     REQUIRE(_object.size() == 1);
-    auto first = _object.begin();
-    REQUIRE(first->key != key);
-    REQUIRE(first->key == std::string(key));
-    REQUIRE(first->value == std::string("world"));
+    auto it = _object.begin();
+    REQUIRE(it->key != key);
+    REQUIRE(it->key == std::string(key));
+    REQUIRE(it->value == std::string("world"));
   }
 
   SECTION("should duplicate char* key&value") {
@@ -140,12 +181,21 @@ TEST_CASE("JsonObject::set()") {
   }
 
   SECTION("mutable view would duplicate part of the value") {
-    char val[] = "helloworld";
-    _object.set("hello", ArduinoJson::MakeStringView(&val[0], 5));
-    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
-    auto first = _object.begin();
-    REQUIRE(first->key == std::string("hello"));
-    REQUIRE(first->value == std::string("hello"));
+    char val[] = "longstringthatwouldallocate";
+
+    _object.set("hello", ArduinoJson::MakeStringView(&val[5], 6));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
+
+    _object.set("world", ArduinoJson::MakeStringView(&val[0], std::strlen(val)));
+    REQUIRE(jb.size() > JSON_OBJECT_SIZE(2));
+
+    auto it = _object.begin();
+    REQUIRE(it->key == std::string("hello"));
+    REQUIRE(it->value == std::string(&val[5], 6));
+
+    ++it;
+    REQUIRE(it->key == std::string("world"));
+    REQUIRE(it->value == std::string(val));
   }
 
   SECTION("immutable view would reference pointer as-is") {
@@ -158,12 +208,18 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(first->value == std::string("world"));
   }
 
-  SECTION("should duplicate std::string value") {
+  SECTION("should use variant string buffer for std::string value") {
     _object.set("hello", std::string("world"));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate std::string value") {
+    _object.set("hello", std::string("longstringthatwouldallocate"));
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 
   SECTION("should duplicate std::string key") {
+    // impl detail - JsonPair key is const char* not JsonVariant
     _object.set(std::string("hello"), "world");
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }

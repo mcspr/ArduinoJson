@@ -84,15 +84,29 @@ TEST_CASE("JsonArray::set()") {
     REQUIRE(expectedSize == _jsonBuffer.size());
   }
 
-  SECTION("should duplicate char*") {
+  SECTION("should use variant string buffer for short char*") {
     _array.set(0, const_cast<char*>("world"));
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + 6;
+    const size_t expectedSize = JSON_ARRAY_SIZE(1);
     REQUIRE(expectedSize == _jsonBuffer.size());
   }
 
-  SECTION("should duplicate std::string") {
+  SECTION("should duplicate long char*") {
+    const char* val = "currentimplementationwouldplacethistringontheheap";
+    _array.set(0, const_cast<char*>(val));
+    const size_t expectedSize = JSON_ARRAY_SIZE(1) + std::strlen(val) + 1;
+    REQUIRE(expectedSize == _jsonBuffer.size());
+  }
+
+  SECTION("should use variant string buffer for short std::string") {
     _array.set(0, std::string("world"));
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + 6;
+    const size_t expectedSize = JSON_ARRAY_SIZE(1);
+    REQUIRE(expectedSize == _jsonBuffer.size());
+  }
+
+  SECTION("should duplicate long std::string") {
+    std::string val = "thisstringwouldnotfitintothevariantstringbuffer";
+    _array.set(0, val);
+    const size_t expectedSize = JSON_ARRAY_SIZE(1) + val.length() + 1;
     REQUIRE(expectedSize == _jsonBuffer.size());
   }
 }

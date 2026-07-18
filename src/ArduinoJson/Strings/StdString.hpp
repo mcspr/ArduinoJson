@@ -42,6 +42,13 @@ struct HasConcat<T, VoidType<
 }
 
 template <typename TString>
+struct Length {
+  static size_t Operator(const TString& str) {
+    return str.length();
+  }
+};
+
+template <typename TString>
 struct Equals {
   static bool Operator(const TString& str, const char* expected, size_t len) {
     return Strings::Equals::Operator(str.c_str(), str.length(), expected, len);
@@ -105,6 +112,14 @@ struct Append<TString,
 
 template <typename TString>
 struct Duplicate {
+  static void Operator(void* dup, const TString& str, size_t length) {
+    Strings::CharPointer::Duplicate::Operator(dup, str.c_str(), length);
+  }
+
+  static void Operator(void* dup, const TString& str) {
+    Operator(dup, str, str.length());
+  }
+
   static const char* Operator(JsonBuffer* buffer, const TString& str, size_t length) {
     return Strings::CharPointer::Duplicate::Operator(buffer, str.c_str(), length);
   }

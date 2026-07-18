@@ -27,6 +27,7 @@ namespace Internals {
 template <typename TString>
 struct StdStringTraits : StringTraitsTag {
   typedef Readers::StdString::Reader<TString> Reader;
+  typedef Strings::StdString::Length<TString> Length;
   typedef Strings::StdString::Equals<TString> Equals;
   typedef Strings::StdString::Append<TString> Append;
   typedef Strings::StdString::Duplicate<TString> Duplicate;

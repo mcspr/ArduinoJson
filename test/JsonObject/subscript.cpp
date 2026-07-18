@@ -123,7 +123,7 @@ TEST_CASE("JsonObject::operator[]") {
   }
 
   SECTION("should duplicate char* value") {
-    _object["hello"] = const_cast<char*>("world");
+    _object["hello"] = const_cast<char*>("longstringthatwouldallocate");
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
@@ -145,7 +145,7 @@ TEST_CASE("JsonObject::operator[]") {
   }
 
   SECTION("should duplicate std::string value") {
-    _object["hello"] = std::string("world");
+    _object["hello"] = std::string("longstringthatwouldallocate");
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 

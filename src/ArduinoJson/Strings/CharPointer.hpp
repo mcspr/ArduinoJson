@@ -91,19 +91,23 @@ struct Equals {
 };
 
 struct Duplicate {
+  static void Operator(void* dup, const void* str, size_t len) {
+    std::memcpy(dup, str, len);
+    reinterpret_cast<char *>(dup)[len] = '\0';
+  }
+
   static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
     void* dup = nullptr;
     if (str) {
       dup = buffer->alloc(len + 1);
       if (dup != nullptr) {
-        std::memcpy(dup, str, len);
-        reinterpret_cast<char *>(dup)[len] = '\0';
+        Operator(dup, str, len);
       }
     }
   
     return static_cast<const char *>(dup);
   }
-  
+
   template <typename TChar, size_t Size>
   static const char* Operator(JsonBuffer* buffer, TChar (&str)[Size]) {
     return Operator(buffer, &str[0], Size - 1);

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "ArduinoJson/Data/JsonVariantDefault.hpp"
+#include "ArduinoJson/Data/ValueSaver.hpp"
 #include "ArduinoJson/Numbers/convertNumber.hpp"
 #include "Configuration.hpp"
 
@@ -30,6 +31,42 @@
 
 namespace ArduinoJson {
 namespace Internals {
+
+template <typename Source>
+bool valueSaverDuplicate(JsonBuffer* buffer, JsonVariant& dst, Source src) {
+  auto src_ref = MakeStringRef(src.get());
+  if (ValueSaverIsNull<decltype(src_ref)>::Operator(src_ref))
+    return false;
+
+  typedef StringTraits<decltype(src_ref)> source_ref_traits;
+  const auto length = source_ref_traits::Length::Operator(src_ref);
+
+  typedef ValueStringDuplicate<Source> duplicate_traits;
+  static constexpr auto is_raw_json = duplicate_traits::is_raw_json::value;
+
+  typedef StringTraits<Source> source_traits;
+
+  if (length && (length - 1) < sizeof(JsonVariantContent::StringBufferValue)) {
+    JsonVariantContent::StringBufferValue tmp;
+    source_traits::Duplicate::Operator(&tmp.value[0], std::move(src), length);
+    if (is_raw_json)
+      dst = RawJson(tmp);
+    else
+      dst = tmp;
+    return true;
+  }
+
+  auto* dup = source_traits::Duplicate::Operator(buffer, std::move(src));
+  if (dup) {
+    if (is_raw_json)
+      dst = RawJson(dup);
+    else
+      dst = dup;
+    return true;
+  }
+
+  return false;
+}
 
 inline bool JsonLiterals::isFalse(const char* str) {
   return Strings::Equals::Operator(str, False);
@@ -372,9 +409,13 @@ R JsonVariant::visit(T&& visitor) const {
   } else if (_content.asUnsignedInteger.type == JsonVariantType::JSON_UNSIGNED_INTEGER) {
     return visitor.Operator(_content.asUnsignedInteger.value);
 
-  } else if (_content.asString.type == JsonVariantType::JSON_STRING) {
+  } else if (_content.asStringPointer.type == JsonVariantType::JSON_STRING) {
     return visitor.Operator(Internals::JsonVariantString{
-      _content.asString.pointer, _content.asString.parsed});
+      _content.asStringPointer.pointer, _content.asStringPointer.parsed});
+
+  } else if (_content.asStringBuffer.type == JsonVariantType::JSON_STRING_BUFFER) {
+    return visitor.Operator(Internals::JsonVariantString{
+      &_content.asStringBuffer.buffer.value[0], _content.asStringPointer.parsed});
 
   }
 

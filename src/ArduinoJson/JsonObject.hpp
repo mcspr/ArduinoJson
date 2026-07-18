@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "StringTraits/StringTraits.hpp"
+
 #include "Data/JsonBufferAllocated.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"
@@ -11,14 +13,11 @@
 #include "Data/ValueSaver.hpp"
 #include "Data/StringView.hpp"
 
-#include "JsonPair.hpp"
-
 #include "Serialization/JsonPrintable.hpp"
 
 #include "TypeTraits/EnableIf.hpp"
-#include "TypeTraits/IsChar.hpp"
 
-#include "StringTraits/StringTraits.hpp"
+#include "JsonPair.hpp"
 
 // Returns the size (in bytes) of an object with n elements.
 // Can be very handy to determine the size of a StaticJsonBuffer.
