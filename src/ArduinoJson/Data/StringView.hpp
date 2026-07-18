@@ -51,8 +51,8 @@ class BaseStringView : public JsonSpan<TChar> {
 
   template <typename T,
     typename EnableIf<And<IsPointer<T>, IsChar<typename RemovePointer<T>::type>>::value>::type* = nullptr>
-  constexpr BaseStringView(T ptr, size_t size) :
-    JsonSpan<TChar>(reinterpret_cast<TChar*>(ptr), size)
+  constexpr BaseStringView(T ptr, size_t ptr_size) :
+    JsonSpan<TChar>(reinterpret_cast<TChar*>(ptr), ptr_size)
   {}
 
   BaseStringView(const BaseStringView&) = default;
