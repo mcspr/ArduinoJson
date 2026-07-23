@@ -413,8 +413,8 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   }
 
   bool variantIsString() const {
-    return _content.asStringPointer.type ==
-      Internals::JsonVariantType::JSON_STRING;
+    return _content.asStringPointer.type == Internals::JsonVariantType::JSON_STRING ||
+           _content.asStringPointer.type == Internals::JsonVariantType::JSON_STRING_BUFFER;
   }
 
   // delegate read-only '_content' values access
