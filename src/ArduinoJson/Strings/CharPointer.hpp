@@ -74,6 +74,13 @@ struct Equals {
   static bool Operator(TChar (&actual)[Size], const char* expected, size_t expected_len) {
     return Operator(&actual[0], Size - 1, expected, expected_len);
   }
+
+  static bool Operator(const void* str, const char* expected, size_t expected_len) {
+    const char* actual = reinterpret_cast<const char *>(str);
+    if (!actual || !expected)
+      return actual == expected;
+    return Operator(actual, Length::Operator(str), expected, expected_len);
+  }
   
   static bool Operator(const void* str, size_t str_len, const char* expected) {
     if (!expected)

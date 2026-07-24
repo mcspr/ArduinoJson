@@ -88,6 +88,13 @@ struct Equals {
     return Operator(str, str_len, expected, Length::Operator(expected));
   }
 
+  static bool Operator(const void* str, const char* expected, size_t expected_len) {
+    const char* actual = reinterpret_cast<const char *>(str);
+    if (!actual || !expected)
+      return actual == expected;
+    return Operator(actual, Length::Operator(str), expected, expected_len);
+  }
+
   static bool Operator(const void* str, const char* expected) {
     const char* actual = reinterpret_cast<const char*>(str);
     if (!actual || !expected)
