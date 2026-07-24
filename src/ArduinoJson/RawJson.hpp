@@ -32,8 +32,9 @@ struct StringTraitsImpl<RawJsonString<String>> : StringTraits<String> {
 };
 
 template <typename T>
-using IsRawJsonInstance =
-  typename Internals::IsInstantiationOf<RawJsonString, typename RemoveConstReference<T>::type>;
+struct IsRawJsonInstance : Internals::IsInstantiationOf<
+    RawJsonString, typename RemoveConstReference<T>::type>::type {
+};
 
 template <typename T>
 using RawJsonStringType =

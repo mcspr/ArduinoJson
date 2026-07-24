@@ -17,8 +17,10 @@ struct IsBaseInstantiationOfProbe {
 };
 
 template <template <typename...> class TBase, typename TDerived>
-using IsBaseInstantiationOfProbeImpl = decltype(IsBaseInstantiationOfProbe<TBase, TDerived>::probe(
-    static_cast<typename RemoveReference<TDerived>::type *>(nullptr)));
+struct IsBaseInstantiationOfProbeImpl : decltype(
+    IsBaseInstantiationOfProbe<TBase, TDerived>::probe(
+        static_cast<typename RemoveReference<TDerived>::type *>(nullptr)))::type {
+};
 
 }
 

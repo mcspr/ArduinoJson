@@ -114,7 +114,8 @@ struct StringRefType<StringRefWrapper<T>> {
 };
 
 template <typename T>
-using IsStringRefInstance = IsBaseInstantiationOf<StringRefWrapper, T>;
+struct IsStringRefInstance : public IsBaseInstantiationOf<StringRefWrapper, T>::type {
+};
 
 template <typename T>
 struct StringRefType<T, typename EnableIf<IsStringRefInstance<T>::value>::type> {
