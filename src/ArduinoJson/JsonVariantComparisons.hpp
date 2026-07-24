@@ -168,7 +168,7 @@ inline bool JsonVariantComparisonsHelper::equals(
     if (left.template is<JsonObject>() && right.template is<JsonObject>())
       return left.template as<JsonObject>() == right.template as<JsonObject>();
     if (left.template is<const char *>() && right.template is<const char *>())
-      return StringTraits<const char *>::Equals::Operator(
+      return Strings::Equals::Operator(
         left.template as<const char *>(), right.template as<const char *>());
 
     return false;
