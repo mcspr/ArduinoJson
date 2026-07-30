@@ -26,6 +26,7 @@ jobs:
             m32: true
           - gcc: "16"
             test: "ppa:ubuntu-toolchain-r/test"
+            install: lib32gcc-16 lib32atomic1 lib32asan8 lib32ubsan1
             cxxflags: -m32
             cflags: -m32
             ldflags: -m32
@@ -40,7 +41,7 @@ jobs:
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} main'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ ${{ matrix.archive }} universe'
           sudo apt-get update -y
-          sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+          sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }} ${{ matrix.install }}
         timeout-minutes: 5
 
       - name: Install toolchain test build
@@ -48,7 +49,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update -y
-          sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+          sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }} ${{ matrix.install }}
         timeout-minutes: 5
 
       - name: Checkout
