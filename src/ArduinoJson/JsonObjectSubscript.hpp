@@ -9,7 +9,6 @@
 #include "JsonVariantBase.hpp"
 
 #include "Data/JsonNull.hpp"
-#include "Data/StringRef.hpp"
 #include "Data/StringView.hpp"
 
 #include "TypeTraits/EnableIf.hpp"
@@ -17,8 +16,6 @@
 #include "TypeTraits/IsFloatingPoint.hpp"
 #include "TypeTraits/IsIntegral.hpp"
 #include "TypeTraits/RemoveReference.hpp"
-
-#include "Data/StringRef.hpp"
 
 namespace ArduinoJson {
 namespace Internals {

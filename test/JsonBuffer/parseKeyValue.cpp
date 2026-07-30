@@ -21,7 +21,7 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE_FALSE(result); // fail due to nesting
     REQUIRE(0 == n); // callback should never execute
-    REQUIRE(3 == jsonBuffer.size()); // "ab"
+    REQUIRE(0 == jsonBuffer.size()); // nothing gets allocated, values inlined in the variant
   }
 
   SECTION("ObjectNestedInArray") {
@@ -38,7 +38,7 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE_FALSE(result); // is array
     REQUIRE(0 == n); // callback should never execute
-    REQUIRE(0 == jsonBuffer.size()); // first element is object, which should not be allocated
+    REQUIRE(0 == jsonBuffer.size()); // first element is object, but parser stops before it
   }
 
   SECTION("Simple key value") {
@@ -74,16 +74,16 @@ TEST_CASE("JsonBuffer kv objects") {
 
   SECTION("Stop token") {
     DynamicJsonBuffer jsonBuffer;
-    const char jsonString[] = "{\"process\": \"first\", \"and\": \"second\", \"but not\": \"last\"}";
+    const char jsonString[] = "{\"small\": \"val1\", \"and\": \"val2\", \"but not this one that would allocate\": \"last\"}";
 
     const char* keys[] = {
-      "process",
+      "small",
       "and",
     };
 
     const char* vals[] = {
-      "first",
-      "second",
+      "val1",
+      "val2",
     };
 
     size_t n = 0;
@@ -102,11 +102,7 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE(result); // parser manually stopped
     REQUIRE(2 == n); // parsing stopped before reaching the end
-    REQUIRE(jsonBuffer.size() ==
-      (std::strlen(keys[0]) +
-       std::strlen(keys[1]) +
-       std::strlen(vals[0]) +
-       std::strlen(vals[1]) + 4));
+    REQUIRE(0 == jsonBuffer.size()); // small values never allocate
   }
 
   SECTION("Stop token & multiple callbacks") {
@@ -136,7 +132,7 @@ TEST_CASE("JsonBuffer kv objects") {
     REQUIRE(2 == n);
     REQUIRE(0 == jsonBuffer.size());
 
-    const char tmp3[] = "{another: object, another: val}";
+    const char tmp3[] = "{small: obj, small: val}";
     result = jsonBuffer.parseKeyValue(
       tmp3,
       [&](const char*, JsonVariant) {
@@ -145,6 +141,17 @@ TEST_CASE("JsonBuffer kv objects") {
 
     REQUIRE(result);
     REQUIRE(4 == n);
+    REQUIRE(jsonBuffer.size() == 0);
+
+    const char tmp4[] = "{thiskeygetsallocated: obj, small: thisvaluegetsallocated}";
+    result = jsonBuffer.parseKeyValue(
+      tmp4,
+      [&](const char*, JsonVariant) {
+        n++;
+      });
+
+    REQUIRE(result);
+    REQUIRE(6 == n);
     REQUIRE(jsonBuffer.size() > 0);
   }
 

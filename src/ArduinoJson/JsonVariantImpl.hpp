@@ -14,7 +14,7 @@
 #include "Data/JsonInteger.hpp"
 #include "Data/JsonNull.hpp"
 #include "Data/JsonVariantContent.hpp"
-#include "Data/JsonVariantString.hpp"
+#include "Data/JsonStringPointer.hpp"
 #include "Data/JsonVariantType.hpp"
 
 #include "JsonArray.hpp"
@@ -102,7 +102,7 @@ struct JsonVariantAsBoolean {
     return value != JsonUnsignedInteger(0);
   }
 
-  static bool Operator(JsonVariantString str) {
+  static bool Operator(JsonStringPointer str) {
     if (!str.data || JsonLiterals::isFalse(str.data))
       return false;
 
@@ -170,7 +170,7 @@ struct JsonVariantAsFloat {
     return defaultValue();
   }
 
-  static TOut Operator(JsonVariantString str) {
+  static TOut Operator(JsonStringPointer str) {
     const auto converted = Internals::parseFloat<TOut>(str.data);
     if (converted)
       return converted.value;
@@ -208,7 +208,7 @@ struct JsonVariantAsInteger {
     return defaultValue();
   }
 
-  static TOut Operator(JsonVariantString str) {
+  static TOut Operator(JsonStringPointer str) {
     const auto converted = Internals::parseInteger<TOut>(str.data);
     if (converted)
       return converted.value;
@@ -232,7 +232,7 @@ struct JsonVariantMaybeNull {
     return true;
   }
 
-  static bool Operator(JsonVariantString str) {
+  static bool Operator(JsonStringPointer str) {
     if (str.data && !str.parsed)
       return JsonLiterals::isNull(str.data);
 
@@ -255,7 +255,7 @@ struct JsonVariantMaybeBoolean {
     return true;
   }
 
-  static bool Operator(JsonVariantString str) {
+  static bool Operator(JsonStringPointer str) {
     if (str.data && !str.parsed)
       return JsonLiterals::isFalse(str.data) ||
              JsonLiterals::isTrue(str.data);
@@ -315,7 +315,7 @@ struct JsonVariantMaybeInteger {
     return true;
   }
 
-  static bool Operator(JsonVariantString str) {
+  static bool Operator(JsonStringPointer str) {
     return str.data && !str.parsed && isInteger(str.data);
   }
 
@@ -343,7 +343,7 @@ struct JsonVariantMaybeFloat {
     return true;
   }
 
-  static bool Operator(JsonVariantString str) {
+  static bool Operator(JsonStringPointer str) {
     return str.data && !str.parsed && isFloat(str.data);
   }
 };
@@ -369,12 +369,35 @@ struct JsonVariantMaybeString {
     return nullptr;
   }
 
-  static const char* Operator(JsonVariantString str) {
+  static const char* Operator(JsonStringPointer str) {
     return str.data;
   }
 };
 
+// adapt different union base, which contains only a subset of possible values
+struct JsonStringVisitor {
+  explicit JsonStringVisitor(bool parsed) noexcept :
+    _parsed(parsed)
+  {}
+
+  JsonVariantContent Operator(const char* pointer) noexcept {
+    return JsonVariantContent(pointer, _parsed);
+  }
+
+  JsonVariantContent Operator(JsonVariantContent::StringBufferValue buffer) noexcept {
+    return JsonVariantContent(buffer, _parsed);
+  }
+
+ private:
+  bool _parsed;
+};
+
 }
+
+inline JsonVariant::JsonVariant(Internals::JsonString other, bool parsed) noexcept :
+  _content(other.visit<Internals::JsonVariantContent>(
+    Internals::JsonStringVisitor(parsed)))
+{}
 
 inline JsonVariant::JsonVariant(const JsonArray &array) noexcept :
   _content(const_cast<JsonArray *>(std::addressof(array)))
@@ -410,11 +433,11 @@ R JsonVariant::visit(T&& visitor) const {
     return visitor.Operator(_content.asUnsignedInteger.value);
 
   } else if (_content.asStringPointer.type == JsonVariantType::JSON_STRING) {
-    return visitor.Operator(Internals::JsonVariantString{
+    return visitor.Operator(Internals::JsonStringPointer{
       _content.asStringPointer.pointer, _content.asStringPointer.parsed});
 
   } else if (_content.asStringBuffer.type == JsonVariantType::JSON_STRING_BUFFER) {
-    return visitor.Operator(Internals::JsonVariantString{
+    return visitor.Operator(Internals::JsonStringPointer{
       &_content.asStringBuffer.buffer.value[0], _content.asStringPointer.parsed});
 
   }

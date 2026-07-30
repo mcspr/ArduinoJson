@@ -190,7 +190,9 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   template <typename TKey>
   iterator find_impl(TKey key) {
     for (auto it = begin(); it != end(); ++it) {
-      if (Internals::StringTraits<TKey>::Equals::Operator(key, it->key))
+      const auto ptr = it->key.as<const char*>();
+      const auto len = Internals::Strings::Length::Operator(ptr);
+      if (Internals::StringTraits<TKey>::Equals::Operator(key, ptr, len))
         return it;
     }
     return end();
@@ -265,6 +267,9 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   template <typename>
   friend class Internals::JsonObjectSubscript;
+
+  template <typename, typename>
+  friend class Internals::JsonParser;
 };
 
 namespace Internals {

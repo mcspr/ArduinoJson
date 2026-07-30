@@ -48,4 +48,27 @@ TEST_CASE("StaticJsonBuffer::parseObject()") {
     JsonObject& obj = bufferOfRightSize.parseObject(input);
     REQUIRE(obj.success());
   }
+
+  SECTION("StringDuplicateForcedAlignment") {
+    // note: contents depend on current impl, adjust if necessary
+    std::string elements[] {
+      "123456789ABCDEFG",  // always supposed to allocate
+      "ABCD",              // should not allocate w/ 32bit build
+    };
+
+    StaticJsonBuffer<JSON_OBJECT_SIZE(3)> bufferOfRightSize;
+
+    std::string input;
+    input += "  { key1: \"";
+    input += elements[0];
+    input += "\", key2: \"";
+    input += elements[1];
+    input += "\"   }   ";
+
+    JsonObject& obj = bufferOfRightSize.parseObject(input);
+    REQUIRE(obj.success());
+    REQUIRE(obj["key1"].as<const char*>() == elements[0]);
+    REQUIRE(obj["key2"].as<const char*>() == elements[1]);
+    REQUIRE(JSON_OBJECT_SIZE(2) < bufferOfRightSize.size());
+  }
 }

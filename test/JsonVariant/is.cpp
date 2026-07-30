@@ -5,6 +5,9 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+using StringBufferValue = ArduinoJson::Internals::JsonVariantContent::StringBufferValue;
+using ArduinoJson::Internals::JsonString;
+
 void checkIsArray(JsonVariant var) {
   REQUIRE(var.is<JsonArray>());
   REQUIRE(var.is<JsonArray&>());
@@ -161,6 +164,18 @@ TEST_CASE("JsonVariant::is()") {
 
   SECTION("string") {
     checkIsString("42");
+    checkIsString(StringBufferValue{"42"});
+  }
+
+  SECTION("string to string conversion") {
+    checkIsString(JsonVariant(
+      JsonString("42"), true));
+    checkIsString(JsonVariant(
+      JsonString(StringBufferValue{"42"}), true));
+    checkIsString(JsonVariant(
+      JsonString("wat"), false));
+    checkIsString(JsonVariant(
+      JsonString(StringBufferValue{"wat"}), false));
   }
 
   SECTION("unparsed null") {

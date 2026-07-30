@@ -127,19 +127,37 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate char* key") {
+  SECTION("should not duplicate small char* key") {
     _object[const_cast<char*>("hello")] = "world";
+    REQUIRE(_jsonBuffer.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate char* key") {
+    _object[const_cast<char*>("thiskeyshouldgetduplicatedinthebuffer")] = "world";
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate char* key&value") {
+  SECTION("should not duplicate small char* key&value") {
     _object[const_cast<char*>("hello")] = const_cast<char*>("world");
+    REQUIRE(_jsonBuffer.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long char* key&value") {
+    _object[const_cast<char*>("thiskeyshouldgetallocatedinthebuffer")] =
+      const_cast<char*>("thisvalshouldalsogetallocatedinthebuffer");
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate char[] key&value") {
+  SECTION("should not duplicate small char[] key&value") {
     char key[] = "hello";
     char val[] = "world";
+    _object[key] = val;
+    REQUIRE(_jsonBuffer.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long char[] key&value") {
+    char key[] = "thiskeyshouldgetallocated";
+    char val[] = "thisvalshouldgetallocated";
     _object[key] = val;
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
@@ -149,19 +167,37 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate std::string key") {
+  SECTION("should not duplicate small std::string key") {
     _object[std::string("hello")] = "world";
+    REQUIRE(_jsonBuffer.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long std::string key") {
+    _object[std::string("makingsurethatthisstringgetsallocated")] = "world";
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate std::string key&value") {
+  SECTION("should not duplicate small std::string key&value") {
     _object[std::string("hello")] = std::string("world");
+    REQUIRE(_jsonBuffer.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long std::string key&value") {
+    _object[std::string("somekeyvaluethatislongerthaninternalbuffer")] =
+      std::string("andsomevaluethatislongerthaninternalbuffer");
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate const std::string& key&value") {
+  SECTION("should not duplicate small const std::string& key&value") {
     const auto key = std::string("hello");
     const auto val = std::string("world");
+    _object[key] = val;
+    REQUIRE(_jsonBuffer.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long const std::string& key&value") {
+    const auto key = std::string("longstringthatwouldallocate");
+    const auto val = std::string("anotherlongstringforvalue");
     _object[key] = val;
     REQUIRE(_jsonBuffer.size() > JSON_OBJECT_SIZE(1));
   }

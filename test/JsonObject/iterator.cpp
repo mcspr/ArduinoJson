@@ -6,12 +6,32 @@
 #include <catch.hpp>
 
 using Catch::Matchers::Equals;
+using ArduinoJson::Internals::JsonFloat;
 
 TEST_CASE("JsonObject::begin()/end()") {
   StaticJsonBuffer<JSON_OBJECT_SIZE(2)> jb;
   JsonObject& obj = jb.createObject();
   obj["ab"] = 12;
   obj["cd"] = 34;
+
+  SECTION("Loop") {
+    const char* keys[] = { "ef", "gh", };
+
+    size_t kindex = 0;
+    for (auto& pair : obj) {
+      pair.key = keys[kindex++];
+      auto value = pair.value.as<int>();
+      pair.value = static_cast<JsonFloat>(value) + JsonFloat(0.5);
+    }
+
+    REQUIRE(kindex == 2);
+
+    REQUIRE(obj[keys[0]].is<JsonFloat>());
+    REQUIRE(obj[keys[0]] == Approx(12.5));
+
+    REQUIRE(obj[keys[1]].is<JsonFloat>());
+    REQUIRE(obj[keys[1]] == Approx(34.5));
+  }
 
   SECTION("NonConstIterator") {
     JsonObject::iterator it = obj.begin();

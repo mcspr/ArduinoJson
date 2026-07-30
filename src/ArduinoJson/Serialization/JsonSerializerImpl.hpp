@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../Data/JsonStringPointer.hpp"
+
 #include "../JsonArray.hpp"
 #include "../JsonArraySubscript.hpp"
 #include "../JsonObject.hpp"
@@ -43,7 +45,7 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
 
   JsonObject::const_iterator it = object.begin();
   while (it != object.end()) {
-    writer.writeString(it->key);
+    serialize(it->key, writer);
     writer.writeColon();
     serialize(it->value, writer);
 
@@ -100,7 +102,7 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Oper
 }
 
 template <typename Writer>
-inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonVariantString str) {
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonStringPointer str) {
   if (str.parsed)
     _writer.writeString(str.data);
   else

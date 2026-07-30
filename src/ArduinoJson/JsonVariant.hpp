@@ -6,8 +6,10 @@
 
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonVariantType.hpp"
-#include "Data/JsonVariantString.hpp"
+
 #include "JsonVariantBase.hpp"
+#include "JsonString.hpp"
+
 #include "RawJson.hpp"
 #include "Serialization/JsonPrintable.hpp"
 
@@ -20,7 +22,6 @@
 #include "TypeTraits/IsUnsignedIntegral.hpp"
 #include "TypeTraits/RemoveConstReference.hpp"
 #include "TypeTraits/RemoveReference.hpp"
-
 #include "TypeTraits/Or.hpp"
 
 #include <cstddef>
@@ -114,16 +115,21 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
  {}
 
   // Internally used overload when data is managed by JsonVariant
-  // JsonVariant(JsonVariantStringBufferValue{const char[]});
+  // JsonVariant(StringBufferValue{const char[]});
   JsonVariant(Internals::JsonVariantContent::StringBufferValue buffer_value) :
     _content(buffer_value)
  {}
 
   // Create a JsonVariant containing an unparsed string
+  // JsonVariant(RawJson(...))
   template <typename T>
   JsonVariant(Internals::RawJsonString<T> value) noexcept :
     _content(value.get(), false)
   {}
+
+  // Convert JsonString variant-like to a JsonVariant containing string data
+  // CAUTION: usually only called internally, prefer other constructors
+  JsonVariant(Internals::JsonString, bool parsed) noexcept;
 
   // Create a JsonVariant containing a reference to an array.
   // CAUTION: we are lying about constness, because the array can be modified if
@@ -360,6 +366,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   bool success() const;
 
  private:
+  // delegate read-only '_content' values access
+
+  template <typename R, typename T>
+  R visit(T&& visitor) const;
+
   // sometimes types are implicitly convertible, even when they don't exactly match
 
   bool variantIsUndefined() const {
@@ -413,13 +424,11 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   }
 
   bool variantIsString() const {
-    return _content.asStringPointer.type == Internals::JsonVariantType::JSON_STRING ||
-           _content.asStringPointer.type == Internals::JsonVariantType::JSON_STRING_BUFFER;
+    return _content.asStringPointer.type ==
+      Internals::JsonVariantType::JSON_STRING ||
+           _content.asStringPointer.type ==
+      Internals::JsonVariantType::JSON_STRING_BUFFER;
   }
-
-  // delegate read-only '_content' values access
-  template <typename R, typename T>
-  R visit(T&& visitor) const;
 
   // return exact or implicitly converted values
 

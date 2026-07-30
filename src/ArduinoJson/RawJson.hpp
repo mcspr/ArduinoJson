@@ -10,7 +10,7 @@
 #include "TypeTraits/And.hpp"
 #include "TypeTraits/Not.hpp"
 
-#include "Data/StringRef.hpp"
+#include "Data/StringView.hpp"
 
 #include <utility>
 

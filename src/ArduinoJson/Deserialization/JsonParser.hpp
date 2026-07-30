@@ -4,15 +4,9 @@
 
 #pragma once
 
-#include "../JsonBuffer.hpp"
-#include "../JsonVariant.hpp"
-#include "../JsonSpan.hpp"
-
-#include "../StringTraits/StringTraits.hpp"
-#include "../Readers/Readers.hpp"
-
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/IsPointer.hpp"
+#include "../TypeTraits/IsInstantiationOf.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemovePointer.hpp"
 
@@ -20,8 +14,19 @@
 #include "../TypeTraits/VoidType.hpp"
 #include "../TypeTraits/Declval.hpp"
 
+#include "../Data/JsonVariantContent.hpp"
+
+#include "../JsonVariant.hpp"
+#include "../JsonBuffer.hpp"
+#include "../JsonSpan.hpp"
+#include "../JsonString.hpp"
+
+#include "../StringTraits/StringTraits.hpp"
+#include "../Readers/Readers.hpp"
+
 #include "JsonParserStopToken.hpp"
 #include "StringWriter.hpp"
+#include "StringBufferedWriter.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -60,6 +65,9 @@ struct BasicCallback<T, VoidType<decltype(
 template <typename TReader, typename TWriter>
 class JsonParser {
  public:
+  using reader_type = TReader;
+  using writer_type = TWriter;
+
   JsonParser(JsonBuffer *buffer, TReader reader, TWriter writer,
              uint8_t nestingLimit)
       : _buffer(buffer),
@@ -88,12 +96,16 @@ class JsonParser {
     return eat(_reader, charToSkip);
   }
 
-  const char *parseString();
+  JsonString parseString();
   bool parseAnythingTo(JsonVariant *destination);
 
   inline bool parseArrayTo(JsonVariant *destination);
   inline bool parseObjectTo(JsonVariant *destination);
-  inline bool parseStringTo(JsonVariant *destination);
+  inline bool parseStringTo(JsonVariant *destination, bool = false);
+
+  using writer_string_type = decltype(Declval<TWriter>().startString());
+  using writer_returns_json_string =
+    typename IsInstantiationOf<StringBufferedWriter, writer_type>::type;
 
   JsonBuffer *_buffer;
   TReader _reader;
@@ -128,6 +140,7 @@ class JsonKeyValueParser final :
 
   using JsonParser<TReader, TWriter>::eat;
   using JsonParser<TReader, TWriter>::parseString;
+  using JsonParser<TReader, TWriter>::parseStringTo;
   using JsonParser<TReader, TWriter>::parseAnythingTo;
 
   using JsonParser<TReader, TWriter>::parseObject;
@@ -189,12 +202,13 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<const TChar, Size>> 
   typedef Internals::JsonSpan<const TChar, Size> TSpan;
 
   typedef typename StringTraits<TChar *>::Reader TReader;
-  typedef TJsonParser<TReader, TJsonBuffer &> TParser;
+  typedef StringBufferedWriter<TJsonBuffer> TWriter;
+  typedef TJsonParser<TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TSpan json, uint8_t nestingLimit) {
     return TParser(buffer,
       TReader(json.data(), json.size()),
-      *buffer,
+      TWriter(*buffer),
       nestingLimit);
   }
 };

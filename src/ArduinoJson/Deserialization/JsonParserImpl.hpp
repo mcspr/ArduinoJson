@@ -10,6 +10,8 @@
 #include "../JsonArray.hpp"
 #include "../JsonObject.hpp"
 
+#include "StringBufferedWriter.hpp"
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -116,14 +118,25 @@ inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
   // Read each key value pair
   for (;;) {
     // 1 - Parse key
-    const char *key = parseString();
-    if (!key) goto ERROR_INVALID_KEY;
+    JsonVariant key;
+    if (!parseStringTo(&key, true)) goto ERROR_INVALID_KEY;
     if (!eat(':')) goto ERROR_MISSING_COLON;
 
     // 2 - Parse value
     JsonVariant value;
     if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
-    if (!object.set(key, value)) goto ERROR_NO_MEMORY;
+
+    // 3 - Manually search object for variant key match
+    auto it = object.find_impl(
+      Internals::MakeStringRef(key.as<const char*>()));
+    if (it != object.end()) {  // no reason to update existing key object
+      it->value = std::move(value);
+    } else {  // brand new object nodes list entry
+      it = object.add();
+      if (it == object.end()) goto ERROR_NO_MEMORY;
+      it->key = std::move(key);
+      it->value = std::move(value);
+    }
 
     // 3 - More keys/values?
     if (eat('}')) goto SUCCESS_NON_EMPTY_OBJECT;
@@ -154,13 +167,69 @@ inline bool JsonParser<TReader, TWriter>::parseObjectTo(
   return true;
 }
 
-template <typename TReader, typename TWriter>
-inline const char *
-JsonParser<TReader, TWriter>::parseString() {
-  typename RemoveReference<TWriter>::type::String str = _writer.startString();
+namespace JsonParserImpl {
 
+template <typename Convertible>
+struct AsJsonString;
+
+template <>
+struct AsJsonString<TrueType> {
+  template <typename TString>
+  static JsonString Operator(TString& str) {
+    return str.asJsonString();
+  }
+};
+
+template <>
+struct AsJsonString<FalseType> {
+  template <typename TString>
+  static JsonString Operator(TString& str) {
+    return JsonString(str.c_str());
+  }
+};
+
+}
+
+// conditionally called based on the probing done in the parser
+// appends to the internal buffer until full, then the parent buffer
+template <typename TWriter>
+inline void StringBufferedWriter<TWriter>::String::_appendValue(
+  string_type& str, char c)
+{
+  auto& capacity = last();
+  const auto windex = LastIndex - static_cast<size_t>(capacity);
+
+  if (capacity == '\0') {
+    for (size_t index = 0; index < windex; ++index)
+      str.append(_buffer.value[index]);
+    str.append(c);
+    _append = &String::_appendParent;
+    return;
+  }
+
+  _buffer.value[windex] = c;
+  --capacity;
+}
+
+// either forced or switched to from the internal buffer
+template <typename TWriter>
+inline void StringBufferedWriter<TWriter>::String::_appendParent(
+  string_type& str, char c)
+{
+  str.append(c);
+}
+
+// JsonString *may* store data inline before falling 
+// Otherwise, points to TJsonBuffer allocated storage
+template <typename TReader, typename TWriter>
+inline JsonString
+JsonParser<TReader, TWriter>::parseString() {
   skipSpacesAndComments(_reader);
   char c = _reader.current();
+
+  auto str = _writer.startString();
+
+  JsonString out;
 
   if (isQuote(c)) {  // quotes
     _reader.move();
@@ -168,7 +237,7 @@ JsonParser<TReader, TWriter>::parseString() {
     for (;;) {
       c = _reader.current();
       if (c == '\0')
-        return nullptr;  // incomplete input
+        return out;  // incomplete input
       _reader.move();
 
       if (c == stopChar)
@@ -179,11 +248,11 @@ JsonParser<TReader, TWriter>::parseString() {
       else {
         c = _reader.current();
         if (c == '\0')
-          return nullptr;  // incomplete input
+          return out;  // incomplete input
 
         c = Encoding::unescapeChar(c);
         if (c == '\0')
-          return nullptr;  // invalid escape
+          return out;  // invalid escape
 
         _reader.move();
         str.append(c);
@@ -196,23 +265,22 @@ JsonParser<TReader, TWriter>::parseString() {
       c = _reader.current();
     } while (canBeInNonQuotedString(c));
   } else {
-    return nullptr;  // invalid
+    return out;  // invalid
   }
 
-  return str.c_str();
+  using AsJsonString = JsonParserImpl::AsJsonString<writer_returns_json_string>;
+  out = AsJsonString::Operator(str);
+
+  return out;
 }
 
 template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::parseStringTo(
-    JsonVariant *destination) {
-  bool hasQuotes = isQuote(_reader.current());
-  auto *value = parseString();
-  if (value != nullptr) {
-    if (hasQuotes) {
-      *destination = value;
-    } else {
-      *destination = RawJson(value);
-    }
+    JsonVariant *destination, bool forceString) {
+  const auto hasQuotes = forceString || isQuote(_reader.current());
+  const auto parsed = parseString();
+  if (parsed.success()) {
+    *destination = JsonVariant(parsed, hasQuotes);
     return true;
   }
 
@@ -232,8 +300,8 @@ inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
   // Read each key value pair
   for (;;) {
     // 1 - Parse key
-    const char *key = parseString();
-    if (!key) goto ERROR_INVALID_KEY;
+    JsonVariant key;
+    if (!parseStringTo(&key, true)) goto ERROR_INVALID_KEY;
     if (!eat(':')) goto ERROR_MISSING_COLON;
 
     // 2 - Parse value
@@ -241,7 +309,7 @@ inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
     if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
 
     // 3 - Execute user callback and possibly stop
-    if (keyValueCallback(std::forward<T>(callback), key, value)) goto SUCCESS_STOP;
+    if (keyValueCallback(std::forward<T>(callback), key.as<const char*>(), value)) goto SUCCESS_STOP;
 
     // 4 - Process more keys/values?
     if (eat('}')) goto SUCCESS_NON_EMPTY_OBJECT;

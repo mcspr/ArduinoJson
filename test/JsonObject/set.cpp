@@ -88,11 +88,18 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(obj.set("hello", std::string("world")));
   }
 
+  SECTION("returns true when jsonvariant buffers string key&value") {
+    StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+
+    REQUIRE(obj.set(std::string("hello"), std::string("world")));
+  }
+
   SECTION("returns false when jsonvariant buffers string value but not the key") {
     StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
 
-    REQUIRE_FALSE(obj.set(std::string("hello"), std::string("world")));
+    REQUIRE_FALSE(obj.set(std::string("thisstringistoolongtobeinlined"), std::string("world")));
   }
 
   SECTION("returns true when allocation succeeds") {
@@ -134,7 +141,8 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
     REQUIRE(_object.size() == 1);
     auto it = _object.begin();
-    REQUIRE(it->key == key);
+    REQUIRE(it->key.as<const char*>() != nullptr);
+    REQUIRE(it->key.as<const char*>() == key);
     REQUIRE(it->key == std::string(key));
     REQUIRE(it->value.as<const char*>() != nullptr);
     REQUIRE(it->value.as<const char*>() != val);
@@ -155,25 +163,28 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(it->value == std::string(val));
   }
 
-  SECTION("should duplicate char* key") {
+  SECTION("should not duplicate small char* key") {
     const char* key = "hello";
     REQUIRE(_object.set(const_cast<char*>(key), "world"));
-    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
     REQUIRE(_object.size() == 1);
     auto it = _object.begin();
-    REQUIRE(it->key != key);
+    REQUIRE(it->key.as<const char*>() != nullptr);
+    REQUIRE(it->key.as<const char*>() != key);
     REQUIRE(it->key == std::string(key));
+    REQUIRE(it->value.as<const char*>() != nullptr);
     REQUIRE(it->value == std::string("world"));
   }
 
-  SECTION("should duplicate char* key&value") {
+  SECTION("should not duplicate small char* key&value") {
     const char* key = "hello";
     const char* val = "world";
     _object.set(const_cast<char*>(key), const_cast<char*>(val));
-    REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
     REQUIRE(_object.size() == 1);
     auto first = _object.begin();
-    REQUIRE(first->key != key);
+    REQUIRE(first->key.as<const char*>() != nullptr);
+    REQUIRE(first->key.as<const char*>() != key);
     REQUIRE(first->key == std::string(key));
     REQUIRE(first->value.as<const char*>() != nullptr);
     REQUIRE(first->value.as<const char*>() != val);
@@ -218,14 +229,24 @@ TEST_CASE("JsonObject::set()") {
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate std::string key") {
-    // impl detail - JsonPair key is const char* not JsonVariant
+  SECTION("should not duplicate small std::string key") {
     _object.set(std::string("hello"), "world");
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long std::string key") {
+    _object.set(std::string("thiskeyisduplicatedinthebuffer"), "world");
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 
-  SECTION("should duplicate std::string key&value") {
+  SECTION("should not duplicate small std::string key&value") {
     _object.set(std::string("hello"), std::string("world"));
+    REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
+  }
+
+  SECTION("should duplicate long std::string key&value") {
+    _object.set(std::string("thiskeyistoolongtobeinlined"),
+      std::string("thisvalueistoolongtobeinlined"));
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(1));
   }
 }

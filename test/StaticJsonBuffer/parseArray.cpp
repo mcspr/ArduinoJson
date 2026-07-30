@@ -5,6 +5,8 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+using StringBufferValue = ArduinoJson::Internals::JsonVariantContent::StringBufferValue;
+
 TEST_CASE("StaticJsonBuffer::parseArray()") {
   SECTION("TooSmallBufferForEmptyArray") {
     StaticJsonBuffer<JSON_ARRAY_SIZE(0) - 1> bufferTooSmall;
@@ -50,11 +52,26 @@ TEST_CASE("StaticJsonBuffer::parseArray()") {
     REQUIRE(arr.success());
   }
 
-  SECTION("CopyStringNotSpaces") {
+  SECTION("StringDuplicateForcedAlignment") {
     StaticJsonBuffer<100> jsonBuffer;
-    jsonBuffer.parseArray("  [ \"1234567\" ] ");
-    REQUIRE(JSON_ARRAY_SIZE(1) + sizeof("1234567") == jsonBuffer.size());
-    // note we use a string of 8 bytes to be sure that the StaticJsonBuffer
-    // will not insert bytes to enforce alignement
+
+    // note: contents depend on current impl, adjust if necessary
+    std::string elements[] {
+      "123456789ABCDEFG",  // always supposed to allocate
+      "ABCD",              // should not allocate w/ 32bit build
+    };
+
+    std::string input;
+    input += "  [ \"";
+    input += elements[0];
+    input += "\", \"";
+    input += elements[1];
+    input += "\"   ]   ";
+
+    JsonArray& arr = jsonBuffer.parseArray(input);
+    REQUIRE(arr.success());
+    REQUIRE(arr[0].as<const char*>() == elements[0]);
+    REQUIRE(arr[1].as<const char*>() == elements[1]);
+    REQUIRE(JSON_ARRAY_SIZE(2) < jsonBuffer.size());
   }
 }

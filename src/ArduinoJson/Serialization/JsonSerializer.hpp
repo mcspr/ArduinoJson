@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "../Data/JsonInteger.hpp"
 #include "../Data/JsonFloat.hpp"
+#include "../Data/JsonInteger.hpp"
 #include "../Data/JsonNull.hpp"
+#include "../Data/JsonStringPointer.hpp"
 
 namespace ArduinoJson {
 
@@ -19,8 +20,6 @@ namespace Internals {
 class JsonArraySubscript;
 template <typename TKey>
 class JsonObjectSubscript;
-
-struct JsonVariantString;
 
 template <typename Writer>
 class JsonSerializer {
@@ -48,7 +47,7 @@ class JsonSerializer {
     void Operator(JsonFloat);
     void Operator(JsonInteger);
     void Operator(JsonUnsignedInteger);
-    void Operator(JsonVariantString);
+    void Operator(JsonStringPointer);
   };
 };
 }  // namespace Internals

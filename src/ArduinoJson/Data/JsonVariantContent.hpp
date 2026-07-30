@@ -46,6 +46,7 @@ namespace Internals {
 
 // The enum JsonVariantType determines which member is in use.
 // Take care and only access the active union member data fields other than 'type'.
+
 union JsonVariantContent {
   // default variant state
   struct Undefined {
@@ -115,6 +116,12 @@ union JsonVariantContent {
     bool parsed;
     StringBufferValue buffer;
   };
+
+  JsonVariantContent(const JsonVariantContent&) = default;
+  JsonVariantContent& operator=(const JsonVariantContent&) = default;
+
+  JsonVariantContent(JsonVariantContent&&) = default;
+  JsonVariantContent& operator=(JsonVariantContent&&) = default;
 
   JsonVariantContent() noexcept :
     undefined({JsonVariantType::JSON_UNDEFINED})

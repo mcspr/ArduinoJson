@@ -5,7 +5,7 @@
 namespace ArduinoJson {
 namespace Internals {
 
-struct JsonVariantString {
+struct JsonStringPointer {
   const char* data;
   bool parsed;
 };
