@@ -90,7 +90,7 @@ struct StringBufferedWriter {
   static constexpr auto LastIndex = size_t{ sizeof(buffer_type) - 1 };
 
   static buffer_type makeBuffer() {
-    JsonVariantContent::StringBufferValue out{};
+    buffer_type out{{}};
     out.value[LastIndex] = static_cast<char>(LastIndex);
     return out;
   }
