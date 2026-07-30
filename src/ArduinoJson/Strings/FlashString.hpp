@@ -175,7 +175,6 @@ struct Equals {
 struct Duplicate {
   static void Operator(void* dup, const void* str, size_t len) {
     memcpy_P(dup, str, len);
-    reinterpret_cast<char *>(dup)[len] = '\0';
   }
 
   static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
@@ -185,6 +184,7 @@ struct Duplicate {
       dup = buffer->alloc(len + 1);
       if (dup != nullptr) {
         Operator(dup, ptr, len);
+        reinterpret_cast<char *>(dup)[len] = '\0';
       }
     }
 

@@ -45,10 +45,13 @@ bool valueSaverDuplicate(JsonBuffer* buffer, JsonVariant& dst, Source src) {
   static constexpr auto is_raw_json = duplicate_traits::is_raw_json::value;
 
   typedef StringTraits<Source> source_traits;
+  typedef JsonVariantContent::StringBufferValue buffer_type;
+  static constexpr auto buffer_size = sizeof(buffer_type);
 
-  if (length && (length - 1) < sizeof(JsonVariantContent::StringBufferValue)) {
-    JsonVariantContent::StringBufferValue tmp;
-    source_traits::Duplicate::Operator(&tmp.value[0], std::move(src), length);
+  if ((length + 1) <= buffer_size) {
+    buffer_type tmp{};
+    if (length)
+      source_traits::Duplicate::Operator(&tmp.value[0], std::move(src), length);
     if (is_raw_json)
       dst = RawJson(tmp);
     else
