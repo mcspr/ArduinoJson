@@ -23,6 +23,12 @@ jobs:
             test: "ppa:ubuntu-toolchain-r/test"
           - gcc: "16"
             test: "ppa:ubuntu-toolchain-r/test"
+            m32: true
+          - gcc: "16"
+            test: "ppa:ubuntu-toolchain-r/test"
+            cxxflags: -m32
+            cflags: -m32
+            ldflags: -m32
     steps:
       - name: Workaround for actions/runner-images#9491
         run: sudo sysctl vm.mmap_rnd_bits=28
@@ -54,6 +60,8 @@ jobs:
         env:
           CC: gcc-${{ matrix.gcc }}
           CXX: g++-${{ matrix.gcc }}
+          CFLAGS: ${{ matrix.cflags }}
+          LDFLAGS: ${{ matrix.ldflags }}
           CXXFLAGS: ${{ matrix.cxxflags }}
         timeout-minutes: 1
 
