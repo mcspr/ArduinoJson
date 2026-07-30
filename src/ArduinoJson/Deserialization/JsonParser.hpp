@@ -158,14 +158,15 @@ struct JsonParserBuilder {
   typedef typename RemoveConstReference<TJson>::type TJsonNoCref;
 
   typedef ReaderImpl<TJsonNoCref> TReader;
-  typedef TJsonParser<TReader, TJsonBuffer &> TParser;
+  typedef StringBufferedWriter<TJsonBuffer> TWriter;
+  typedef TJsonParser<TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TJson &&json,
                             uint8_t nestingLimit) {
     static_assert(!IsPointer<TJsonNoCref>::value &&
                   !IsChar<typename RemovePointer<TJson>::type>::value,
                   "Avoid using T* w/ unknown size");
-    return TParser(buffer, TReader(json), *buffer, nestingLimit);
+    return TParser(buffer, TReader(json), TWriter(*buffer), nestingLimit);
   }
 };
 
