@@ -26,7 +26,7 @@ jobs:
             m32: true
           - gcc: "16"
             test: "ppa:ubuntu-toolchain-r/test"
-            install: lib32gcc-16 lib32atomic1 lib32asan8 lib32ubsan1
+            install: lib32gcc1 lib32atomic1 lib32asan8 lib32ubsan1
             cxxflags: -m32
             cflags: -m32
             ldflags: -m32
