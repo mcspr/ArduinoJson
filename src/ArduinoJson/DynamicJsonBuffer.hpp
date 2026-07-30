@@ -143,7 +143,7 @@ class DynamicJsonBufferBase final :
       capacity = bytes;
 
     if (addNewBlock(capacity)) {
-      _nextBlockCapacity *= 2;
+      _nextBlockCapacity = capacity * 2;
       return allocInHead(bytes);
     }
 
