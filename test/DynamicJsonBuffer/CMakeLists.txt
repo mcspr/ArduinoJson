@@ -7,6 +7,8 @@ add_executable(DynamicJsonBufferTests
 	createArray.cpp
 	createObject.cpp
 	no_memory.cpp
+	parseArray.cpp
+	parseObject.cpp
 	size.cpp
 	startString.cpp
 )

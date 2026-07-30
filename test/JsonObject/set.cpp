@@ -194,7 +194,10 @@ TEST_CASE("JsonObject::set()") {
   SECTION("mutable view would duplicate part of the value") {
     char val[] = "longstringthatwouldallocate";
 
-    _object.set("hello", ArduinoJson::MakeStringView(&val[5], 6));
+    char* small_ptr = &val[5];
+    size_t small_len = 4;
+
+    _object.set("hello", ArduinoJson::MakeStringView(small_ptr, small_len));
     REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
 
     _object.set("world", ArduinoJson::MakeStringView(&val[0], std::strlen(val)));
@@ -202,7 +205,7 @@ TEST_CASE("JsonObject::set()") {
 
     auto it = _object.begin();
     REQUIRE(it->key == std::string("hello"));
-    REQUIRE(it->value == std::string(&val[5], 6));
+    REQUIRE(it->value == std::string(small_ptr, small_len));
 
     ++it;
     REQUIRE(it->key == std::string("world"));

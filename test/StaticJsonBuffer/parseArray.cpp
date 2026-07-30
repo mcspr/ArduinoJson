@@ -53,13 +53,19 @@ TEST_CASE("StaticJsonBuffer::parseArray()") {
   }
 
   SECTION("StringDuplicateForcedAlignment") {
-    StaticJsonBuffer<100> jsonBuffer;
-
     // note: contents depend on current impl, adjust if necessary
-    std::string elements[] {
+    static constexpr const char* elements[] {
       "123456789ABCDEFG",  // always supposed to allocate
       "ABCD",              // should not allocate w/ 32bit build
     };
+
+    static constexpr auto totalSize = size_t{
+      JSON_ARRAY_SIZE(2) +         // minimal storage requirement
+      sizeof(void*) +               // 2nd val variant allocated aligned
+      __builtin_strlen(elements[0]) + 1  // 1st val variant contents allocation after 1st variant
+    };
+
+    StaticJsonBuffer<totalSize> jsonBuffer;
 
     std::string input;
     input += "  [ \"";
@@ -70,8 +76,8 @@ TEST_CASE("StaticJsonBuffer::parseArray()") {
 
     JsonArray& arr = jsonBuffer.parseArray(input);
     REQUIRE(arr.success());
-    REQUIRE(arr[0].as<const char*>() == elements[0]);
-    REQUIRE(arr[1].as<const char*>() == elements[1]);
+    REQUIRE(arr[0].as<const char*>() == std::string(elements[0]));
+    REQUIRE(arr[1].as<const char*>() == std::string(elements[1]));
     REQUIRE(JSON_ARRAY_SIZE(2) < jsonBuffer.size());
   }
 }
