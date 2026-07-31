@@ -4,24 +4,15 @@
 
 #pragma once
 
-#include "Configuration.hpp"
+#include "Data/JsonVariantAs.hpp"
 #include "JsonVariantBase.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
  public:
-  // *Always* attached to some JsonArray instance
-
-  JsonArraySubscript() :
-    _array(JsonArray::invalid()),
-    _index()
-  {}
-
-  JsonArraySubscript(JsonArray& array, size_t index) :
-    _array(array),
-    _index(index)
-  {}
+  JsonArraySubscript() noexcept;
+  JsonArraySubscript(JsonArray& array, size_t index) noexcept;
 
   // Allow to construct the object, but disallow changes after construction
 
@@ -29,42 +20,28 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   JsonArraySubscript(JsonArraySubscript &&) = default;
 
   // Everything else is interpreted as array assignment w/ the index attached to the subscript object
-  JsonArraySubscript&
-  ARDUINOJSON_FORCE_INLINE operator=(const JsonArraySubscript& src) {
-    _array.set_impl(_index, src.template as<JsonVariant>());
-    return *this;
-  }
+  JsonArraySubscript& operator=(const JsonArraySubscript&);
 
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE JsonArraySubscript& operator=(TValue &&value) {
-    _array.set(_index, std::forward<TValue>(value));
-    return *this;
-  }
+  JsonArraySubscript& operator=(TValue&& value);
 
-  bool success() const {
-    return _index < _array.size();
-  }
+  // forwarding methods for the bound index and JsonArray ref
+  bool success() const;
 
-  template <typename T>
-  typename JsonVariantAs<T>::type
-  ARDUINOJSON_FORCE_INLINE as() const {
-    return _array.get<T>(_index);
-  }
+  template <typename TValue>
+  typename JsonVariantAs<TValue>::type
+  as() const;
 
   template <typename T>
-  ARDUINOJSON_FORCE_INLINE bool is() const {
-    return _array.is<T>(_index);
-  }
+  bool is() const;
 
   // Replaces the value
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE bool set(TValue&& value) {
-    return _array.set(_index, std::forward<TValue>(value));
-  }
+  bool set(TValue&& value);
 
  private:
   JsonArray& _array;
-  size_t _index;
+  size_t _index{};
 };
 
 template <typename TImpl>
@@ -85,13 +62,4 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 #endif
 }  // namespace Internals
-
-inline Internals::JsonArraySubscript JsonArray::operator[](size_t index) {
-  return Internals::JsonArraySubscript(*this, index);
-}
-
-inline const Internals::JsonArraySubscript JsonArray::operator[](
-    size_t index) const {
-  return Internals::JsonArraySubscript(*const_cast<JsonArray*>(this), index);
-}
 }  // namespace ArduinoJson
