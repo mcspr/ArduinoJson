@@ -188,15 +188,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
  private:
   // Returns the list node that matches the specified key.
   template <typename TKey>
-  iterator find_impl(TKey key) {
-    for (auto it = begin(); it != end(); ++it) {
-      const auto ptr = it->key.as<const char*>();
-      const auto len = Internals::Strings::Length::Operator(ptr);
-      if (Internals::StringTraits<TKey>::Equals::Operator(key, ptr, len))
-        return it;
-    }
-    return end();
-  }
+  iterator find_impl(TKey key);
 
   template <typename TKey>
   const_iterator find_impl(TKey key) const {
@@ -204,49 +196,10 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   }
 
   template <typename TValue, typename TKey>
-  TValue get_impl(TKey key) const {
-    const_iterator it = find_impl(std::move(key));
-    return it != end() ? it->value.as<TValue>()
-                       : Internals::JsonVariantDefault<TValue>::get();
-  }
+  TValue get_impl(TKey key) const;
 
   template <typename TKey, typename TValue>
-  bool set_impl(TKey key, TValue value) {
-    // when creating a key, prune failed list entry before returning
-    bool out = false;
-
-    // search for existing or add another kv object
-    auto it = find_impl(Internals::MakeStringRef(key.get()));
-    if (it == end()) {
-      it = add();
-      if (it == end())
-        return false;
-
-      if (!Internals::ValueSaver<TKey>::save(
-        _buffer, it->key, std::move(key)))
-      {
-        remove(it);
-        return false;
-      }
-
-      out = true;
-    }
-
-    if (it != end()) {
-      if (!Internals::ValueSaver<TValue>::save(
-        _buffer, it->value, std::move(value)))
-      {
-        if (out)
-          remove(it);
-
-        return false;
-      }
-
-      out = true;
-    }
-
-    return out;
-  }
+  bool set_impl(TKey key, TValue value);
 
   template <typename TValue, typename TKey>
   bool is_impl(TKey key) const {
