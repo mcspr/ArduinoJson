@@ -64,7 +64,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   // Gets the value associated with the specified key.
   template <typename TKey>
-  typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
+  const typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
   operator[](TKey&&) const;
 
   // Sets the specified key with the specified value.

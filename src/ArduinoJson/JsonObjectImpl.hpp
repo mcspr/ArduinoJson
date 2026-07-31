@@ -153,7 +153,7 @@ inline JsonObject::operator[](TKey&& key) {
 }
 
 template <typename TKey>
-typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
+const typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
 inline JsonObject::operator[](TKey&& key) const {
   return typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type(
     const_cast<JsonObject&>(*this), std::forward<TKey>(key));
