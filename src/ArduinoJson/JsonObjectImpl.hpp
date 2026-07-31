@@ -8,9 +8,70 @@
 #include "JsonObject.hpp"
 #include "JsonObjectSubscript.hpp"
 
+#include "Polyfills/attributes.hpp"
 #include "StringTraits/StringTraits.hpp"
 
 namespace ArduinoJson {
+namespace Internals {
+
+template <typename TKey>
+class JsonObjectSubscript;
+
+// *Always* attached to some JsonObject instance
+template <typename TKey>
+inline JsonObjectSubscript<TKey>::JsonObjectSubscript() noexcept :
+  _object(JsonObject::invalid()),
+  _key()
+{}
+
+template <typename TKey>
+template <typename TKeyRef>
+inline JsonObjectSubscript<TKey>::JsonObjectSubscript(JsonObject& object, TKeyRef&& key) :
+  _object(object),
+  _key(MakeStringRef(std::forward<TKeyRef>(key)))
+{}
+
+template <typename TKey>
+template <typename TRef>
+inline JsonObjectSubscript<TKey>::JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key) :
+  _object(object),
+  _key(std::move(key))
+{}
+
+template <typename TKey>
+inline JsonObjectSubscript<TKey>&
+ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::operator=(const JsonObjectSubscript<TKey>& other) {
+  _object.set(_key.get(), other.template as<JsonVariant>());
+  return *this;
+}
+
+template <typename TKey>
+inline bool JsonObjectSubscript<TKey>::success() const {
+  return _object.containsKey(_key.get());
+}
+
+template <typename TKey>
+template <typename TValue>
+inline typename JsonVariantAs<TValue>::type
+ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::as() const {
+  return _object.get<TValue>(_key.get());
+}
+
+template <typename TKey>
+template <typename TValue>
+inline bool
+ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::is() const {
+  return _object.is<TValue>(_key.get());
+}
+
+template <typename TKey>
+template <typename TValue>
+inline bool
+ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::set(TValue&& value) {
+  return _object.set(_key.get(), std::forward<TValue>(value));
+}
+
+}
 
 template <typename TKey>
 inline JsonObject::iterator JsonObject::find_impl(TKey key) {

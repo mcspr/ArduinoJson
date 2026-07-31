@@ -7,15 +7,7 @@
 #include "Configuration.hpp"
 
 #include "JsonVariantBase.hpp"
-
-#include "Data/JsonNull.hpp"
 #include "Data/StringView.hpp"
-
-#include "TypeTraits/EnableIf.hpp"
-#include "TypeTraits/IsPointer.hpp"
-#include "TypeTraits/IsFloatingPoint.hpp"
-#include "TypeTraits/IsIntegral.hpp"
-#include "TypeTraits/RemoveReference.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -29,24 +21,13 @@ class JsonObjectSubscript final
     : public JsonVariantBase<JsonObjectSubscript<TKey> > {
 
  public:
-  // *Always* attached to some JsonObject instance
-
-  JsonObjectSubscript() :
-    _object(JsonObject::invalid()),
-    _key()
-  {}
+  JsonObjectSubscript() noexcept;
 
   template <typename TKeyRef>
-  JsonObjectSubscript(JsonObject& object, TKeyRef&& key) :
-    _object(object),
-    _key(MakeStringRef(std::forward<TKeyRef>(key)))
-  {}
+  JsonObjectSubscript(JsonObject& object, TKeyRef&& key);
 
   template <typename TRef>
-  JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key) :
-    _object(object),
-    _key(std::move(key))
-  {}
+  JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key);
 
   // Allow to construct the object, but disallow changes after construction
 
@@ -61,30 +42,19 @@ class JsonObjectSubscript final
   }
 
   // class copy is disallowed, interpret it as an assignment operation
-  ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(const JsonObjectSubscript& other) {
-    _object.set(_key.get(), other.template as<JsonVariant>());
-    return *this;
-  }
+  JsonObjectSubscript& operator=(const JsonObjectSubscript&);
 
-  bool success() const {
-    return _object.containsKey(_key.get());
-  }
+  // forwarding methods for the bound key and JsonObject ref
+  bool success() const;
 
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE typename JsonVariantAs<TValue>::type as() const {
-    return _object.get<TValue>(_key.get());
-  }
+  typename JsonVariantAs<TValue>::type as() const;
 
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE
-  bool is() const {
-    return _object.is<TValue>(_key.get());
-  }
+  bool is() const;
 
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE bool set(TValue&& value) {
-    return _object.set(_key.get(), std::forward<TValue>(value));
-  }
+  bool set(TValue&& value);
 
  private:
   JsonObject& _object;
