@@ -139,11 +139,18 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   }
 
   // Gets the value at the specified index.
-  template <typename T>
-  typename Internals::JsonVariantAs<T>::type
-  get(size_t index) const {
+  template <typename TValue>
+  typename Internals::JsonVariantAs<TValue>::type
+  get(size_t index) {
     const auto it = begin() + index;
-    return it != end() ? it->as<T>() : Internals::JsonVariantDefault<T>::get();
+    return it != end() ? it->as<TValue>() : Internals::JsonVariantDefault<TValue>::get();
+  }
+
+  template <typename TValue>
+  typename Internals::JsonVariantAsConst<TValue>::type
+  get(size_t index) const {
+    return const_cast<JsonArray *>(this)->
+      get<typename Internals::JsonVariantAsConst<TValue>::type>(index);
   }
 
   // Check the type of the value at specified index.
@@ -224,7 +231,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   void copyTo(T (&array)[N1][N2]) const {
     size_t i = 0;
     for (auto it = begin(); it != end() && i < N1; ++it) {
-      it->as<JsonArray>().copyTo(array[i++]);
+      it->as<const JsonArray&>().copyTo(array[i++]);
     }
   }
 
@@ -255,11 +262,34 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 };
 
 namespace Internals {
+
 template <>
 struct JsonVariantDefault<JsonArray> {
-  static JsonArray &get() {
+  static JsonArray& get() {
     return JsonArray::invalid();
   }
 };
+
+template <>
+struct JsonVariantDefault<const JsonArray> {
+  static const JsonArray& get() {
+    return JsonArray::invalid();
+  }
+};
+
+template <>
+struct JsonVariantDefault<JsonArray&> {
+  static JsonArray& get() {
+    return JsonArray::invalid();
+  }
+};
+
+template <>
+struct JsonVariantDefault<const JsonArray&> {
+  static const JsonArray& get() {
+    return JsonArray::invalid();
+  }
+};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

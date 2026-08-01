@@ -45,14 +45,24 @@ class JsonObjectSubscript final
   JsonObjectSubscript& operator=(const JsonObjectSubscript&);
 
   // forwarding methods for the bound key and JsonObject ref
+
   bool success() const;
 
+  // aka JsonObject::get<TValue>(key)
   template <typename TValue>
-  typename JsonVariantAs<TValue>::type as() const;
+  typename JsonVariantAs<TValue>::type as();
 
+  template <typename TValue>
+  typename JsonVariantAsConst<TValue>::type as() const {
+    return const_cast<JsonObjectSubscript *>(this)->
+      as<typename JsonVariantAsConst<TValue>::type>();
+  }
+
+  // aka JsonObject::is<TValue>(key)
   template <typename TValue>
   bool is() const;
 
+  // aka JsonObject::set<TValue>(key, value)
   template <typename TValue>
   bool set(TValue&& value);
 

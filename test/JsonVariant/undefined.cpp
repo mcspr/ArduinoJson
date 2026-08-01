@@ -50,7 +50,15 @@ TEST_CASE("JsonVariant undefined") {
     REQUIRE(JsonArray::invalid() == variant.as<JsonArray>());
   }
 
+  SECTION("AsConstArrayWrapperReturnInvalid") {
+    REQUIRE(JsonArray::invalid() == variant.as<const JsonArray>());
+  }
+
   SECTION("AsObjectWrapperReturnInvalid") {
     REQUIRE(JsonObject::invalid() == variant.as<JsonObject>());
+  }
+
+  SECTION("AsConstObjectWrapperReturnInvalid") {
+    REQUIRE(JsonObject::invalid() == variant.as<const JsonObject>());
   }
 }

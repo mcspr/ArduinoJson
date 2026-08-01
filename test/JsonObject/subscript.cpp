@@ -59,15 +59,18 @@ TEST_CASE("JsonObject::operator[]") {
 
     _object["hello"] = arr;
 
-    REQUIRE(&arr == &_object["hello"].as<JsonArray&>());
-    REQUIRE(&arr == &_object["hello"].as<JsonArray>());  // <- short hand
-    REQUIRE(&arr == &_object["hello"].as<const JsonArray&>());
-    REQUIRE(&arr == &_object["hello"].as<const JsonArray>());  // <- short hand
-    REQUIRE(true == _object["hello"].is<JsonArray&>());
-    REQUIRE(true == _object["hello"].is<JsonArray>());
-    REQUIRE(true == _object["hello"].is<const JsonArray&>());
-    REQUIRE(true == _object["hello"].is<const JsonArray>());
-    REQUIRE(false == _object["hello"].is<JsonObject&>());
+    REQUIRE(std::addressof(arr) == std::addressof(_object["hello"].as<JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_object["hello"].as<JsonArray>()));  // <- short hand
+    REQUIRE(std::addressof(arr) == std::addressof(_object["hello"].as<const JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_object["hello"].as<const JsonArray>()));  // <- short hand
+    REQUIRE(_object["hello"].is<JsonArray&>());
+    REQUIRE(_object["hello"].is<JsonArray>());
+    REQUIRE(_object["hello"].is<const JsonArray&>());
+    REQUIRE(_object["hello"].is<const JsonArray>());
+    REQUIRE_FALSE(_object["hello"].is<JsonObject&>());
+    REQUIRE_FALSE(_object["hello"].is<JsonObject>());
+    REQUIRE_FALSE(_object["hello"].is<const JsonObject&>());
+    REQUIRE_FALSE(_object["hello"].is<const JsonObject>());
   }
 
   SECTION("object") {
@@ -75,15 +78,18 @@ TEST_CASE("JsonObject::operator[]") {
 
     _object["hello"] = obj;
 
-    REQUIRE(&obj == &_object["hello"].as<JsonObject&>());
-    REQUIRE(&obj == &_object["hello"].as<JsonObject>());  // <- short hand
-    REQUIRE(&obj == &_object["hello"].as<const JsonObject&>());
-    REQUIRE(&obj == &_object["hello"].as<const JsonObject>());  // <- short hand
-    REQUIRE(true == _object["hello"].is<JsonObject&>());
-    REQUIRE(true == _object["hello"].is<JsonObject>());
-    REQUIRE(true == _object["hello"].is<const JsonObject&>());
-    REQUIRE(true == _object["hello"].is<const JsonObject>());
-    REQUIRE(false == _object["hello"].is<JsonArray&>());
+    REQUIRE(std::addressof(obj) == std::addressof(_object["hello"].as<JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_object["hello"].as<JsonObject>()));  // <- short hand
+    REQUIRE(std::addressof(obj) == std::addressof(_object["hello"].as<const JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_object["hello"].as<const JsonObject>()));  // <- short hand
+    REQUIRE(_object["hello"].is<JsonObject&>());
+    REQUIRE(_object["hello"].is<JsonObject>());
+    REQUIRE(_object["hello"].is<const JsonObject&>());
+    REQUIRE(_object["hello"].is<const JsonObject>());
+    REQUIRE_FALSE(_object["hello"].is<JsonArray&>());
+    REQUIRE_FALSE(_object["hello"].is<JsonArray>());
+    REQUIRE_FALSE(_object["hello"].is<const JsonArray&>());
+    REQUIRE_FALSE(_object["hello"].is<const JsonArray>());
   }
 
   SECTION("array subscript") {

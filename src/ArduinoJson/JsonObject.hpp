@@ -110,9 +110,16 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   // Gets the value associated with the specified key.
   template <typename TValue, typename TKey>
   typename Internals::JsonVariantAs<TValue>::type
-  ARDUINOJSON_FORCE_INLINE get(TKey&& key) const {
+  ARDUINOJSON_FORCE_INLINE get(TKey&& key) {
     return get_impl<typename Internals::JsonVariantAs<TValue>::type>(
       Internals::MakeStringRef(std::forward<TKey>(key)));
+  }
+
+  template <typename TValue, typename TKey>
+  typename Internals::JsonVariantAsConst<TValue>::type
+  ARDUINOJSON_FORCE_INLINE get(TKey&& key) const {
+    return const_cast<JsonObject *>(this)->
+      get<typename Internals::JsonVariantAsConst<TValue>::type>(std::forward<TKey>(key));
   }
 
   template <typename TValue, typename TKey,
@@ -192,20 +199,17 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   template <typename TKey>
   const_iterator find_impl(TKey key) const {
-    return const_cast<JsonObject*>(this)->find_impl(std::move(key));
+    return const_cast<JsonObject *>(this)->find_impl(std::move(key));
   }
 
   template <typename TValue, typename TKey>
-  TValue get_impl(TKey key) const;
+  TValue get_impl(TKey key);
 
   template <typename TKey, typename TValue>
   bool set_impl(TKey key, TValue value);
 
   template <typename TValue, typename TKey>
-  bool is_impl(TKey key) const {
-    const_iterator it = find_impl(std::move(key));
-    return it != end() ? it->value.is<TValue>() : false;
-  }
+  bool is_impl(TKey key) const;
 
   template <typename TKey>
   bool contains_impl(TKey key) const {
@@ -226,11 +230,34 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 };
 
 namespace Internals {
+
 template <>
 struct JsonVariantDefault<JsonObject> {
   static JsonObject& get() {
     return JsonObject::invalid();
   }
 };
+
+template <>
+struct JsonVariantDefault<const JsonObject> {
+  static const JsonObject& get() {
+    return JsonObject::invalid();
+  }
+};
+
+template <>
+struct JsonVariantDefault<JsonObject&> {
+  static JsonObject& get() {
+    return JsonObject::invalid();
+  }
+};
+
+template <>
+struct JsonVariantDefault<const JsonObject&> {
+  static const JsonObject& get() {
+    return JsonObject::invalid();
+  }
+};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

@@ -155,7 +155,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // unsigned long as<unsigned long>() const;
   // unsigned long long as<unsigned long long>() const;
   template <typename T>
-  const typename Internals::EnableIf<
+  typename Internals::EnableIf<
         Internals::And<typename Internals::IsIntegral<T>,
                        typename Internals::Not<Internals::IsSame<T, bool>>>::value,
         T>::type
@@ -164,7 +164,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   }
   // bool as<bool>() const
   template <typename T>
-  const typename Internals::EnableIf<Internals::IsSame<T, bool>::value, T>::type
+  typename Internals::EnableIf<Internals::IsSame<T, bool>::value, T>::type
   as() const {
     return variantAsBoolean();
   }
@@ -172,7 +172,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   // double as<double>() const;
   // float as<float>() const;
   template <typename T>
-  const typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value,
+  typename Internals::EnableIf<Internals::IsFloatingPoint<T>::value,
                                      T>::type
   as() const {
     return variantAsFloat<T>();
@@ -225,7 +225,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
       Internals::IsSame<typename Internals::RemoveReference<T>::type,
                         JsonArray>::value,
       JsonArray &>::type
-  as() const {
+  as() {
     return variantAsArray();
   }
   //
@@ -246,7 +246,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
       Internals::IsSame<typename Internals::RemoveReference<T>::type,
                         JsonObject>::value,
       JsonObject &>::type
-  as() const {
+  as() {
     return variantAsObject();
   }
   //

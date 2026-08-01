@@ -19,14 +19,22 @@ class JsonVariantCasts {
   // Returns a reference to the JsonArray or JsonArray::invalid() if the
   // variant
   // is not an array.
-  ARDUINOJSON_FORCE_INLINE operator JsonArray &() const {
+  ARDUINOJSON_FORCE_INLINE operator const JsonArray &() const {
+    return impl()->template as<const JsonArray &>();
+  }
+
+  ARDUINOJSON_FORCE_INLINE operator JsonArray &() {
     return impl()->template as<JsonArray &>();
   }
 
   // Gets the variant as an object.
   // Returns a reference to the JsonObject or JsonObject::invalid() if the
   // variant is not an object.
-  ARDUINOJSON_FORCE_INLINE operator JsonObject &() const {
+  ARDUINOJSON_FORCE_INLINE operator const JsonObject &() const {
+    return impl()->template as<const JsonObject &>();
+  }
+
+  ARDUINOJSON_FORCE_INLINE operator JsonObject &() {
     return impl()->template as<JsonObject &>();
   }
 
@@ -40,8 +48,12 @@ class JsonVariantCasts {
   operator std::nullptr_t() const = delete;
 
  private:
-  const TImpl *impl() const {
+  const TImpl* impl() const {
     return static_cast<const TImpl *>(this);
+  }
+
+  TImpl* impl() {
+    return static_cast<TImpl *>(this);
   }
 };
 }  // namespace Internals

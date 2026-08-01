@@ -3,7 +3,6 @@
 // MIT License
 
 #include <ArduinoJson.h>
-#include <stdint.h>
 #include <catch.hpp>
 
 TEST_CASE("JsonArray::operator[]") {

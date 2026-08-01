@@ -119,8 +119,17 @@ class JsonVariantComparisons {
     return static_cast<const TImpl *>(this);
   }
 
+  TImpl *impl() {
+    return static_cast<TImpl *>(this);
+  }
+
   template <typename T>
-  typename JsonVariantAs<T>::type as() const {
+  typename JsonVariantAsConst<T>::type as() const {
+    return impl()->template as<typename JsonVariantAsConst<T>::type>();
+  }
+
+  template <typename T>
+  typename JsonVariantAs<T>::type as() {
     return impl()->template as<typename JsonVariantAs<T>::type>();
   }
 
@@ -163,10 +172,10 @@ inline bool JsonVariantComparisonsHelper::equals(
       return left.template as<JsonInteger>() == right.template as<JsonInteger>();
     if (left.template is<JsonFloat>() && right.template is<JsonFloat>())
       return left.template as<JsonFloat>() == right.template as<JsonFloat>();
-    if (left.template is<JsonArray>() && right.template is<JsonArray>())
-      return left.template as<JsonArray>() == right.template as<JsonArray>();
-    if (left.template is<JsonObject>() && right.template is<JsonObject>())
-      return left.template as<JsonObject>() == right.template as<JsonObject>();
+    if (left.template is<const JsonArray&>() && right.template is<const JsonArray&>())
+      return left.template as<const JsonArray&>() == right.template as<const JsonArray&>();
+    if (left.template is<const JsonObject&>() && right.template is<const JsonObject&>())
+      return left.template as<const JsonObject&>() == right.template as<const JsonObject&>();
     if (left.template is<const char *>() && right.template is<const char *>())
       return Strings::Equals::Operator(
         left.template as<const char *>(), right.template as<const char *>());

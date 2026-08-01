@@ -53,7 +53,7 @@ inline bool JsonObjectSubscript<TKey>::success() const {
 template <typename TKey>
 template <typename TValue>
 inline typename JsonVariantAs<TValue>::type
-ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::as() const {
+ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::as() {
   return _object.get<TValue>(_key.get());
 }
 
@@ -85,8 +85,8 @@ inline JsonObject::iterator JsonObject::find_impl(TKey key) {
 }
 
 template <typename TValue, typename TKey>
-inline TValue JsonObject::get_impl(TKey key) const {
-    const_iterator it = find_impl(std::move(key));
+inline TValue JsonObject::get_impl(TKey key) {
+    iterator it = find_impl(std::move(key));
     return it != end() ? it->value.as<TValue>()
                        : Internals::JsonVariantDefault<TValue>::get();
 }
@@ -129,8 +129,14 @@ inline bool JsonObject::set_impl(TKey key, TValue value) {
   return out;
 }
 
+template <typename TValue, typename TKey>
+bool JsonObject::is_impl(TKey key) const {
+    const_iterator it = find_impl(std::move(key));
+    return it != end() ? it->value.is<TValue>() : false;
+}
+
 template <typename TKey>
-inline JsonArray &JsonObject::createNestedArray_impl(TKey key) {
+inline JsonArray& JsonObject::createNestedArray_impl(TKey key) {
   auto &ref = _buffer->createArray();
   if (set_impl(std::move(key), JsonVariant(ref)))
     return ref;
@@ -138,7 +144,7 @@ inline JsonArray &JsonObject::createNestedArray_impl(TKey key) {
 }
 
 template <typename TKey>
-inline JsonObject &JsonObject::createNestedObject_impl(TKey key) {
+inline JsonObject& JsonObject::createNestedObject_impl(TKey key) {
   JsonObject &ref = _buffer->createObject();
   if (set_impl(std::move(key), JsonVariant(ref)))
     return ref;

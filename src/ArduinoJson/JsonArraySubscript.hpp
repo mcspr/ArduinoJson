@@ -26,16 +26,26 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   JsonArraySubscript& operator=(TValue&& value);
 
   // forwarding methods for the bound index and JsonArray ref
+
   bool success() const;
 
+  // aka JsonArray::get<TValue>(index)
   template <typename TValue>
   typename JsonVariantAs<TValue>::type
-  as() const;
+  as();
 
-  template <typename T>
+  template <typename TValue>
+  typename JsonVariantAsConst<TValue>::type
+  as() const {
+    return const_cast<JsonArraySubscript *>(this)->
+      as<typename JsonVariantAsConst<TValue>::type>();
+  }
+
+  // aka JsonArray::is<TValue>(index)
+  template <typename TValue>
   bool is() const;
 
-  // Replaces the value
+  // aka JsonArray::set<TValue>(index, value)
   template <typename TValue>
   bool set(TValue&& value);
 
@@ -43,17 +53,6 @@ class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
   JsonArray& _array;
   size_t _index{};
 };
-
-template <typename TImpl>
-inline JsonArraySubscript JsonVariantSubscripts<TImpl>::operator[](size_t index) {
-  return impl()->template as<JsonArray>()[index];
-}
-
-template <typename TImpl>
-inline JsonArraySubscript
-ARDUINOJSON_FORCE_INLINE JsonVariantSubscripts<TImpl>::operator[](size_t index) const {
-  return impl()->template as<JsonArray>()[index];
-}
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
 inline std::ostream& operator<<(std::ostream& os,

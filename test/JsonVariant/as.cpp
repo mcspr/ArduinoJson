@@ -256,16 +256,20 @@ TEST_CASE("JsonVariant::as()") {
     JsonArray& arr = buffer.createArray();
 
     JsonVariant variant = arr;
-    REQUIRE(&arr == &variant.as<JsonArray&>());
-    REQUIRE(&arr == &variant.as<JsonArray>());  // <- shorthand
+    REQUIRE(std::addressof(arr) == std::addressof(variant.as<const JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(variant.as<JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(variant.as<const JsonArray>()));  // <- shorthand
+    REQUIRE(std::addressof(arr) == std::addressof(variant.as<JsonArray>()));  // <- shorthand
   }
 
   SECTION("ObjectAsJsonObject") {
     DynamicJsonBuffer buffer;
-    JsonObject& arr = buffer.createObject();
+    JsonObject& obj = buffer.createObject();
 
-    JsonVariant variant = arr;
-    REQUIRE(&arr == &variant.as<JsonObject&>());
-    REQUIRE(&arr == &variant.as<JsonObject>());  // <- shorthand
+    JsonVariant variant = obj;
+    REQUIRE(std::addressof(obj) == std::addressof(variant.as<const JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(variant.as<JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(variant.as<const JsonObject>()));  // <- shorthand
+    REQUIRE(std::addressof(obj) == std::addressof(variant.as<JsonObject>()));  // <- shorthand
   }
 }

@@ -79,7 +79,7 @@ TEST_CASE("Gbathree") {
   SECTION("Pulses") {
     // "pulses":[50,50,50]
 
-    JsonArray& array = _object["pulses"];
+    const JsonArray& array = _object["pulses"];
     REQUIRE(array.success());
 
     REQUIRE(3 == array.size());
@@ -92,7 +92,7 @@ TEST_CASE("Gbathree") {
   SECTION("Act") {
     // "act":[2,1,2,2]
 
-    JsonArray& array = _object["act"];
+    const JsonArray& array = _object["act"];
     REQUIRE(array.success());
 
     REQUIRE(4 == array.size());
@@ -105,12 +105,12 @@ TEST_CASE("Gbathree") {
   SECTION("Detectors") {
     // "detectors":[[34,34,34,34],[34,34,34,34],[34,34,34,34],[34,34,34,34]]
 
-    JsonArray& array = _object["detectors"];
+    const JsonArray& array = _object["detectors"];
     REQUIRE(array.success());
     REQUIRE(4 == array.size());
 
     for (size_t i = 0; i < 4; i++) {
-      JsonArray& nestedArray = array[i];
+      const JsonArray& nestedArray = array[i];
       REQUIRE(4 == nestedArray.size());
 
       for (size_t j = 0; j < 4; j++) {
@@ -122,7 +122,7 @@ TEST_CASE("Gbathree") {
   SECTION("Alta") {
     // alta:[2,2,2,2]
 
-    JsonArray& array = _object["alta"];
+    const JsonArray& array = _object["alta"];
     REQUIRE(array.success());
 
     REQUIRE(4 == array.size());
@@ -135,7 +135,7 @@ TEST_CASE("Gbathree") {
   SECTION("Altb") {
     // altb:[2,2,2,2]
 
-    JsonArray& array = _object["altb"];
+    const JsonArray& array = _object["altb"];
     REQUIRE(array.success());
 
     REQUIRE(4 == array.size());
@@ -148,12 +148,12 @@ TEST_CASE("Gbathree") {
   SECTION("Measlights") {
     // "measlights":[[15,15,15,15],[15,15,15,15],[15,15,15,15],[15,15,15,15]]
 
-    JsonArray& array = _object["measlights"];
+    const JsonArray& array = _object["measlights"];
     REQUIRE(array.success());
     REQUIRE(4 == array.size());
 
     for (size_t i = 0; i < 4; i++) {
-      JsonArray& nestedArray = array[i];
+      const JsonArray& nestedArray = array[i];
 
       REQUIRE(4 == nestedArray.size());
 
@@ -166,12 +166,12 @@ TEST_CASE("Gbathree") {
   SECTION("Measlights2") {
     // "measlights2":[[15,15,15,15],[15,15,15,15],[15,15,15,15],[15,15,15,15]]
 
-    JsonArray& array = _object["measlights2"];
+    const JsonArray& array = _object["measlights2"];
     REQUIRE(array.success());
     REQUIRE(4 == array.size());
 
     for (size_t i = 0; i < 4; i++) {
-      JsonArray& nestedArray = array[i];
+      const JsonArray& nestedArray = array[i];
       REQUIRE(4 == nestedArray.size());
 
       for (size_t j = 0; j < 4; j++) {
@@ -183,7 +183,7 @@ TEST_CASE("Gbathree") {
   SECTION("Altc") {
     // altc:[2,2,2,2]
 
-    JsonArray& array = _object["altc"];
+    const JsonArray& array = _object["altc"];
     REQUIRE(array.success());
 
     REQUIRE(4 == array.size());
@@ -196,7 +196,7 @@ TEST_CASE("Gbathree") {
   SECTION("Altd") {
     // altd:[2,2,2,2]
 
-    JsonArray& array = _object["altd"];
+    const JsonArray& array = _object["altd"];
     REQUIRE(array.success());
 
     REQUIRE(4 == array.size());

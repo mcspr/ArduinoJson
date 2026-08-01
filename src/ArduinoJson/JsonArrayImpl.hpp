@@ -40,7 +40,7 @@ inline bool JsonArraySubscript::success() const {
 
 template <typename TValue>
 inline typename JsonVariantAs<TValue>::type
-ARDUINOJSON_FORCE_INLINE JsonArraySubscript::as() const {
+ARDUINOJSON_FORCE_INLINE JsonArraySubscript::as() {
   return _array.get<TValue>(_index);
 }
 
@@ -54,6 +54,17 @@ template <typename TValue>
 inline bool
 ARDUINOJSON_FORCE_INLINE JsonArraySubscript::set(TValue&& value) {
   return _array.set(_index, std::forward<TValue>(value));
+}
+
+template <typename TImpl>
+inline JsonArraySubscript JsonVariantSubscripts<TImpl>::operator[](size_t index) {
+  return impl()->template as<JsonArray &>()[index];
+}
+
+template <typename TImpl>
+inline JsonArraySubscript
+ARDUINOJSON_FORCE_INLINE JsonVariantSubscripts<TImpl>::operator[](size_t index) const {
+  return impl()->template as<const JsonArray &>()[index];
 }
 
 }  // namespace Internals

@@ -26,8 +26,8 @@ class JsonVariantSubscripts {
   // Returns the size of the array or object if the variant has that type.
   // Returns 0 if the variant is neither an array nor an object
   size_t size() const {
-    return impl()->template as<JsonArray>().size() +
-           impl()->template as<JsonObject>().size();
+    return impl()->template as<const JsonArray &>().size() +
+           impl()->template as<const JsonObject &>().size();
   }
 
   // Mimics an array.
@@ -43,23 +43,23 @@ class JsonVariantSubscripts {
   typename EnableIf<HasEquals<StringTraits<TKey>>::value,
     typename JsonObjectSubscriptHelper<TKey>::subscript_type >::type
   ARDUINOJSON_FORCE_INLINE operator[](TKey &&key) const {
-    return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
+    return impl()->template as<const JsonObject &>()[std::forward<TKey>(key)];
   }
 
   template <typename TKey>
   typename EnableIf<HasEquals<StringTraits<TKey>>::value,
     typename JsonObjectSubscriptHelper<TKey>::subscript_type >::type
   ARDUINOJSON_FORCE_INLINE operator[](TKey &&key) {
-    return impl()->template as<JsonObject>()[std::forward<TKey>(key)];
+    return impl()->template as<JsonObject &>()[std::forward<TKey>(key)];
   }
 
  private:
-  TImpl *impl() {
-    return static_cast<TImpl *>(this);
+  const TImpl* impl() const {
+    return static_cast<const TImpl *>(this);
   }
 
-  const TImpl *impl() const {
-    return static_cast<const TImpl *>(this);
+  TImpl *impl() {
+    return static_cast<TImpl *>(this);
   }
 };
 }  // namespace Internals
