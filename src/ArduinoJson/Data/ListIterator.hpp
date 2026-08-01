@@ -5,12 +5,13 @@
 #pragma once
 
 #include "ListNode.hpp"
+
+#include "../TypeTraits/And.hpp"
+#include "../TypeTraits/Conditional.hpp"
+#include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/IsSame.hpp"
-#include "../TypeTraits/EnableIf.hpp"
-#include "../TypeTraits/And.hpp"
 #include "../TypeTraits/RemoveConst.hpp"
-#include "../TypeTraits/Conditional.hpp"
 
 #include <memory>
 #include <cstddef>
@@ -30,22 +31,23 @@ class ListIterator {
   using pointer_type = Conditional<IsConst<T>::value, const value_type*, value_type*>;
   using reference_type = Conditional<IsConst<T>::value, const value_type&, value_type&>;
 
+ private:
+  template <typename TOther>
+  using is_const_convertible = And<IsConst<T>, IsSame<typename RemoveConst<TOther>::type, value_type>>;
+
+ public:
   ListIterator() = delete;
-  explicit ListIterator(ListNode<value_type> *node) :
+  explicit ListIterator(node_type *node) :
     _node(node)
   {}
 
-  template <typename Other>
-  ListIterator(const ListIterator<Other> &other,
-    typename EnableIf<And<IsSame<typename RemoveConst<T>::type, typename RemoveConst<Other>::type>,
-                 IsConst<T>>::value>::type* = nullptr) :
-    _node(const_cast<ListNode<value_type> *>(other._node))
+  template <typename TOther, typename EnableIf<is_const_convertible<TOther>::value>::type* = nullptr>
+  ListIterator(const ListIterator<TOther> &other) :
+    _node(const_cast<node_type *>(other._node))
   {}
 
-  template <typename Other>
-  typename EnableIf<And<IsSame<typename RemoveConst<T>::type, typename RemoveConst<Other>::type>,
-               IsConst<T>>::value, ListIterator<T> &>::type
-  operator=(const ListIterator<Other> &other) {
+  template <typename TOther, typename EnableIf<is_const_convertible<TOther>::value>::type* = nullptr>
+  ListIterator& operator=(const ListIterator<TOther> &other) {
     _node = const_cast<node_type *>(other._node);
     return *this;
   }
