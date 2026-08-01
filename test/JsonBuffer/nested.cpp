@@ -40,7 +40,7 @@ TEST_CASE("JsonBuffer nested objects") {
         " [ { \"a\" : 1 , \"b\" : 2 } , { \"c\" : 3 , \"d\" : 4 } ] ";
 
     JsonArray &array = jsonBuffer.parseArray(jsonString);
-    JsonObject &object1 = array[0];
+    JsonObject &object1 = array[0].as<JsonObject&>();
     const JsonObject &object2 = array[1];
     JsonObject &object3 = array[2];
 

@@ -45,7 +45,10 @@ TEST_CASE("JsonArray::set()") {
 
     _array.set(0, arr);
 
-    REQUIRE(&arr == &_array[0].as<JsonArray&>());
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray>()));
     REQUIRE(_array[0].is<JsonArray&>());
     REQUIRE_FALSE(_array[0].is<int>());
   }
@@ -55,7 +58,10 @@ TEST_CASE("JsonArray::set()") {
 
     _array.set(0, obj);
 
-    REQUIRE(&obj == &_array[0].as<JsonObject&>());
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject>()));
     REQUIRE(_array[0].is<JsonObject&>());
     REQUIRE_FALSE(_array[0].is<int>());
   }

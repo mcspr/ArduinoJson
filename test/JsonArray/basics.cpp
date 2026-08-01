@@ -19,11 +19,11 @@ TEST_CASE("JsonArray basics") {
 
   SECTION("CreateNestedArray") {
     JsonArray& arr = array.createNestedArray();
-    REQUIRE(&arr == &array[0].as<JsonArray&>());
+    REQUIRE(std::addressof(arr) == std::addressof(array[0].as<JsonArray&>()));
   }
 
   SECTION("CreateNestedObject") {
     JsonObject& obj = array.createNestedObject();
-    REQUIRE(&obj == &array[0].as<JsonObject&>());
+    REQUIRE(std::addressof(obj) == std::addressof(array[0].as<JsonObject&>()));
   }
 }
