@@ -115,22 +115,23 @@ class JsonVariantComparisons {
   }
 
  private:
-  const TImpl *impl() const {
-    return static_cast<const TImpl *>(this);
-  }
-
   TImpl *impl() {
     return static_cast<TImpl *>(this);
   }
 
-  template <typename T>
-  typename JsonVariantAsConst<T>::type as() const {
-    return impl()->template as<typename JsonVariantAsConst<T>::type>();
+  const TImpl *impl() const {
+    return static_cast<const TImpl *>(this);
   }
 
   template <typename T>
   typename JsonVariantAs<T>::type as() {
     return impl()->template as<typename JsonVariantAs<T>::type>();
+  }
+
+  template <typename T>
+  typename JsonVariantAsConst<T>::type as() const {
+    return const_cast<JsonVariantComparisons *>(this)->
+      as<typename JsonVariantAsConst<T>::type>();
   }
 
   template <typename T>
