@@ -10,34 +10,94 @@ TEST_CASE("JsonArray::operator[]") {
   JsonArray& _array = _jsonBuffer.createArray();
   _array.add(0);
 
+  SECTION("char") {
+    _array[0] = 1;
+
+    REQUIRE(_array[0].is<char>());
+    REQUIRE(_array[0].is<short>());
+    REQUIRE(_array[0].is<int>());
+    REQUIRE(_array[0].is<long>());
+    REQUIRE(1 == _array[0].as<char>());
+    REQUIRE(1 == _array[0].as<short>());
+    REQUIRE(1 == _array[0].as<int>());
+    REQUIRE(1 == _array[0].as<long>());
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
+  SECTION("short") {
+    _array[0] = 1234;
+
+    REQUIRE(_array[0].is<char>());
+    REQUIRE(_array[0].is<short>());
+    REQUIRE(_array[0].is<int>());
+    REQUIRE(_array[0].is<long>());
+
+    REQUIRE(0 == _array[0].as<char>());
+    REQUIRE(1234 == _array[0].as<short>());
+    REQUIRE(1234 == _array[0].as<int>());
+    REQUIRE(1234 == _array[0].as<long>());
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
   SECTION("int") {
-    _array[0] = 123;
-    REQUIRE(123 == _array[0].as<int>());
-    REQUIRE(true == _array[0].is<int>());
-    REQUIRE(false == _array[0].is<bool>());
+    _array[0] = 123456;
+
+    REQUIRE(_array[0].is<char>());
+    REQUIRE(_array[0].is<short>());
+    REQUIRE(_array[0].is<int>());
+    REQUIRE(_array[0].is<long>());
+
+    REQUIRE(0 == _array[0].as<char>());
+    REQUIRE(0 == _array[0].as<short>());
+    REQUIRE(123456 == _array[0].as<int>());
+    REQUIRE(123456 == _array[0].as<long>());
+
+    REQUIRE_FALSE(_array[0].is<bool>());
   }
 
 #if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
   SECTION("long long") {
-    _array[0] = 9223372036854775807;
-    REQUIRE(9223372036854775807 == _array[0].as<long long>());
-    REQUIRE(true == _array[0].is<int>());
-    REQUIRE(false == _array[0].is<bool>());
+    static constexpr long long value = std::numeric_limits<long long>::max();
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<char>());
+    REQUIRE(_array[0].is<short>());
+    REQUIRE(_array[0].is<int>());
+    REQUIRE(_array[0].is<long>());
+
+    REQUIRE(0 == _array[0].as<char>());
+    REQUIRE(0 == _array[0].as<short>());
+    REQUIRE(0 == _array[0].as<int>());
+    REQUIRE(value == _array[0].as<long long>());
+
+    REQUIRE_FALSE(_array[0].is<bool>());
   }
 #endif
 
   SECTION("double") {
     _array[0] = 123.45;
-    REQUIRE(123.45 == _array[0].as<double>());
-    REQUIRE(true == _array[0].is<double>());
-    REQUIRE(false == _array[0].is<int>());
+
+    REQUIRE(_array[0].is<double>());
+    REQUIRE(Approx(123.45) == _array[0].as<double>());
+
+    REQUIRE_FALSE(_array[0].is<char>());
+    REQUIRE_FALSE(_array[0].is<short>());
+    REQUIRE_FALSE(_array[0].is<int>());
+    REQUIRE_FALSE(_array[0].is<long>());
   }
 
   SECTION("bool") {
     _array[0] = true;
-    REQUIRE(true == _array[0].as<bool>());
-    REQUIRE(true == _array[0].is<bool>());
-    REQUIRE(false == _array[0].is<int>());
+
+    REQUIRE(_array[0].is<bool>());
+    REQUIRE(_array[0].as<bool>());
+
+    REQUIRE_FALSE(_array[0].is<char>());
+    REQUIRE_FALSE(_array[0].is<short>());
+    REQUIRE_FALSE(_array[0].is<int>());
+    REQUIRE_FALSE(_array[0].is<long>());
   }
 
   SECTION("const char*") {
@@ -47,7 +107,11 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(str == _array[0].as<const char*>());
     REQUIRE(str == _array[0].as<char*>());  // <- short hand
     REQUIRE(true == _array[0].is<const char*>());
-    REQUIRE(false == _array[0].is<int>());
+
+    REQUIRE_FALSE(_array[0].is<char>());
+    REQUIRE_FALSE(_array[0].is<short>());
+    REQUIRE_FALSE(_array[0].is<int>());
+    REQUIRE_FALSE(_array[0].is<long>());
   }
 
   SECTION("nested array") {
@@ -55,12 +119,16 @@ TEST_CASE("JsonArray::operator[]") {
 
     _array[0] = arr;
 
-    REQUIRE(&arr == &_array[0].as<JsonArray&>());
-    REQUIRE(&arr == &_array[0].as<JsonArray>());  // <- short hand
-    REQUIRE(&arr == &_array[0].as<const JsonArray&>());
-    REQUIRE(&arr == &_array[0].as<const JsonArray>());  // <- short hand
-    REQUIRE(true == _array[0].is<JsonArray&>());
-    REQUIRE(false == _array[0].is<int>());
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray>()));  // <- short hand
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray&>()));
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray>()));  // short hand
+    REQUIRE(_array[0].is<JsonArray&>());
+
+    REQUIRE_FALSE(_array[0].is<char>());
+    REQUIRE_FALSE(_array[0].is<short>());
+    REQUIRE_FALSE(_array[0].is<int>());
+    REQUIRE_FALSE(_array[0].is<long>());
   }
 
   SECTION("nested object") {
@@ -68,12 +136,16 @@ TEST_CASE("JsonArray::operator[]") {
 
     _array[0] = obj;
 
-    REQUIRE(&obj == &_array[0].as<JsonObject&>());
-    REQUIRE(&obj == &_array[0].as<JsonObject>());  // <- short hand
-    REQUIRE(&obj == &_array[0].as<const JsonObject&>());
-    REQUIRE(&obj == &_array[0].as<const JsonObject>());  // <- short hand
-    REQUIRE(true == _array[0].is<JsonObject&>());
-    REQUIRE(false == _array[0].is<int>());
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject>()));  // <- short hand
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject&>()));
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject>()));  // <- short hand
+    REQUIRE(_array[0].is<JsonObject&>());
+
+    REQUIRE_FALSE(_array[0].is<char>());
+    REQUIRE_FALSE(_array[0].is<short>());
+    REQUIRE_FALSE(_array[0].is<int>());
+    REQUIRE_FALSE(_array[0].is<long>());
   }
 
   SECTION("array subscript") {

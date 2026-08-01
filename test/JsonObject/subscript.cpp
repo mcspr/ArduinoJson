@@ -11,44 +11,87 @@ TEST_CASE("JsonObject::operator[]") {
   DynamicJsonBuffer _jsonBuffer;
   JsonObject& _object = _jsonBuffer.createObject();
 
-  SECTION("int") {
-    _object["hello"] = 123;
+  SECTION("char") {
+    _object["hello"] = 1;
 
-    REQUIRE(123 == _object["hello"].as<int>());
-    REQUIRE(true == _object["hello"].is<int>());
-    REQUIRE(false == _object["hello"].is<bool>());
+    REQUIRE(_object["hello"].is<char>());
+    REQUIRE(1 == _object["hello"].as<char>());
+    REQUIRE(1 == _object["hello"].as<short>());
+    REQUIRE(1 == _object["hello"].as<int>());
+    REQUIRE(1 == _object["hello"].as<long>());
+    REQUIRE_FALSE(_object["hello"].is<const char*>());
+    REQUIRE_FALSE(_object["hello"].is<bool>());
+  }
+
+  SECTION("short") {
+    _object["hello"] = 1234;
+
+    REQUIRE(_object["hello"].is<char>());
+    REQUIRE(_object["hello"].is<short>());
+    REQUIRE(_object["hello"].is<int>());
+    REQUIRE(_object["hello"].is<long>());
+    REQUIRE(0 == _object["hello"].as<char>());
+    REQUIRE(1234 == _object["hello"].as<short>());
+    REQUIRE(1234 == _object["hello"].as<int>());
+    REQUIRE(1234 == _object["hello"].as<long>());
+    REQUIRE_FALSE(_object["hello"].is<const char*>());
+    REQUIRE_FALSE(_object["hello"].is<bool>());
+  }
+
+  SECTION("int") {
+    _object["hello"] = 123456;
+
+    REQUIRE(_object["hello"].is<char>());
+    REQUIRE(_object["hello"].is<short>());
+    REQUIRE(_object["hello"].is<int>());
+    REQUIRE(_object["hello"].is<long>());
+    REQUIRE(0 == _object["hello"].as<char>());
+    REQUIRE(0 == _object["hello"].as<short>());
+    REQUIRE(123456 == _object["hello"].as<int>());
+    REQUIRE(123456 == _object["hello"].as<long>());
+    REQUIRE_FALSE(_object["hello"].is<const char*>());
+    REQUIRE_FALSE(_object["hello"].is<bool>());
   }
 
   SECTION("volatile int") {  // issue #415
     volatile int i = 123;
     _object["hello"] = i;
 
+    REQUIRE(_object["hello"].is<int>());
     REQUIRE(123 == _object["hello"].as<int>());
-    REQUIRE(true == _object["hello"].is<int>());
-    REQUIRE(false == _object["hello"].is<bool>());
+    REQUIRE_FALSE(_object["hello"].is<bool>());
   }
 
   SECTION("double") {
     _object["hello"] = 123.45;
 
-    REQUIRE(true == _object["hello"].is<double>());
-    REQUIRE(false == _object["hello"].is<long>());
-    REQUIRE(123.45 == _object["hello"].as<double>());
+    REQUIRE(_object["hello"].is<double>());
+    REQUIRE(Approx(123.45) == _object["hello"].as<double>());
+    REQUIRE_FALSE(_object["hello"].is<char>());
+    REQUIRE_FALSE(_object["hello"].is<short>());
+    REQUIRE_FALSE(_object["hello"].is<int>());
+    REQUIRE_FALSE(_object["hello"].is<long>());
   }
 
   SECTION("bool") {
     _object["hello"] = true;
 
-    REQUIRE(true == _object["hello"].is<bool>());
-    REQUIRE(false == _object["hello"].is<long>());
-    REQUIRE(true == _object["hello"].as<bool>());
+    REQUIRE(_object["hello"].is<bool>());
+    REQUIRE(_object["hello"].as<bool>());
+    REQUIRE_FALSE(_object["hello"].is<char>());
+    REQUIRE_FALSE(_object["hello"].is<short>());
+    REQUIRE_FALSE(_object["hello"].is<int>());
+    REQUIRE_FALSE(_object["hello"].is<long>());
   }
 
   SECTION("const char*") {
     _object["hello"] = "h3110";
 
-    REQUIRE(true == _object["hello"].is<const char*>());
-    REQUIRE(false == _object["hello"].is<long>());
+    REQUIRE(_object["hello"].is<const char*>());
+    REQUIRE_FALSE(_object["hello"].is<char>());
+    REQUIRE_FALSE(_object["hello"].is<short>());
+    REQUIRE_FALSE(_object["hello"].is<int>());
+    REQUIRE_FALSE(_object["hello"].is<long>());
     REQUIRE(std::string("h3110") == _object["hello"].as<const char*>());
     REQUIRE(std::string("h3110") ==
             _object["hello"].as<char*>());  // <- short hand
