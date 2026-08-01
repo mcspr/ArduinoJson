@@ -15,10 +15,8 @@ namespace Internals {
 template <typename TImpl>
 class JsonVariantCasts {
  public:
-  // Gets the variant as an array.
-  // Returns a reference to the JsonArray or JsonArray::invalid() if the
-  // variant
-  // is not an array.
+  // Returns a reference to the contained JsonArray or JsonArray::invalid()
+  // if this variant is not an array.
   ARDUINOJSON_FORCE_INLINE operator const JsonArray &() const {
     return impl()->template as<const JsonArray &>();
   }
@@ -27,9 +25,8 @@ class JsonVariantCasts {
     return impl()->template as<JsonArray &>();
   }
 
-  // Gets the variant as an object.
-  // Returns a reference to the JsonObject or JsonObject::invalid() if the
-  // variant is not an object.
+  // Returns a reference to the contained JsonObject or JsonObject::invalid()
+  // if this variant is not an object.
   ARDUINOJSON_FORCE_INLINE operator const JsonObject &() const {
     return impl()->template as<const JsonObject &>();
   }
