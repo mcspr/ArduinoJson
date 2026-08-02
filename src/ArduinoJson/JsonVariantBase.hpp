@@ -20,5 +20,6 @@ class JsonVariantBase : public JsonPrintable<TImpl>,
                         public JsonVariantOr<TImpl>,
                         public JsonVariantSubscripts<TImpl>,
                         public JsonVariantTag {};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

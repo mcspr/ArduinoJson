@@ -5,11 +5,12 @@
 #pragma once
 
 #include "Data/JsonVariantAs.hpp"
-#include "JsonVariantBase.hpp"
+#include "JsonSubscriptBase.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
-class JsonArraySubscript : public JsonVariantBase<JsonArraySubscript> {
+
+class JsonArraySubscript : public JsonSubscriptBase<JsonArraySubscript> {
  public:
   JsonArraySubscript() noexcept;
   JsonArraySubscript(JsonArray& array, size_t index) noexcept;

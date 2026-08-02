@@ -6,7 +6,7 @@
 
 #include "Configuration.hpp"
 
-#include "JsonVariantBase.hpp"
+#include "JsonSubscriptBase.hpp"
 #include "Data/StringView.hpp"
 
 namespace ArduinoJson {
@@ -18,7 +18,7 @@ using TJsonObjectSubscriptKeyType =
 
 template <typename TKey>
 class JsonObjectSubscript final
-    : public JsonVariantBase<JsonObjectSubscript<TKey> > {
+    : public JsonSubscriptBase<JsonObjectSubscript<TKey> > {
 
  public:
   JsonObjectSubscript() noexcept;
