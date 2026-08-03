@@ -16,6 +16,8 @@
 #include "../TypeTraits/Or.hpp"
 #include "../TypeTraits/And.hpp"
 
+#include "../JsonBuffer.hpp"
+
 #include "../StringTraits/StringTraitsBase.hpp"
 #include "../Strings/Strings.hpp"
 
