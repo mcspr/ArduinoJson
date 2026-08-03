@@ -22,6 +22,7 @@ namespace Internals {
 template <>
 struct StringTraitsImpl<const __FlashStringHelper*, void> : StringTraitsTag {
   typedef Readers::FlashString::Reader Reader;
+  typedef Strings::FlashString::Length Length;
   typedef Strings::FlashString::Equals Equals;
   typedef Strings::FlashString::Reference Reference;
 #if !ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
