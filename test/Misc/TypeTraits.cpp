@@ -12,10 +12,14 @@
 #include <ArduinoJson/TypeTraits/IsVariant.hpp>
 
 using ArduinoJson::Internals::IsBaseOf;
+using ArduinoJson::Internals::IsSame;
 using ArduinoJson::Internals::IsArray;
 using ArduinoJson::Internals::IsPointer;
 using ArduinoJson::Internals::IsConst;
 using ArduinoJson::Internals::IsVariant;
+using ArduinoJson::Internals::IsInstantiationOf;
+
+using ArduinoJson::Internals::Conditional;
 
 using ArduinoJson::Internals::JsonMutableArraySubscript;
 using ArduinoJson::Internals::JsonConstArraySubscript;
@@ -24,29 +28,37 @@ using ArduinoJson::Internals::JsonConstObjectSubscript;
 using ArduinoJson::Internals::JsonSubscriptBase;
 using ArduinoJson::Internals::JsonVariantBase;
 
-struct BaseOne {
+template <typename>
+struct TemplateOne {
 };
 
-struct DerivedFromBaseOne : public BaseOne {
-};
-
-struct DerivedFromDerived : public DerivedFromBaseOne {
-};
-
-struct BaseTwo {
-};
-
-struct DerivedFromBaseTwo : public BaseTwo {
+template <typename>
+struct TemplateTwo {
 };
 
 TEST_CASE("TypeTraits") {
   SECTION("IsBaseOf") {
-    REQUIRE_FALSE(IsBaseOf<BaseTwo, BaseOne>::value);
-    REQUIRE_FALSE(IsBaseOf<BaseOne, BaseTwo>::value);
-    REQUIRE_FALSE(IsBaseOf<BaseOne, DerivedFromBaseTwo>::value);
-    REQUIRE(IsBaseOf<BaseOne, DerivedFromBaseOne>::value);
-    REQUIRE(IsBaseOf<BaseOne, DerivedFromDerived>::value);
-    REQUIRE(IsBaseOf<BaseTwo, DerivedFromBaseTwo>::value);
+    struct BaseOne {
+    };
+
+    struct DerivedFromBaseOne : public BaseOne {
+    };
+
+    struct DerivedFromDerived : public DerivedFromBaseOne {
+    };
+
+    struct BaseTwo {
+    };
+
+    struct DerivedFromBaseTwo : public BaseTwo {
+    };
+
+    STATIC_REQUIRE_FALSE(IsBaseOf<BaseTwo, BaseOne>::value);
+    STATIC_REQUIRE_FALSE(IsBaseOf<BaseOne, BaseTwo>::value);
+    STATIC_REQUIRE_FALSE(IsBaseOf<BaseOne, DerivedFromBaseTwo>::value);
+    STATIC_REQUIRE(IsBaseOf<BaseOne, DerivedFromBaseOne>::value);
+    STATIC_REQUIRE(IsBaseOf<BaseOne, DerivedFromDerived>::value);
+    STATIC_REQUIRE(IsBaseOf<BaseTwo, DerivedFromBaseTwo>::value);
   }
 
   SECTION("Recursive IsBaseOf") {
@@ -75,41 +87,76 @@ TEST_CASE("TypeTraits") {
     STATIC_REQUIRE(!IsBaseOf<JsonMutableArraySubscript, const_array_subscript_type>::value);
   }
 
+  SECTION("IsSame") {
+    struct One {
+    };
+
+    struct Two {
+    };
+
+    STATIC_REQUIRE(IsSame<One, One>::value);
+    STATIC_REQUIRE(IsSame<Two, Two>::value);
+    STATIC_REQUIRE(!IsSame<One, Two>::value);
+    STATIC_REQUIRE(!IsSame<Two, One>::value);
+  }
+
+
   SECTION("IsPointer") {
-    REQUIRE_FALSE((IsPointer<char[]>::value));
-    REQUIRE_FALSE((IsPointer<const char[]>::value));
-    REQUIRE_FALSE((IsPointer<const char[10]>::value));
-    REQUIRE_FALSE((IsPointer<const char*&>::value));
-    REQUIRE((IsPointer<char*>::value));
-    REQUIRE((IsPointer<const char*>::value));
-    REQUIRE((IsPointer<const char* const>::value));
+    STATIC_REQUIRE_FALSE((IsPointer<char[]>::value));
+    STATIC_REQUIRE_FALSE((IsPointer<const char[]>::value));
+    STATIC_REQUIRE_FALSE((IsPointer<const char[10]>::value));
+    STATIC_REQUIRE_FALSE((IsPointer<const char*&>::value));
+    STATIC_REQUIRE((IsPointer<char*>::value));
+    STATIC_REQUIRE((IsPointer<const char*>::value));
+    STATIC_REQUIRE((IsPointer<const char* const>::value));
   }
 
   SECTION("IsArray") {
-    REQUIRE_FALSE((IsArray<JsonMutableObjectSubscript<const char[10]> >::value));
-    REQUIRE_FALSE((IsArray<JsonConstObjectSubscript<const char[10]> >::value));
-    REQUIRE_FALSE((IsArray<JsonMutableArraySubscript >::value));
-    REQUIRE_FALSE((IsArray<JsonConstArraySubscript >::value));
-    REQUIRE_FALSE((IsArray<std::string>::value));
-    REQUIRE_FALSE((IsArray<const char*>::value));
-    REQUIRE_FALSE((IsArray<const char*&>::value));
-    REQUIRE_FALSE((IsArray<const char(&)[10]>::value));
-    REQUIRE((IsArray<const char[]>::value));
-    REQUIRE((IsArray<const char[10]>::value));
+    STATIC_REQUIRE_FALSE((IsArray<JsonMutableObjectSubscript<const char[10]> >::value));
+    STATIC_REQUIRE_FALSE((IsArray<JsonConstObjectSubscript<const char[10]> >::value));
+    STATIC_REQUIRE_FALSE((IsArray<JsonMutableArraySubscript >::value));
+    STATIC_REQUIRE_FALSE((IsArray<JsonConstArraySubscript >::value));
+    STATIC_REQUIRE_FALSE((IsArray<std::string>::value));
+    STATIC_REQUIRE_FALSE((IsArray<const char*>::value));
+    STATIC_REQUIRE_FALSE((IsArray<const char*&>::value));
+    STATIC_REQUIRE_FALSE((IsArray<const char(&)[10]>::value));
+    STATIC_REQUIRE((IsArray<const char[]>::value));
+    STATIC_REQUIRE((IsArray<const char[10]>::value));
   }
 
   SECTION("IsVariant") {
-    REQUIRE_FALSE(IsVariant<std::string>::value);
-    REQUIRE(IsVariant<JsonMutableObjectSubscript<const char*> >::value);
-    REQUIRE(IsVariant<JsonConstObjectSubscript<std::string> >::value);
-    REQUIRE(IsVariant<JsonMutableArraySubscript >::value);
-    REQUIRE(IsVariant<JsonConstArraySubscript >::value);
-    REQUIRE(IsVariant<JsonVariant>::value);
+    STATIC_REQUIRE_FALSE(IsVariant<std::string>::value);
+    STATIC_REQUIRE(IsVariant<JsonMutableObjectSubscript<const char*> >::value);
+    STATIC_REQUIRE(IsVariant<JsonConstObjectSubscript<std::string> >::value);
+    STATIC_REQUIRE(IsVariant<JsonMutableArraySubscript >::value);
+    STATIC_REQUIRE(IsVariant<JsonConstArraySubscript >::value);
+    STATIC_REQUIRE(IsVariant<JsonVariant>::value);
   }
 
   SECTION("IsConst") {
-    REQUIRE_FALSE((IsConst<char>::value));
-    REQUIRE((IsConst<const std::string>::value));
-    REQUIRE((IsConst<const char>::value));
+    STATIC_REQUIRE_FALSE((IsConst<char>::value));
+    STATIC_REQUIRE((IsConst<const std::string>::value));
+    STATIC_REQUIRE((IsConst<const char>::value));
+  }
+
+  SECTION("IsInstantiationOf") {
+    STATIC_REQUIRE(IsInstantiationOf<TemplateOne, TemplateOne<int> >::value);
+    STATIC_REQUIRE_FALSE(IsInstantiationOf<TemplateOne, TemplateTwo<int> >::value);
+    STATIC_REQUIRE(IsInstantiationOf<TemplateTwo, TemplateTwo<int> >::value);
+    STATIC_REQUIRE_FALSE(IsInstantiationOf<TemplateTwo, TemplateOne<int> >::value);
+  }
+
+  SECTION("Conditional") {
+    struct One {
+    };
+
+    struct Two {
+    };
+
+    STATIC_REQUIRE(IsSame<One, Conditional<true, One, Two> >::value);
+    STATIC_REQUIRE(IsSame<Two, Conditional<false, One, Two> >::value);
+
+    STATIC_REQUIRE(IsSame<One, Conditional<false, Two, One> >::value);
+    STATIC_REQUIRE(IsSame<Two, Conditional<true, Two, One> >::value);
   }
 }
