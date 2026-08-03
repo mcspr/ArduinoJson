@@ -55,7 +55,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // Create an empty JsonArray attached to the specified JsonBuffer.
   // You should not call this constructor directly.
   // Instead, use JsonBuffer::createArray() or JsonBuffer::parseArray().
-  explicit JsonArray(JsonBuffer *buffer) noexcept :
+  explicit JsonArray(JsonBuffer* buffer) noexcept :
     Internals::List<JsonVariant>(buffer)
   {}
 
@@ -88,14 +88,14 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   template <typename TValue>
   typename Internals::EnableIf<
     Internals::IsReferenceType<TValue>::value, bool>::type
-  ARDUINOJSON_FORCE_INLINE add(TValue &ref) {
+  ARDUINOJSON_FORCE_INLINE add(TValue& ref) {
     return add_impl(JsonVariant(ref));
   }
 
   template <typename TValue>
   typename Internals::EnableIf<
     Internals::HasStringTraits<TValue>::value, bool>::type
-  ARDUINOJSON_FORCE_INLINE add(TValue &&value) {
+  ARDUINOJSON_FORCE_INLINE add(TValue&& value) {
     return add_impl(Internals::MakeStringRef(std::forward<TValue>(value)));
   }
 
@@ -121,14 +121,14 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   template <typename TValue>
   typename Internals::EnableIf<Internals::HasStringTraits<TValue>::value, bool>::type
-  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue &&value) {
+  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue&& value) {
     return set_impl(index, Internals::MakeStringRef(std::forward<TValue>(value)));
   }
 
   template <typename TValue>
   typename Internals::EnableIf<
     Internals::IsReferenceType<TValue>::value, bool>::type
-  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue &ref) {
+  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue& ref) {
     return set_impl(index, JsonVariant(ref));
   }
 
@@ -162,11 +162,11 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   // Creates a JsonArray and adds a reference at the end of the array.
   // It's a shortcut for JsonBuffer::createArray() and JsonArray::add()
-  JsonArray &createNestedArray();
+  JsonArray& createNestedArray();
 
   // Creates a JsonObject and adds a reference at the end of the array.
   // It's a shortcut for JsonBuffer::createObject() and JsonArray::add()
-  JsonObject &createNestedObject();
+  JsonObject& createNestedObject();
 
   // Removes element at specified index.
   void remove(size_t index) {
@@ -177,7 +177,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // Returns a reference an invalid JsonArray.
   // This object is meant to replace `_buffer(nullptr)`
   // when memory allocation or JSON parsing fail.
-  static JsonArray &invalid() {
+  static JsonArray& invalid() {
     static JsonArray instance(Internals::EmptyJsonBuffer::instance());
     return instance;
   }
@@ -203,7 +203,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   bool copyFrom(T (&array)[N1][N2]) {
     bool ok = true;
     for (size_t i = 0; i < N1; i++) {
-      JsonArray &nestedArray = createNestedArray();
+      JsonArray& nestedArray = createNestedArray();
       for (size_t j = 0; j < N2; j++) {
         ok &= nestedArray.add(array[i][j]);
       }

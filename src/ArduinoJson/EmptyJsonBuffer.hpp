@@ -13,7 +13,7 @@ struct EmptyJsonBuffer final : public JsonBufferBase<EmptyJsonBuffer> {
     return &jsonBuffer;
   }
 
-  void *alloc(size_t) override {
+  void* alloc(size_t) override {
     return nullptr;
   }
 

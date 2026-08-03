@@ -105,7 +105,7 @@ TEST_CASE("JsonArray::operator[]") {
 
     _array[0] = str;
     REQUIRE(str == _array[0].as<const char*>());
-    REQUIRE(str == _array[0].as<char*>());  // <- short hand
+    REQUIRE(str == _array[0].as<char*>());  // <- shorthand
     REQUIRE(true == _array[0].is<const char*>());
 
     REQUIRE_FALSE(_array[0].is<char>());
@@ -120,9 +120,9 @@ TEST_CASE("JsonArray::operator[]") {
     _array[0] = arr;
 
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray&>()));
-    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray>()));  // <- short hand
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray>()));  // <- shorthand
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray&>()));
-    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray>()));  // short hand
+    REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray>()));  // shorthand
     REQUIRE(_array[0].is<JsonArray&>());
 
     REQUIRE_FALSE(_array[0].is<char>());
@@ -137,9 +137,9 @@ TEST_CASE("JsonArray::operator[]") {
     _array[0] = obj;
 
     REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject&>()));
-    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject>()));  // <- short hand
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject>()));  // <- shorthand
     REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject&>()));
-    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject>()));  // <- short hand
+    REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject>()));  // <- shorthand
     REQUIRE(_array[0].is<JsonObject&>());
 
     REQUIRE_FALSE(_array[0].is<char>());
