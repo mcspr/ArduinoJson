@@ -33,6 +33,19 @@ TEST_CASE("StaticJsonBuffer::createArray()") {
     REQUIRE_FALSE(array.success());
   }
 
+  SECTION("NestedCreateArrayFailsWhenTooSmall") {
+    StaticJsonBuffer<JSON_ARRAY_SIZE(2) + JSON_ARRAY_SIZE(0)> json;
+
+    JsonArray &array = json.createArray();
+    REQUIRE(array.success());
+
+    JsonArray &one = array.createNestedArray();
+    REQUIRE(one.success());
+
+    JsonArray &two = array.createNestedArray();
+    REQUIRE_FALSE(two.success());
+  }
+
   SECTION("ArrayDoesntGrowWhenFull") {
     StaticJsonBuffer<JSON_ARRAY_SIZE(1)> json;
 

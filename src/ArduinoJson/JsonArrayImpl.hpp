@@ -151,14 +151,16 @@ inline Internals::JsonMutableArraySubscript JsonArray::operator[](size_t index) 
 
 inline JsonArray& JsonArray::createNestedArray() {
   JsonArray &ref = _buffer->createArray();
-  add(JsonVariant(ref));
-  return ref;
+  if (add_impl(JsonVariant(ref)))
+    return ref;
+  return JsonArray::invalid();
 }
 
 inline JsonObject& JsonArray::createNestedObject() {
   JsonObject &ref = _buffer->createObject();
-  add(JsonVariant(ref));
-  return ref;
+  if (add_impl(JsonVariant(ref)))
+    return ref;
+  return JsonObject::invalid();
 }
 
 }  // namespace ArduinoJson
