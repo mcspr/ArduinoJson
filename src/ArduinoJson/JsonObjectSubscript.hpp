@@ -12,37 +12,47 @@
 namespace ArduinoJson {
 namespace Internals {
 
+template <typename>
+class JsonMutableObjectSubscript;
+
+template <typename>
+class JsonConstObjectSubscript;
+
 template <typename TKey>
 using TJsonObjectSubscriptKeyType =
   typename StringRefWrapperHelper<TKey>::wrapper_type;
 
 template <typename TKey>
-class JsonObjectSubscript final
-    : public JsonSubscriptBase<JsonObjectSubscript<TKey> > {
+class JsonMutableObjectSubscript final
+    : public JsonSubscriptBase<JsonObject, JsonMutableObjectSubscript<TKey> > {
 
  public:
-  JsonObjectSubscript() noexcept;
+  JsonMutableObjectSubscript() noexcept;
 
   template <typename TKeyRef>
-  JsonObjectSubscript(JsonObject& object, TKeyRef&& key);
+  JsonMutableObjectSubscript(JsonObject& object, TKeyRef&& key);
 
   template <typename TRef>
-  JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key);
+  JsonMutableObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key);
 
-  // Allow to construct the object, but disallow changes after construction
+  // allow to construct the object, but disallow changes after construction
 
-  JsonObjectSubscript(const JsonObjectSubscript &) = default;
-  JsonObjectSubscript(JsonObjectSubscript &&) = default;
+  JsonMutableObjectSubscript(const JsonMutableObjectSubscript &) = default;
+  JsonMutableObjectSubscript(JsonMutableObjectSubscript &&) = default;
 
-  // Everything else is interpreted as object assignment w/ the key attached to the subscript object
+  JsonMutableObjectSubscript(const JsonConstObjectSubscript<TKey> &) = delete;
+  JsonMutableObjectSubscript(JsonConstObjectSubscript<TKey> &&) = delete;
+
+  // class copy / move implicitly converts into JsonVariant and assigns
+
+  JsonMutableObjectSubscript& operator=(const JsonMutableObjectSubscript &);
+  JsonMutableObjectSubscript& operator=(JsonMutableObjectSubscript &&);
+
+  JsonMutableObjectSubscript& operator=(const JsonConstObjectSubscript<TKey> &);
+  JsonMutableObjectSubscript& operator=(JsonConstObjectSubscript<TKey> &&);
+
   template <typename TValue>
-  ARDUINOJSON_FORCE_INLINE JsonObjectSubscript& operator=(TValue&& src) {
-    set(std::forward<TValue>(src));
-    return *this;
-  }
-
-  // class copy is disallowed, interpret it as an assignment operation
-  JsonObjectSubscript& operator=(const JsonObjectSubscript&);
+  JsonMutableObjectSubscript& operator=(TValue&&);
 
   // forwarding methods for the bound key and JsonObject ref
 
@@ -50,13 +60,7 @@ class JsonObjectSubscript final
 
   // aka JsonObject::get<TValue>(key)
   template <typename TValue>
-  typename JsonVariantAs<TValue>::type as();
-
-  template <typename TValue>
-  typename JsonVariantAsConst<TValue>::type as() const {
-    return const_cast<JsonObjectSubscript *>(this)->
-      as<typename JsonVariantAsConst<TValue>::type>();
-  }
+  typename JsonVariantAs<TValue>::type as() const;
 
   // aka JsonObject::is<TValue>(key)
   template <typename TValue>
@@ -72,17 +76,61 @@ class JsonObjectSubscript final
 };
 
 template <typename TKey>
-struct JsonObjectSubscriptHelper {
-  typedef TJsonObjectSubscriptKeyType<TKey> key_type;
-  typedef JsonObjectSubscript<typename key_type::string_type> subscript_type;
+class JsonConstObjectSubscript final
+    : public JsonSubscriptBase<const JsonObject, JsonConstObjectSubscript<TKey> > {
+
+ public:
+  JsonConstObjectSubscript() noexcept;
+
+  template <typename TKeyRef>
+  JsonConstObjectSubscript(const JsonObject& object, TKeyRef&& key);
+
+  template <typename TRef>
+  JsonConstObjectSubscript(const JsonObject& object, StringRefWrapper<TRef> key);
+
+  // allow to construct the object, but disallow changes after construction
+
+  JsonConstObjectSubscript(const JsonConstObjectSubscript &) = default;
+  JsonConstObjectSubscript(JsonConstObjectSubscript &&) = default;
+
+  JsonConstObjectSubscript(const JsonMutableObjectSubscript<TKey> &);
+  JsonConstObjectSubscript(JsonMutableObjectSubscript<TKey> &&);
+
+  // class copy / move implicitly converts into JsonVariant and assigns
+
+  JsonConstObjectSubscript& operator=(const JsonMutableObjectSubscript<TKey> &) = delete;
+  JsonConstObjectSubscript& operator=(JsonMutableObjectSubscript<TKey> &&) = delete;
+
+  JsonConstObjectSubscript& operator=(const JsonConstObjectSubscript &) = delete;
+  JsonConstObjectSubscript& operator=(JsonConstObjectSubscript<TKey> &&) = delete;
+
+  template <typename TValue>
+  JsonConstObjectSubscript& operator=(TValue &&) = delete;
+
+  // forwarding methods for the bound key and JsonObject ref
+
+  bool success() const;
+
+  // aka JsonObject::get<TValue>(key)
+  template <typename TValue>
+  typename JsonVariantAsConst<TValue>::type as() const;
+
+  // aka JsonObject::is<TValue>(key)
+  template <typename TValue>
+  bool is() const;
+
+ private:
+  const JsonObject& _object;
+  TJsonObjectSubscriptKeyType<TKey> _key;
 };
 
-#if ARDUINOJSON_ENABLE_STD_STREAM
-template <typename TKey>
-inline std::ostream& operator<<(std::ostream& os,
-                                const JsonObjectSubscript<TKey>& source) {
-  return source.printTo(os);
-}
-#endif
+template <typename TJsonObject, typename TKey>
+struct JsonObjectSubscriptHelper {
+  typedef TJsonObjectSubscriptKeyType<TKey> key_type;
+  typedef Conditional<IsConst<TJsonObject>::value,
+    JsonConstObjectSubscript<typename key_type::string_type>,
+    JsonMutableObjectSubscript<typename key_type::string_type>> subscript_type;
+};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

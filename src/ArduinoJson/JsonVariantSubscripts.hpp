@@ -14,9 +14,10 @@ namespace Internals {
 
 // Forward declarations.
 
-class JsonArraySubscript;
-template <typename TKey>
+class JsonMutableArraySubscript;
+class JsonConstArraySubscript;
 
+template <typename, typename TKey>
 struct JsonObjectSubscriptHelper;
 
 template <typename TImpl>
@@ -33,22 +34,22 @@ class JsonVariantSubscripts {
   // Mimics an array.
   // Returns the element at specified index if the variant is an array.
   // Returns JsonVariant::invalid() if the variant is not an array.
-  JsonArraySubscript operator[](size_t index) const;
-  JsonArraySubscript operator[](size_t index);
+  JsonConstArraySubscript operator[](size_t index) const;
+  JsonMutableArraySubscript operator[](size_t index);
 
   // Mimics an object.
   // Returns the value associated with the specified key if the variant is an object.
   // Return JsonVariant::invalid() if the variant is not an object.
   template <typename TKey>
   typename EnableIf<HasEquals<StringTraits<TKey>>::value,
-    typename JsonObjectSubscriptHelper<TKey>::subscript_type >::type
+    typename JsonObjectSubscriptHelper<const JsonObject, TKey>::subscript_type >::type
   ARDUINOJSON_FORCE_INLINE operator[](TKey &&key) const {
     return impl()->template as<const JsonObject &>()[std::forward<TKey>(key)];
   }
 
   template <typename TKey>
   typename EnableIf<HasEquals<StringTraits<TKey>>::value,
-    typename JsonObjectSubscriptHelper<TKey>::subscript_type >::type
+    typename JsonObjectSubscriptHelper<JsonObject, TKey>::subscript_type >::type
   ARDUINOJSON_FORCE_INLINE operator[](TKey &&key) {
     return impl()->template as<JsonObject &>()[std::forward<TKey>(key)];
   }

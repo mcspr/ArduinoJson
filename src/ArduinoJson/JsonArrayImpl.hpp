@@ -12,70 +12,141 @@ namespace ArduinoJson {
 namespace Internals {
 
 // *Always* attached to some JsonArray instance
-inline JsonArraySubscript::JsonArraySubscript() noexcept :
+inline JsonMutableArraySubscript::JsonMutableArraySubscript() noexcept :
   _array(JsonArray::invalid())
 {}
 
-inline JsonArraySubscript::JsonArraySubscript(JsonArray& array, size_t index) noexcept :
+inline JsonMutableArraySubscript::JsonMutableArraySubscript(JsonArray& array, size_t index) noexcept :
   _array(array),
   _index(index)
 {}
 
-inline JsonArraySubscript&
-ARDUINOJSON_FORCE_INLINE JsonArraySubscript::operator=(const JsonArraySubscript& src) {
-  _array.set_impl(_index, src.template as<JsonVariant>());
-  return *this;
+inline JsonMutableArraySubscript&
+JsonMutableArraySubscript::operator=(const JsonMutableArraySubscript& other) {
+  return this->operator=(other.as<JsonVariant>());
+}
+
+inline JsonMutableArraySubscript&
+JsonMutableArraySubscript::operator=(JsonMutableArraySubscript&& other) {
+  return this->operator=(other.as<JsonVariant>());
+}
+
+inline JsonMutableArraySubscript&
+JsonMutableArraySubscript::operator=(const JsonConstArraySubscript& other) {
+  return this->operator=(other.as<JsonVariant>());
+}
+
+inline JsonMutableArraySubscript&
+JsonMutableArraySubscript::operator=(JsonConstArraySubscript&& other) {
+  return this->operator=(other.as<JsonVariant>());
 }
 
 template <typename TValue>
-inline JsonArraySubscript&
-ARDUINOJSON_FORCE_INLINE JsonArraySubscript::operator=(TValue&& value) {
-  _array.set(_index, std::forward<TValue>(value));
+inline JsonMutableArraySubscript&
+ARDUINOJSON_FORCE_INLINE JsonMutableArraySubscript::operator=(TValue&& value) {
+  set(std::forward<TValue>(value));
   return *this;
 }
 
-inline bool JsonArraySubscript::success() const {
+inline bool JsonMutableArraySubscript::success() const {
   return _array.success() && _index < _array.size();
 }
 
 template <typename TValue>
 inline typename JsonVariantAs<TValue>::type
-ARDUINOJSON_FORCE_INLINE JsonArraySubscript::as() {
+ARDUINOJSON_FORCE_INLINE JsonMutableArraySubscript::as() const {
   return _array.get<TValue>(_index);
 }
 
 template <typename TValue>
 inline bool
-ARDUINOJSON_FORCE_INLINE JsonArraySubscript::is() const {
+ARDUINOJSON_FORCE_INLINE JsonMutableArraySubscript::is() const {
   return _array.is<TValue>(_index);
 }
 
 template <typename TValue>
 inline bool
-ARDUINOJSON_FORCE_INLINE JsonArraySubscript::set(TValue&& value) {
+ARDUINOJSON_FORCE_INLINE JsonMutableArraySubscript::set(TValue&& value) {
   return _array.set(_index, std::forward<TValue>(value));
 }
 
-template <typename TImpl>
-inline JsonArraySubscript JsonVariantSubscripts<TImpl>::operator[](size_t index) {
-  return impl()->template as<JsonArray &>()[index];
+inline JsonConstArraySubscript::JsonConstArraySubscript() noexcept :
+  _array(JsonArray::invalid())
+{}
+
+inline JsonConstArraySubscript::JsonConstArraySubscript(const JsonArray& array, size_t index) noexcept :
+  _array(array),
+  _index(index)
+{}
+
+inline JsonConstArraySubscript::JsonConstArraySubscript(const JsonConstArraySubscript& other) noexcept :
+  _array(other._array),
+  _index(other._index)
+{}
+
+inline JsonConstArraySubscript::JsonConstArraySubscript(JsonConstArraySubscript&& other) noexcept :
+  _array(other._array),
+  _index(other._index)
+{}
+
+inline JsonConstArraySubscript::JsonConstArraySubscript(const JsonMutableArraySubscript& other) noexcept :
+  _array(other._array),
+  _index(other._index)
+{}
+
+inline JsonConstArraySubscript::JsonConstArraySubscript(JsonMutableArraySubscript&& other) noexcept :
+  _array(other._array),
+  _index(other._index)
+{}
+
+inline bool JsonConstArraySubscript::success() const {
+  return _array.success() && _index < _array.size();
+}
+
+template <typename TValue>
+inline typename JsonVariantAsConst<TValue>::type
+ARDUINOJSON_FORCE_INLINE JsonConstArraySubscript::as() const {
+  return _array.get<typename JsonVariantAsConst<TValue>::type>(_index);
+}
+
+template <typename TValue>
+inline bool
+ARDUINOJSON_FORCE_INLINE JsonConstArraySubscript::is() const {
+  return _array.is<TValue>(_index);
 }
 
 template <typename TImpl>
-inline JsonArraySubscript
+inline JsonConstArraySubscript
 ARDUINOJSON_FORCE_INLINE JsonVariantSubscripts<TImpl>::operator[](size_t index) const {
   return impl()->template as<const JsonArray &>()[index];
 }
 
-}  // namespace Internals
-
-inline Internals::JsonArraySubscript JsonArray::operator[](size_t index) {
-  return Internals::JsonArraySubscript(*this, index);
+template <typename TImpl>
+inline JsonMutableArraySubscript JsonVariantSubscripts<TImpl>::operator[](size_t index) {
+  return impl()->template as<JsonArray &>()[index];
 }
 
-inline const Internals::JsonArraySubscript JsonArray::operator[](
+#if ARDUINOJSON_ENABLE_STD_STREAM
+inline std::ostream&
+operator<<(std::ostream& os, const JsonMutableArraySubscript& source) {
+  return source.printTo(os);
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const JsonConstArraySubscript& source) {
+  return source.printTo(os);
+}
+#endif
+
+}  // namespace Internals
+
+inline Internals::JsonConstArraySubscript JsonArray::operator[](
     size_t index) const {
-  return Internals::JsonArraySubscript(*const_cast<JsonArray*>(this), index);
+  return Internals::JsonConstArraySubscript(*this, index);
+}
+
+inline Internals::JsonMutableArraySubscript JsonArray::operator[](size_t index) {
+  return Internals::JsonMutableArraySubscript(*this, index);
 }
 
 inline JsonArray& JsonArray::createNestedArray() {

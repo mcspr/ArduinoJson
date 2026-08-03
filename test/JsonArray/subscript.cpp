@@ -148,7 +148,7 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE_FALSE(_array[0].is<long>());
   }
 
-  SECTION("array subscript") {
+  SECTION("array subscript assignment") {
     JsonArray& arr = _jsonBuffer.createArray();
     const char* str = "hello";
 
@@ -159,13 +159,37 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(str == _array[0]);
   }
 
-  SECTION("object subscript") {
+  SECTION("array subscript move") {
+    JsonArray& arr = _jsonBuffer.createArray();
+    const char* str = "hello";
+
+    arr.add(str);
+
+    auto sub = arr[0];
+    _array[0] = std::move(sub);
+
+    REQUIRE(str == _array[0]);
+  }
+
+  SECTION("object subscript assignment") {
     JsonObject& obj = _jsonBuffer.createObject();
     const char* str = "hello";
 
     obj["x"] = str;
 
     _array[0] = obj["x"];
+
+    REQUIRE(str == _array[0]);
+  }
+
+  SECTION("object subscript move") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    const char* str = "hello";
+
+    obj["x"] = str;
+
+    auto sub = obj["x"];
+    _array[0] = std::move(sub);
 
     REQUIRE(str == _array[0]);
   }

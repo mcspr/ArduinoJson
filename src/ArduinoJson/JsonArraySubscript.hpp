@@ -10,21 +10,34 @@
 namespace ArduinoJson {
 namespace Internals {
 
-class JsonArraySubscript : public JsonSubscriptBase<JsonArraySubscript> {
+class JsonMutableArraySubscript;
+class JsonConstArraySubscript;
+
+class JsonMutableArraySubscript final :
+    public JsonSubscriptBase<JsonArray, JsonMutableArraySubscript> {
+
  public:
-  JsonArraySubscript() noexcept;
-  JsonArraySubscript(JsonArray& array, size_t index) noexcept;
+  JsonMutableArraySubscript() noexcept;
+  JsonMutableArraySubscript(JsonArray&, size_t index) noexcept;
 
-  // Allow to construct the object, but disallow changes after construction
+  // allow to construct the object, but disallow changes after construction
 
-  JsonArraySubscript(const JsonArraySubscript &) = default;
-  JsonArraySubscript(JsonArraySubscript &&) = default;
+  JsonMutableArraySubscript(const JsonMutableArraySubscript &) = default;
+  JsonMutableArraySubscript(JsonMutableArraySubscript &&) = default;
 
-  // Everything else is interpreted as array assignment w/ the index attached to the subscript object
-  JsonArraySubscript& operator=(const JsonArraySubscript&);
+  JsonMutableArraySubscript(const JsonConstArraySubscript &) = delete;
+  JsonMutableArraySubscript(JsonConstArraySubscript &&) = delete;
+
+  // class copy / move implicitly converts into JsonVariant and assigns
+
+  JsonMutableArraySubscript& operator=(const JsonMutableArraySubscript&);
+  JsonMutableArraySubscript& operator=(JsonMutableArraySubscript&&);
+
+  JsonMutableArraySubscript& operator=(const JsonConstArraySubscript&);
+  JsonMutableArraySubscript& operator=(JsonConstArraySubscript&&);
 
   template <typename TValue>
-  JsonArraySubscript& operator=(TValue&& value);
+  JsonMutableArraySubscript& operator=(TValue&&);
 
   // forwarding methods for the bound index and JsonArray ref
 
@@ -33,14 +46,7 @@ class JsonArraySubscript : public JsonSubscriptBase<JsonArraySubscript> {
   // aka JsonArray::get<TValue>(index)
   template <typename TValue>
   typename JsonVariantAs<TValue>::type
-  as();
-
-  template <typename TValue>
-  typename JsonVariantAsConst<TValue>::type
-  as() const {
-    return const_cast<JsonArraySubscript *>(this)->
-      as<typename JsonVariantAsConst<TValue>::type>();
-  }
+  as() const;
 
   // aka JsonArray::is<TValue>(index)
   template <typename TValue>
@@ -53,13 +59,55 @@ class JsonArraySubscript : public JsonSubscriptBase<JsonArraySubscript> {
  private:
   JsonArray& _array;
   size_t _index{};
+
+  friend class JsonConstArraySubscript;
 };
 
-#if ARDUINOJSON_ENABLE_STD_STREAM
-inline std::ostream& operator<<(std::ostream& os,
-                                const JsonArraySubscript& source) {
-  return source.printTo(os);
-}
-#endif
+class JsonConstArraySubscript final :
+    public JsonSubscriptBase<const JsonArray, JsonConstArraySubscript> {
+
+ public:
+  JsonConstArraySubscript() noexcept;
+  JsonConstArraySubscript(const JsonArray&, size_t index) noexcept;
+
+  // allow to construct the object, but disallow changes after construction
+
+  JsonConstArraySubscript(const JsonConstArraySubscript &) noexcept;
+  JsonConstArraySubscript(JsonConstArraySubscript &&) noexcept;
+
+  JsonConstArraySubscript(const JsonMutableArraySubscript &) noexcept;
+  JsonConstArraySubscript(JsonMutableArraySubscript &&) noexcept;
+
+  // class copy / move cannot assign anything to a cref
+
+  JsonConstArraySubscript& operator=(const JsonConstArraySubscript&) = delete;
+  JsonConstArraySubscript& operator=(JsonConstArraySubscript&&) = delete;
+
+  JsonConstArraySubscript& operator=(const JsonMutableArraySubscript&) = delete;
+  JsonConstArraySubscript& operator=(JsonMutableArraySubscript&&) = delete;
+
+  template <typename TValue>
+  JsonConstArraySubscript& operator=(TValue&&) = delete;
+
+  // forwarding methods for the bound index and JsonArray ref
+
+  bool success() const;
+
+  // aka JsonArray::get<TValue>(index)
+  template <typename TValue>
+  typename JsonVariantAsConst<TValue>::type
+  as() const;
+
+  // aka JsonArray::is<TValue>(index)
+  template <typename TValue>
+  bool is() const;
+
+ private:
+  const JsonArray& _array;
+  size_t _index{};
+
+  friend class JsonMutableArraySubscript;
+};
+
 }  // namespace Internals
 }  // namespace ArduinoJson

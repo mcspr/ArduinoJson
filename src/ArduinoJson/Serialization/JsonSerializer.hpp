@@ -17,18 +17,26 @@ class JsonVariant;
 
 namespace Internals {
 
-class JsonArraySubscript;
+class JsonMutableArraySubscript;
+class JsonConstArraySubscript;
+
 template <typename TKey>
-class JsonObjectSubscript;
+class JsonMutableObjectSubscript;
+
+template <typename TKey>
+class JsonConstObjectSubscript;
 
 template <typename Writer>
 class JsonSerializer {
  public:
   static void serialize(const JsonArray &, Writer &);
-  static void serialize(JsonArraySubscript, Writer &);
+  static void serialize(JsonMutableArraySubscript, Writer &);
+  static void serialize(JsonConstArraySubscript, Writer &);
   static void serialize(const JsonObject &, Writer &);
   template <typename TKey>
-  static void serialize(const JsonObjectSubscript<TKey>&, Writer &);
+  static void serialize(const JsonConstObjectSubscript<TKey>&, Writer &);
+  template <typename TKey>
+  static void serialize(const JsonMutableObjectSubscript<TKey>&, Writer &);
   static void serialize(JsonVariant, Writer &);
  private:
   struct VariantVisitor {

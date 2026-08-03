@@ -15,61 +15,143 @@ namespace ArduinoJson {
 namespace Internals {
 
 template <typename TKey>
-class JsonObjectSubscript;
+class JsonMutableObjectSubscript;
+
+template <typename TKey>
+class JsonConstObjectSubscript;
 
 // *Always* attached to some JsonObject instance
 template <typename TKey>
-inline JsonObjectSubscript<TKey>::JsonObjectSubscript() noexcept :
+inline JsonMutableObjectSubscript<TKey>::JsonMutableObjectSubscript() noexcept :
   _object(JsonObject::invalid()),
   _key()
 {}
 
 template <typename TKey>
 template <typename TKeyRef>
-inline JsonObjectSubscript<TKey>::JsonObjectSubscript(JsonObject& object, TKeyRef&& key) :
+inline JsonMutableObjectSubscript<TKey>::JsonMutableObjectSubscript(JsonObject& object, TKeyRef&& key) :
   _object(object),
   _key(MakeStringRef(std::forward<TKeyRef>(key)))
 {}
 
 template <typename TKey>
 template <typename TRef>
-inline JsonObjectSubscript<TKey>::JsonObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key) :
+inline JsonMutableObjectSubscript<TKey>::JsonMutableObjectSubscript(JsonObject& object, StringRefWrapper<TRef> key) :
   _object(object),
   _key(std::move(key))
 {}
 
 template <typename TKey>
-inline JsonObjectSubscript<TKey>&
-ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::operator=(const JsonObjectSubscript<TKey>& other) {
-  _object.set(_key.get(), other.template as<JsonVariant>());
+inline JsonMutableObjectSubscript<TKey>&
+JsonMutableObjectSubscript<TKey>::operator=(const JsonMutableObjectSubscript<TKey>& other) {
+  return this->operator=(other.as<JsonVariant>());
+}
+
+template <typename TKey>
+inline JsonMutableObjectSubscript<TKey>&
+JsonMutableObjectSubscript<TKey>::operator=(JsonMutableObjectSubscript<TKey>&& other) {
+  return this->operator=(other.as<JsonVariant>());
+}
+
+template <typename TKey>
+inline JsonMutableObjectSubscript<TKey>&
+JsonMutableObjectSubscript<TKey>::operator=(const JsonConstObjectSubscript<TKey>& other) {
+  return this->operator=(other.template as<JsonVariant>());
+}
+
+template <typename TKey>
+inline JsonMutableObjectSubscript<TKey>&
+JsonMutableObjectSubscript<TKey>::operator=(JsonConstObjectSubscript<TKey>&& other) {
+  return this->operator=(other.template as<JsonVariant>());
+}
+
+template <typename TKey>
+template <typename TValue>
+inline JsonMutableObjectSubscript<TKey>&
+ARDUINOJSON_FORCE_INLINE JsonMutableObjectSubscript<TKey>::operator=(TValue&& value) {
+  set(std::forward<TValue>(value));
   return *this;
 }
 
 template <typename TKey>
-inline bool JsonObjectSubscript<TKey>::success() const {
+inline bool JsonMutableObjectSubscript<TKey>::success() const {
   return _object.containsKey(_key.get());
 }
 
 template <typename TKey>
 template <typename TValue>
 inline typename JsonVariantAs<TValue>::type
-ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::as() {
-  return _object.get<TValue>(_key.get());
+ARDUINOJSON_FORCE_INLINE JsonMutableObjectSubscript<TKey>::as() const {
+  return _object.template get<TValue>(_key.get());
 }
 
 template <typename TKey>
 template <typename TValue>
 inline bool
-ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::is() const {
-  return _object.is<TValue>(_key.get());
+ARDUINOJSON_FORCE_INLINE JsonMutableObjectSubscript<TKey>::is() const {
+  return _object.template is<TValue>(_key.get());
 }
 
 template <typename TKey>
 template <typename TValue>
 inline bool
-ARDUINOJSON_FORCE_INLINE JsonObjectSubscript<TKey>::set(TValue&& value) {
+ARDUINOJSON_FORCE_INLINE JsonMutableObjectSubscript<TKey>::set(TValue&& value) {
   return _object.set(_key.get(), std::forward<TValue>(value));
 }
+
+// *Always* attached to some JsonObject instance
+template <typename TKey>
+inline JsonConstObjectSubscript<TKey>::JsonConstObjectSubscript() noexcept :
+  _object(JsonObject::invalid()),
+  _key()
+{}
+
+template <typename TKey>
+template <typename TKeyRef>
+inline JsonConstObjectSubscript<TKey>::JsonConstObjectSubscript(const JsonObject& object, TKeyRef&& key) :
+  _object(object),
+  _key(MakeStringRef(std::forward<TKeyRef>(key)))
+{}
+
+template <typename TKey>
+template <typename TRef>
+inline JsonConstObjectSubscript<TKey>::JsonConstObjectSubscript(const JsonObject& object, StringRefWrapper<TRef> key) :
+  _object(object),
+  _key(std::move(key))
+{}
+
+template <typename TKey>
+inline bool JsonConstObjectSubscript<TKey>::success() const {
+  return _object.containsKey(_key.get());
+}
+
+template <typename TKey>
+template <typename TValue>
+inline typename JsonVariantAsConst<TValue>::type
+ARDUINOJSON_FORCE_INLINE JsonConstObjectSubscript<TKey>::as() const {
+  return _object.template get<typename JsonVariantAsConst<TValue>::type>(_key.get());
+}
+
+template <typename TKey>
+template <typename TValue>
+inline bool
+ARDUINOJSON_FORCE_INLINE JsonConstObjectSubscript<TKey>::is() const {
+  return _object.template is<TValue>(_key.get());
+}
+
+#if ARDUINOJSON_ENABLE_STD_STREAM
+template <typename TKey>
+inline std::ostream&
+operator<<(std::ostream& os, const JsonMutableObjectSubscript<TKey>& source) {
+  return source.printTo(os);
+}
+
+template <typename TKey>
+inline std::ostream&
+operator<<(std::ostream& os, const JsonConstObjectSubscript<TKey>& source) {
+  return source.printTo(os);
+}
+#endif
 
 }
 
@@ -152,16 +234,17 @@ inline JsonObject& JsonObject::createNestedObject_impl(TKey key) {
 }
 
 template <typename TKey>
-typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
-inline JsonObject::operator[](TKey&& key) {
-  return typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type(
+typename Internals::JsonObjectSubscriptHelper<const JsonObject, TKey>::subscript_type
+inline JsonObject::operator[](TKey&& key) const {
+  return typename Internals::JsonObjectSubscriptHelper<const JsonObject, TKey>::subscript_type(
     *this, std::forward<TKey>(key));
 }
 
 template <typename TKey>
-const typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type
-inline JsonObject::operator[](TKey&& key) const {
-  return typename Internals::JsonObjectSubscriptHelper<TKey>::subscript_type(
-    const_cast<JsonObject&>(*this), std::forward<TKey>(key));
+typename Internals::JsonObjectSubscriptHelper<JsonObject, TKey>::subscript_type
+inline JsonObject::operator[](TKey&& key) {
+  return typename Internals::JsonObjectSubscriptHelper<JsonObject, TKey>::subscript_type(
+    *this, std::forward<TKey>(key));
 }
+
 }  // namespace ArduinoJson

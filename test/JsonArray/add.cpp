@@ -65,7 +65,7 @@ TEST_CASE("JsonArray::add()") {
 
     _array.add(arr[0]);
 
-    REQUIRE(str == _array[0]);
+    REQUIRE(std::string(str) == _array[0]);
   }
 
   SECTION("object subscript") {

@@ -32,8 +32,12 @@ namespace ArduinoJson {
 // Forward declarations
 class JsonObject;
 class JsonBuffer;
+
 namespace Internals {
-class JsonArraySubscript;
+
+class JsonMutableArraySubscript;
+class JsonConstArraySubscript;
+
 }
 
 // An array of JsonVariant.
@@ -56,10 +60,10 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   {}
 
   // Gets the value at the specified index
-  const Internals::JsonArraySubscript operator[](size_t index) const;
+  Internals::JsonConstArraySubscript operator[](size_t index) const;
 
   // Gets or sets the value at specified index
-  Internals::JsonArraySubscript operator[](size_t index);
+  Internals::JsonMutableArraySubscript operator[](size_t index);
 
   // Adds the specified value at the end of the array.
   template <typename TValue>
@@ -254,7 +258,8 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
     return false;
   }
 
-  friend class Internals::JsonArraySubscript;
+  friend class Internals::JsonMutableArraySubscript;
+  friend class Internals::JsonConstArraySubscript;
 };
 
 namespace Internals {
