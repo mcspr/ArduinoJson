@@ -87,7 +87,7 @@ class SizedStringView : public BaseStringView<TChar> {
 
 template <typename T>
 struct SizedStringViewLength {
-  static size_t Operator(SizedStringView<T> view) {
+  static constexpr size_t Operator(SizedStringView<T> view) {
     return view.length();
   }
 };
@@ -105,14 +105,14 @@ struct SizedStringViewEquals {
 
 template <typename T>
 struct SizedStringViewIsNull {
-  static bool Operator(SizedStringView<T> view) {
+  static constexpr bool Operator(SizedStringView<T> view) {
     return view.is_null();
   }
 };
 
 template <typename T>
 struct SizedStringViewReference {
-  static const char* Operator(SizedStringView<T> view) {
+  static constexpr const char* Operator(SizedStringView<T> view) {
     return StringTraits<T*>::Reference::Operator(view.data());
   }
 };
