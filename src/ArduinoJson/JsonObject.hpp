@@ -71,13 +71,22 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   // Both TKey and TValue allow for arbitrary string types.
   template <typename TValue, typename TKey>
   typename Internals::EnableIf<
-    Internals::Or<Internals::IsVariant<TValue>,
-                  Internals::IsIntegral<TValue>,
+    Internals::Or<Internals::IsIntegral<TValue>,
                   Internals::IsFloatingPoint<TValue>,
                   Internals::IsSame<JsonNull, TValue>>::value,
     bool>::type
   ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue value) {
-    return set_impl(Internals::MakeStringRef(std::forward<TKey>(key)), value);
+    return set_impl(
+      Internals::MakeStringRef(std::forward<TKey>(key)), value);
+  }
+
+  template <typename TValue, typename TKey>
+  typename Internals::EnableIf<
+    Internals::IsVariant<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue&& value) {
+    return set_impl(
+      Internals::MakeStringRef(std::forward<TKey>(key)),
+      value.template as<JsonVariant>());
   }
 
   template <typename TKey, typename TValue>
@@ -179,6 +188,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   }
 
   //
+  // void remove(const_iterator)
   // void remove(iterator)
   using Internals::List<JsonPair>::remove;
 

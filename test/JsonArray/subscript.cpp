@@ -8,7 +8,7 @@
 TEST_CASE("JsonArray::operator[]") {
   DynamicJsonBuffer _jsonBuffer;
   JsonArray& _array = _jsonBuffer.createArray();
-  _array.add(0);
+  _array.add(9876);
 
   SECTION("char") {
     _array[0] = 1;
@@ -159,7 +159,29 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(str == _array[0]);
   }
 
-  SECTION("array subscript move") {
+  SECTION("array subscript set") {
+    JsonArray& arr = _jsonBuffer.createArray();
+    const char* str = "hello";
+
+    arr.add(str);
+    _array.set(0, arr[0]);
+
+    REQUIRE(str == _array[0]);
+  }
+
+  SECTION("array subscript add") {
+    JsonArray& arr = _jsonBuffer.createArray();
+    const char* str = "hello";
+
+    arr.add(str);
+    _array.add(arr[0]);
+
+    REQUIRE(2 == _array.size());
+    REQUIRE(9876 == _array[0]);
+    REQUIRE(str == _array[1]);
+  }
+
+  SECTION("array subscript move assignment") {
     JsonArray& arr = _jsonBuffer.createArray();
     const char* str = "hello";
 
@@ -182,7 +204,51 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(str == _array[0]);
   }
 
-  SECTION("object subscript move") {
+  SECTION("object subscript set") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    const char* str = "hello";
+
+    obj["x"] = str;
+    _array.set(0, obj["x"]);
+
+    REQUIRE(str == _array[0]);
+  }
+
+  SECTION("object move-only subscript set") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    const char* str = "hello";
+
+    obj["x"] = str;
+    _array.set(0, obj[std::string("x")]);
+
+    REQUIRE(str == _array[0]);
+  }
+
+  SECTION("object subscript add") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    const char* str = "hello";
+
+    obj["x"] = str;
+    _array.add(obj["x"]);
+
+    REQUIRE(2 == _array.size());
+    REQUIRE(9876 == _array[0]);
+    REQUIRE(str == _array[1]);
+  }
+
+  SECTION("object move-only subscript add") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    const char* str = "hello";
+
+    obj["x"] = str;
+    _array.add(obj[std::string("x")]);
+
+    REQUIRE(2 == _array.size());
+    REQUIRE(9876 == _array[0]);
+    REQUIRE(str == _array[1]);
+  }
+
+  SECTION("object subscript move assignment") {
     JsonObject& obj = _jsonBuffer.createObject();
     const char* str = "hello";
 

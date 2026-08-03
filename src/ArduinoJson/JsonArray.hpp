@@ -68,8 +68,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // Adds the specified value at the end of the array.
   template <typename TValue>
   typename Internals::EnableIf<
-      Internals::Or<Internals::IsVariant<TValue>,
-                    Internals::IsIntegral<TValue>,
+      Internals::Or<Internals::IsIntegral<TValue>,
                     Internals::IsFloatingPoint<TValue>,
                     Internals::IsSame<JsonNull, TValue>>::value,
     bool>::type
@@ -83,6 +82,13 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   add(TValue) {
     static_assert(!Internals::IsSame<TValue, std::nullptr_t>::value,
       "ambiguous add(nullptr)");
+  }
+
+  template <typename TValue>
+  typename Internals::EnableIf<
+    Internals::IsVariant<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE add(TValue&& value) {
+    return add_impl(value.template as<JsonVariant>());
   }
 
   template <typename TValue>
@@ -102,13 +108,19 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // Sets the value at specified index.
   template <typename TValue>
   typename Internals::EnableIf<
-      Internals::Or<Internals::IsVariant<TValue>,
-                    Internals::IsIntegral<TValue>,
+      Internals::Or<Internals::IsIntegral<TValue>,
                     Internals::IsFloatingPoint<TValue>,
                     Internals::IsSame<JsonNull, TValue>>::value,
       bool>::type
   ARDUINOJSON_FORCE_INLINE set(size_t index, TValue value) {
     return set_impl(index, value);
+  }
+
+  template <typename TValue>
+  typename Internals::EnableIf<
+      Internals::IsVariant<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE set(size_t index, TValue&& value) {
+    return set_impl(index, value.template as<JsonVariant>());
   }
 
   template <typename TValue>
@@ -172,6 +184,10 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   void remove(size_t index) {
     remove(begin() + index);
   }
+
+  //
+  // void remove(const_iterator)
+  // void remove(iterator)
   using Internals::List<JsonVariant>::remove;
 
   // Returns a reference an invalid JsonArray.

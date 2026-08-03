@@ -12,6 +12,7 @@
 #include "Serialization/JsonPrintable.hpp"
 
 #include "TypeTraits/IsConst.hpp"
+#include "TypeTraits/IsSubscript.hpp"
 #include "TypeTraits/Conditional.hpp"
 
 namespace ArduinoJson {
@@ -37,6 +38,7 @@ class JsonSubscriptBase :
     public JsonVariantComparisons<TImpl>,
     public JsonVariantOr<TImpl>,
     public JsonVariantSubscripts<TImpl>,
+    public JsonSubscriptTag,
     public JsonVariantTag {
 
 };

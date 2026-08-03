@@ -135,7 +135,7 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE_FALSE(_object["hello"].is<const JsonArray>());
   }
 
-  SECTION("array subscript") {
+  SECTION("array subscript assignment") {
     JsonArray& arr = _jsonBuffer.createArray();
     arr.add(42);
 
@@ -144,11 +144,58 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(42 == _object["a"]);
   }
 
-  SECTION("object subscript") {
+  SECTION("array subscript set") {
+    JsonArray& arr = _jsonBuffer.createArray();
+    arr.add(42);
+
+    _object.set("a", arr[0]);
+
+    REQUIRE(42 == _object["a"]);
+  }
+
+  SECTION("array subscript move assignment") {
+    JsonArray& arr = _jsonBuffer.createArray();
+    arr.add(42);
+
+    auto sub = arr[0];
+    _object["a"] = std::move(sub);
+
+    REQUIRE(42 == _object["a"]);
+  }
+
+  SECTION("object subscript assignment") {
     JsonObject& obj = _jsonBuffer.createObject();
     obj.set("x", 42);
 
     _object["a"] = obj["x"];
+
+    REQUIRE(42 == _object["a"]);
+  }
+
+  SECTION("object subscript move assignment") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    obj.set("x", 42);
+
+    auto sub = obj["x"];
+    _object["a"] = std::move(sub);
+
+    REQUIRE(42 == _object["a"]);
+  }
+
+  SECTION("object subscript set") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    obj.set("x", 42);
+
+    _object.set("a", obj["x"]);
+
+    REQUIRE(42 == _object["a"]);
+  }
+
+  SECTION("object move-only subscript set") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    obj.set("x", 42);
+
+    _object.set("a", obj[std::string("x")]);
 
     REQUIRE(42 == _object["a"]);
   }
