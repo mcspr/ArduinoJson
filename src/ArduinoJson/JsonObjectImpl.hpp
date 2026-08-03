@@ -159,8 +159,7 @@ template <typename TKey>
 inline JsonObject::iterator JsonObject::find_impl(TKey key) {
   for (auto it = begin(); it != end(); ++it) {
     const auto ptr = it->key.as<const char*>();
-    const auto len = Internals::Strings::Length::Operator(ptr);
-    if (Internals::StringTraits<TKey>::Equals::Operator(key, ptr, len))
+    if (Internals::StringTraits<TKey>::Equals::Operator(key, ptr))
       return it;
   }
   return end();
