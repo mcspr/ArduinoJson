@@ -103,6 +103,10 @@ struct SizedStringViewEquals {
   static bool Operator(SizedStringView<T> view, const char* other, size_t other_length) {
     return Strings::Equals::Operator(view.data(), view.length(), other, other_length);
   }
+
+  static bool Operator(SizedStringView<T> view, size_t view_length, const char* other, size_t other_length) {
+    return Strings::Equals::Operator(view.data(), view_length, other, other_length);
+  }
 };
 
 template <typename T>
@@ -120,15 +124,18 @@ struct SizedStringViewReference {
 };
 
 template <typename T>
+struct SizedStringViewCopy {
+  static void Operator(void* out, SizedStringView<T> view, size_t length) {
+    Strings::Copy::Operator(out, view.data(), length);
+  }
+
+  static void Operator(void* out, SizedStringView<T> view) {
+    Strings::Copy::Operator(out, view.data());
+  }
+};
+
+template <typename T>
 struct SizedStringViewDuplicate {
-  static void Operator(void* dup, SizedStringView<T> view, size_t length) {
-    Strings::Duplicate::Operator(dup, view.data(), length);
-  }
-
-  static void Operator(void* dup, SizedStringView<T> view) {
-    Strings::Duplicate::Operator(dup, view.data());
-  }
-
   static const char* Operator(JsonBuffer *buffer, SizedStringView<T> view) {
     return Strings::Duplicate::Operator(buffer, view.data(), view.size());
   }
@@ -148,6 +155,7 @@ struct SizedStringViewBaseTraits<T,
 template <typename T>
 struct SizedStringViewTraits : SizedStringViewBaseTraits<T> {
   using Length = SizedStringViewLength<T>;
+  using Copy = SizedStringViewCopy<T>;
   using Equals = SizedStringViewEquals<T>;
   using IsNull = SizedStringViewIsNull<T>;
   using Reference = SizedStringViewReference<T>;
@@ -204,6 +212,17 @@ struct UnsizedStringViewLength {
 };
 
 template <typename T>
+struct UnsizedStringViewCopy {
+  static void Operator(void* out, UnsizedStringView<T> view, size_t length) {
+    Strings::Copy::Operator(out, view.data(), length);
+  }
+
+  static void Operator(void* out, UnsizedStringView<T> view) {
+    Strings::Copy::Operator(out, view.data());
+  }
+};
+
+template <typename T>
 struct UnsizedStringViewEquals {
   static bool Operator(UnsizedStringView<T> view, const char* other) {
     return Strings::Equals::Operator(view.data(), other);
@@ -211,6 +230,10 @@ struct UnsizedStringViewEquals {
 
   static bool Operator(UnsizedStringView<T> view, const char* other, size_t len) {
     return Strings::Equals::Operator(view.data(), other, len);
+  }
+
+  static bool Operator(UnsizedStringView<T> view, size_t view_length, const char* other, size_t len) {
+    return Strings::Equals::Operator(view.data(), view_length, other, len);
   }
 };
 
@@ -230,14 +253,6 @@ struct UnsizedStringViewReference {
 
 template <typename T>
 struct UnsizedStringViewDuplicate {
-  static void Operator(void* dup, UnsizedStringView<T> view, size_t length) {
-    Strings::Duplicate::Operator(dup, view.data(), length);
-  }
-
-  static void Operator(void* dup, UnsizedStringView<T> view) {
-    Strings::Duplicate::Operator(dup, view.data());
-  }
-
   static const char* Operator(JsonBuffer* buffer, UnsizedStringView<T> view) {
     return Strings::Duplicate::Operator(buffer, view.data());
   }
@@ -257,6 +272,7 @@ struct UnsizedStringViewBaseTraits<T,
 template <typename T>
 struct UnsizedStringViewTraits : UnsizedStringViewBaseTraits<T> {
   using Length = UnsizedStringViewLength<T>;
+  using Copy = UnsizedStringViewCopy<T>;
   using Equals = UnsizedStringViewEquals<T>;
   using IsNull = UnsizedStringViewIsNull<T>;
   using Reference = UnsizedStringViewReference<T>;

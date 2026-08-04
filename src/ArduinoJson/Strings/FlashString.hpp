@@ -51,11 +51,11 @@ struct Copy {
     return pgm_read_byte(str);
   }
 
-  static void Operator(char* out, const void* str, size_t len) {
+  static void Operator(void* out, const void* str, size_t len) {
     memcpy_P(out, str, len);
   }
 
-  static void Operator(char* out, const void* str) {
+  static void Operator(void* out, const void* str) {
     Operator(out, str, Length::Operator(str));
   }
 };
@@ -159,40 +159,17 @@ struct StringCompare {
   }
 };
 
+using Strings::CharPointer::Reference;
+
 struct Equals : Strings::CharPointer::Impl::Equals<Equals> {
   using Length = FlashString::Length;
   using Compare = FlashString::Compare;
   using StringCompare = FlashString::StringCompare;
 };
 
-struct Reference {
-  static const char* Operator(const void* str) {
-    return reinterpret_cast<const char *>(str);
-  }
-};
-
-struct Duplicate {
-  static void Operator(void* dup, const void* str, size_t len) {
-    memcpy_P(dup, str, len);
-  }
-
-  static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
-    void* dup = nullptr;
-    if (str != nullptr) {
-      auto* ptr = reinterpret_cast<const char *>(str);
-      dup = buffer->alloc(len + 1);
-      if (dup != nullptr) {
-        Operator(dup, ptr, len);
-        reinterpret_cast<char *>(dup)[len] = '\0';
-      }
-    }
-
-    return static_cast<const char*>(dup);
-  }
-
-  static const char* Operator(JsonBuffer* buffer, const void* str) {
-    return Operator(buffer, str, Length::Operator(str));
-  }
+struct Duplicate : Strings::CharPointer::Impl::Duplicate<Duplicate> {
+  using Copy = FlashString::Copy;
+  using Length = FlashString::Length;
 };
 
 }  // namespace FlashString

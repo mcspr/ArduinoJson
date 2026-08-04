@@ -23,6 +23,7 @@ namespace Internals {
 struct CharPointerTraitsBase : StringTraitsTag {
   typedef Readers::CharPointer::Reader Reader;
   typedef Strings::CharPointer::Length Length;
+  typedef Strings::CharPointer::Copy Copy;
   typedef Strings::CharPointer::Equals Equals;
   typedef Strings::CharPointer::IsNull IsNull;
   typedef Strings::CharPointer::Reference Reference;

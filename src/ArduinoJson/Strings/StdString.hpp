@@ -49,6 +49,17 @@ struct Length {
 };
 
 template <typename TString>
+struct Copy {
+  static void Operator(void* out, const TString& str, size_t len) {
+    Strings::CharPointer::Copy::Operator(out, str.c_str(), len);
+  }
+
+  static void Operator(void* out, const TString& str) {
+    Strings::CharPointer::Copy::Operator(out, str.c_str(), str.length());
+  }
+};
+
+template <typename TString>
 struct Equals {
   static bool Operator(const TString& str, const char* expected, size_t len) {
     return Strings::Equals::Operator(str.c_str(), str.length(), expected, len);
@@ -56,6 +67,14 @@ struct Equals {
 
   static bool Operator(const TString& str, const char* expected) {
     return Strings::Equals::Operator(str.c_str(), str.length(), expected);
+  }
+
+  static bool Operator(const TString& str, size_t str_length, const char* expected) {
+    return Strings::Equals::Operator(str.c_str(), str_length, expected);
+  }
+
+  static bool Operator(const TString& str, size_t str_length, const char* expected, size_t expected_length) {
+    return Strings::Equals::Operator(str.c_str(), str_length, expected, expected_length);
   }
 };
 
@@ -112,14 +131,6 @@ struct Append<TString,
 
 template <typename TString>
 struct Duplicate {
-  static void Operator(void* dup, const TString& str, size_t length) {
-    Strings::CharPointer::Duplicate::Operator(dup, str.c_str(), length);
-  }
-
-  static void Operator(void* dup, const TString& str) {
-    Operator(dup, str, str.length());
-  }
-
   static const char* Operator(JsonBuffer* buffer, const TString& str, size_t length) {
     return Strings::CharPointer::Duplicate::Operator(buffer, str.c_str(), length);
   }

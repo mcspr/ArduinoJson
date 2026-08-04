@@ -66,6 +66,31 @@ struct Equals {
   }
 };
 
+template <typename TImpl>
+struct Duplicate {
+  static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
+    void* dup = nullptr;
+    if (str != nullptr) {
+      dup = buffer->alloc(len + 1);
+      if (dup != nullptr) {
+        TImpl::Copy::Operator(dup, str, len);
+        reinterpret_cast<char *>(dup)[len] = '\0';
+      }
+    }
+
+    return static_cast<const char *>(dup);
+  }
+
+  template <typename TChar, size_t Size>
+  static const char* Operator(JsonBuffer* buffer, TChar (&str)[Size]) {
+    return Operator(buffer, &str[0], Size - 1);
+  }
+
+  static const char* Operator(JsonBuffer* buffer, const void* str) {
+    return Operator(buffer, str, TImpl::Length::Operator(str));
+  }
+};
+
 }
 
 struct Length {
@@ -93,12 +118,6 @@ struct StringCompare {
   }
 };
 
-struct Equals : Impl::Equals<Equals> {
-  using Length = CharPointer::Length;
-  using Compare = CharPointer::Compare;
-  using StringCompare = CharPointer::StringCompare;
-};
-
 struct Copy {
   static char Operator(const void* str) {
     return *reinterpret_cast<const char *>(str);
@@ -111,6 +130,12 @@ struct Copy {
   static void Operator(void* out, const void* str) {
     Operator(out, str, Length::Operator(str));
   }
+};
+
+struct Equals : Impl::Equals<Equals> {
+  using Length = CharPointer::Length;
+  using Compare = CharPointer::Compare;
+  using StringCompare = CharPointer::StringCompare;
 };
 
 struct IsNull {
@@ -130,35 +155,9 @@ struct Reference {
   }
 };
 
-struct Duplicate {
-  static void Operator(void* dup, const void* str, size_t len) {
-    std::memcpy(dup, str, len);
-  }
-
-  static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
-    void* dup = nullptr;
-    if (str) {
-      dup = buffer->alloc(len + 1);
-      if (dup != nullptr) {
-        Operator(dup, str, len);
-        reinterpret_cast<char *>(dup)[len] = '\0';
-      }
-    }
-
-    return static_cast<const char *>(dup);
-  }
-
-  template <typename TChar, size_t Size>
-  static const char* Operator(JsonBuffer* buffer, TChar (&str)[Size]) {
-    return Operator(buffer, &str[0], Size - 1);
-  }
-
-  static const char* Operator(JsonBuffer* buffer, const void* str) {
-    if (str)
-      return Operator(buffer, str, Length::Operator(str));
-
-    return nullptr;
-  }
+struct Duplicate : Impl::Duplicate<Duplicate> {
+  using Copy = CharPointer::Copy;
+  using Length = CharPointer::Length;
 };
 
 }
