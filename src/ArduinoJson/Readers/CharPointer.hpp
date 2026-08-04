@@ -7,6 +7,8 @@
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsChar.hpp"
 
+#include "../Strings/CharPointer.hpp"
+
 #include <cstddef>
 
 namespace ArduinoJson {
@@ -33,26 +35,23 @@ struct ReaderBase {
 
   char current() const {
     if (_ptr < _end)
-      return TImpl::read(_ptr);
+      return TImpl::Copy::Operator(_ptr);
 
     return '\0';
   }
 
   char next() const {
     if ((_ptr + 1) < _end)
-      return TImpl::read(_ptr + 1);
+      return TImpl::Copy::Operator(_ptr + 1);
 
     return '\0';
   }
 };
 
-struct ReaderImpl {
-  static char read(const void* ptr) {
-    return *reinterpret_cast<const char *>(ptr);
-  }
+struct Reader : ReaderBase<Reader> {
+  using Copy = Strings::CharPointer::Copy;
+  using ReaderBase<Reader>::ReaderBase;
 };
-
-typedef ReaderBase<ReaderImpl> Reader;
 
 }
 

@@ -11,6 +11,8 @@
 #include "Base.hpp"
 #include "CharPointer.hpp"
 
+#include "../Strings/FlashString.hpp"
+
 class __FlashStringHelper;
 
 namespace ArduinoJson {
@@ -18,13 +20,10 @@ namespace Internals {
 namespace Readers {
 namespace FlashString {
 
-struct ReaderImpl {
-  static char read(const void* ptr) {
-    return pgm_read_byte_near(ptr);
-  }
+struct Reader : Readers::CharPointer::ReaderBase<Reader> {
+  using Copy = Strings::FlashString::Copy;
+  using Readers::CharPointer::ReaderBase<Reader>::ReaderBase;
 };
-
-typedef Readers::CharPointer::ReaderBase<ReaderImpl> Reader;
 
 }
 
