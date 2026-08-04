@@ -11,7 +11,7 @@
 #include "Data/List.hpp"
 #include "Data/ReferenceType.hpp"
 #include "Data/ValueSaver.hpp"
-#include "Data/StringView.hpp"
+#include "Data/StringViewRef.hpp"
 
 #include "Serialization/JsonPrintable.hpp"
 

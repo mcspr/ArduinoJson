@@ -5,7 +5,6 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 #include <string>
-#include "ArduinoJson/Data/StringView.hpp"
 
 TEST_CASE("JsonObject::set()") {
   DynamicJsonBuffer jb;

@@ -1,14 +1,7 @@
 #pragma once
 
 #include "../TypeTraits/EnableIf.hpp"
-#include "../TypeTraits/RemoveConstReference.hpp"
-#include "../TypeTraits/RemoveReference.hpp"
-#include "../TypeTraits/IsPointer.hpp"
-#include "../TypeTraits/IsArray.hpp"
-
-#include "../TypeTraits/IsInstantiationOf.hpp"
 #include "../TypeTraits/IsBaseInstantiationOf.hpp"
-#include "../TypeTraits/Or.hpp"
 
 #include <utility>
 

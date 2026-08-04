@@ -4,10 +4,9 @@
 
 #pragma once
 
-#include "Configuration.hpp"
-
 #include "JsonSubscriptBase.hpp"
-#include "Data/StringView.hpp"
+#include "Data/StringRef.hpp"
+#include "Data/StringViewRef.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
