@@ -10,6 +10,7 @@ add_executable(JsonObjectTests
 	get.cpp
 	invalid.cpp
 	iterator.cpp
+	or.cpp
 	prettyPrintTo.cpp
 	printTo.cpp
 	remove.cpp
