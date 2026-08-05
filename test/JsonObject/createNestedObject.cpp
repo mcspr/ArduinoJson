@@ -13,12 +13,12 @@ TEST_CASE("JsonObject::createNestedObject()") {
 
   SECTION("success() should return true if key is not nullptr") {
     JsonObject& obj = _object.createNestedObject("key");
-    REQUIRE(obj.success() == true);
+    REQUIRE(obj.success());
   }
 
   SECTION("success() should return false if key is nullptr") {
     JsonObject& obj = _object.createNestedObject(const_char_nullptr);
-    REQUIRE(obj.success() == false);
+    REQUIRE_FALSE(obj.success());
   }
 
   SECTION("success() returns false when allocation fails") {

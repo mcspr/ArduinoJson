@@ -16,7 +16,7 @@ TEST_CASE(ARDUINOJSON_UNSIGNED_CHAR_TEST_CASE) {
     StaticJsonBuffer<JSON_ARRAY_SIZE(1)> jsonBuffer;
     JsonArray& arr = jsonBuffer.parseArray(json);
 
-    REQUIRE(true == arr.success());
+    REQUIRE(arr.success());
   }
 
   SECTION("JsonBuffer::parseObject") {
@@ -25,7 +25,7 @@ TEST_CASE(ARDUINOJSON_UNSIGNED_CHAR_TEST_CASE) {
     StaticJsonBuffer<JSON_OBJECT_SIZE(1)> jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject(json);
 
-    REQUIRE(true == obj.success());
+    REQUIRE(obj.success());
   }
 
   SECTION("JsonVariant constructor") {

@@ -88,6 +88,7 @@ TEST_CASE("JsonBuffer::parse()") {
     JsonVariant variant = jb.parse("true");
     REQUIRE(variant.success());
     REQUIRE(variant.is<bool>());
+    REQUIRE(variant.as<bool>() == true);
     REQUIRE(variant == true);
   }
 
@@ -95,6 +96,7 @@ TEST_CASE("JsonBuffer::parse()") {
     JsonVariant variant = jb.parse("false");
     REQUIRE(variant.success());
     REQUIRE(variant.is<bool>());
+    REQUIRE(variant.as<bool>() == false);
     REQUIRE(variant == false);
   }
 

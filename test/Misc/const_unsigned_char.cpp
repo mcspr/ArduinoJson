@@ -12,7 +12,7 @@ TEST_CASE("const unsigned char string") {
     StaticJsonBuffer<JSON_ARRAY_SIZE(1) + 8> jsonBuffer;
     JsonArray& arr = jsonBuffer.parseArray(json);
 
-    REQUIRE(true == arr.success());
+    REQUIRE(arr.success());
   }
 
   SECTION("JsonBuffer::parseObject") {
@@ -21,7 +21,7 @@ TEST_CASE("const unsigned char string") {
     StaticJsonBuffer<JSON_OBJECT_SIZE(1) + 16> jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject(json);
 
-    REQUIRE(true == obj.success());
+    REQUIRE(obj.success());
   }
 
   SECTION("JsonVariant constructor") {

@@ -5,62 +5,75 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-#define SHOULD_WORK(expression) REQUIRE(true == expression.success());
-#define SHOULD_FAIL(expression) REQUIRE(false == expression.success());
-
 TEST_CASE("JsonParser nestingLimit") {
   DynamicJsonBuffer jb;
 
   SECTION("parseArray()") {
     SECTION("limit = 0") {
-      SHOULD_FAIL(jb.parseArray("[]", 0));
+      REQUIRE_FALSE(jb.parseArray("[]", 0).success());
     }
 
     SECTION("limit = 1") {
-      SHOULD_WORK(jb.parseArray("[]", 1));
-      SHOULD_FAIL(jb.parseArray("[[]]", 1));
+      REQUIRE(jb.parseArray("[]", 1).success());
+      REQUIRE_FALSE(jb.parseArray("[[]]", 1).success());
     }
 
     SECTION("limit = 2") {
-      SHOULD_WORK(jb.parseArray("[[]]", 2));
-      SHOULD_FAIL(jb.parseArray("[[[]]]", 2));
+      REQUIRE(jb.parseArray("[[]]", 2).success());
+      REQUIRE(jb.parseArray("[[1,2,3]]", 2).success());
+      REQUIRE(jb.parseArray("[{\"a\":123},{\"key\":\"val\"}]", 2).success());
+      REQUIRE(jb.parseArray("[[],[12,34]]", 2).success());
+      REQUIRE_FALSE(jb.parseArray("[1, [[]]]", 2).success());
+      REQUIRE_FALSE(jb.parseArray("[[[]], 2]", 2).success());
     }
   }
 
   SECTION("parseObject()") {
     SECTION("limit = 0") {
-      SHOULD_FAIL(jb.parseObject("{}", 0));
+      REQUIRE_FALSE(jb.parseObject("{}", 0).success());
     }
 
     SECTION("limit = 1") {
-      SHOULD_WORK(jb.parseObject("{\"key\":42}", 1));
-      SHOULD_FAIL(jb.parseObject("{\"key\":{\"key\":42}}", 1));
+      REQUIRE(jb.parseObject("{\"key1\":42,\"key2\":\"val\"}", 1).success());
+      REQUIRE_FALSE(jb.parseObject("{\"key\":{\"key\":42}}", 1).success());
     }
 
     SECTION("limit = 2") {
-      SHOULD_WORK(jb.parseObject("{\"key\":{\"key\":42}}", 2));
-      SHOULD_FAIL(jb.parseObject("{\"key\":{\"key\":{\"key\":42}}}", 2));
+      REQUIRE(jb.parseObject("{\"key\":{\"nested1\":42,\"nested2\":null}}", 2).success());
+      REQUIRE_FALSE(jb.parseObject("{\"key\":{\"key\":{\"key\":42}}}", 2).success());
     }
   }
 
   SECTION("parse()") {
     SECTION("limit = 0") {
-      SHOULD_WORK(jb.parse("\"toto\"", 0));
-      SHOULD_WORK(jb.parse("123", 0));
-      SHOULD_WORK(jb.parse("true", 0));
-      SHOULD_FAIL(jb.parse("[]", 0));
-      SHOULD_FAIL(jb.parse("{}", 0));
-      SHOULD_FAIL(jb.parse("[\"toto\"]", 0));
-      SHOULD_FAIL(jb.parse("{\"toto\":1}", 0));
+      REQUIRE(jb.parse("\"toto\"", 0).success());  // JsonVariant::success()
+      REQUIRE(jb.parse("null", 0).success());
+      REQUIRE(jb.parse("1.2345", 0).success());
+      REQUIRE(jb.parse("123", 0).success());
+      REQUIRE(jb.parse("false", 0).success());
+      REQUIRE(jb.parse("true", 0).success());
+      REQUIRE_FALSE(jb.parse("[]", 0).success());
+      REQUIRE_FALSE(jb.parse("[[]]", 0).success());
+      REQUIRE_FALSE(jb.parse("{}", 0).success());
+      REQUIRE_FALSE(jb.parse("{\"toto\":{}}", 0).success());
+      REQUIRE_FALSE(jb.parse("[\"toto\"]", 0).success());
+      REQUIRE_FALSE(jb.parse("{\"toto\":1}", 0).success());
     }
 
     SECTION("limit = 1") {
-      SHOULD_WORK(jb.parse("[\"toto\"]", 1));
-      SHOULD_WORK(jb.parse("{\"toto\":1}", 1));
-      SHOULD_FAIL(jb.parse("{\"toto\":{}}", 1));
-      SHOULD_FAIL(jb.parse("{\"toto\":[]}", 1));
-      SHOULD_FAIL(jb.parse("[[\"toto\"]]", 1));
-      SHOULD_FAIL(jb.parse("[{\"toto\":1}]", 1));
+      REQUIRE(jb.parse("[\"toto\"]", 1).success());
+      REQUIRE(jb.parse("{\"toto\":null}", 1).success());
+      REQUIRE(jb.parse("{\"toto\":24.5}", 1).success());
+      REQUIRE(jb.parse("{\"toto\":123}", 1).success());
+      REQUIRE(jb.parse("{\"toto\":false}", 1).success());
+      REQUIRE(jb.parse("{\"toto\":true}", 1).success());
+      REQUIRE(jb.parse("{\"toto\":\"toto\"}", 1).success());
+      REQUIRE_FALSE(jb.parse("{\"toto\":{}}", 1).success());
+      REQUIRE_FALSE(jb.parse("{\"toto\":[]}", 1).success());
+      REQUIRE_FALSE(jb.parse("{\"toto\":[1,2,3]}", 1).success());
+      REQUIRE_FALSE(jb.parse("{\"toto\":[,]}", 1).success());
+      REQUIRE_FALSE(jb.parse("[[\"toto\"]]", 1).success());
+      REQUIRE_FALSE(jb.parse("[{\"toto\":1}]", 1).success());
     }
   }
 }

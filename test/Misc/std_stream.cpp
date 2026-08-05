@@ -61,7 +61,7 @@ TEST_CASE("std::stream") {
     std::istringstream json(" [ 42 /* comment */ ] ");
     DynamicJsonBuffer jsonBuffer;
     JsonArray& arr = jsonBuffer.parseArray(json);
-    REQUIRE(true == arr.success());
+    REQUIRE(arr.success());
     REQUIRE(1 == arr.size());
     REQUIRE(42 == arr[0]);
   }
@@ -70,7 +70,7 @@ TEST_CASE("std::stream") {
     std::istringstream json(" { hello : world // comment\n }");
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.parseObject(json);
-    REQUIRE(true == obj.success());
+    REQUIRE(obj.success());
     REQUIRE(1 == obj.size());
     REQUIRE(std::string("world") == obj["hello"]);
   }

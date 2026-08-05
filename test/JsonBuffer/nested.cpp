@@ -15,11 +15,11 @@ TEST_CASE("JsonBuffer nested objects") {
     const JsonArray &array2 = object["cd"];
     JsonArray &array3 = object["ef"];
 
-    REQUIRE(true == object.success());
+    REQUIRE(object.success());
 
-    REQUIRE(true == array1.success());
-    REQUIRE(true == array2.success());
-    REQUIRE(false == array3.success());
+    REQUIRE(array1.success());
+    REQUIRE(array2.success());
+    REQUIRE_FALSE(array3.success());
 
     REQUIRE(2 == array1.size());
     REQUIRE(2 == array2.size());
@@ -44,11 +44,11 @@ TEST_CASE("JsonBuffer nested objects") {
     const JsonObject &object2 = array[1];
     JsonObject &object3 = array[2];
 
-    REQUIRE(true == array.success());
+    REQUIRE(array.success());
 
-    REQUIRE(true == object1.success());
-    REQUIRE(true == object2.success());
-    REQUIRE(false == object3.success());
+    REQUIRE(object1.success());
+    REQUIRE(object2.success());
+    REQUIRE_FALSE(object3.success());
 
     REQUIRE(2 == object1.size());
     REQUIRE(2 == object2.size());

@@ -22,7 +22,7 @@ TEST_CASE(ARDUINOJSON_STD_STRING_TEST_CASE) {
     std::string json("[\"hello\"]");
     JsonArray &array = jb.parseArray(json);
     eraseString(json);
-    REQUIRE(true == array.success());
+    REQUIRE(array.success());
     REQUIRE(std::string("hello") == array[0]);
   }
 
@@ -30,7 +30,7 @@ TEST_CASE(ARDUINOJSON_STD_STRING_TEST_CASE) {
     std::string json("{\"hello\":\"world\"}");
     JsonObject &object = jb.parseObject(json);
     eraseString(json);
-    REQUIRE(true == object.success());
+    REQUIRE(object.success());
     REQUIRE(std::string("world") == object["hello"]);
   }
 

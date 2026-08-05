@@ -5,8 +5,6 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-#include <cmath>
-
 TEST_CASE("JsonVariant undefined") {
   JsonVariant variant;
 
