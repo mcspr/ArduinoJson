@@ -28,7 +28,7 @@ class RawJsonString : public StringRefWrapperHelper<T>::wrapper_type {
 };
 
 template <typename String>
-struct StringTraitsImpl<RawJsonString<String>> : StringTraits<String> {
+struct StringTraitsImpl<RawJsonString<String>, void> : StringTraits<String> {
 };
 
 template <typename T>

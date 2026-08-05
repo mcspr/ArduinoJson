@@ -146,7 +146,7 @@ struct ValueSaverHelper {
 
 template <typename Source>
 struct ValueSaverHelper<Source,
-  typename EnableIf<IsArray<typename RemoveReference<Source>::type>::value, void>::type> {
+  typename EnableIf<IsArray<typename RemoveReference<Source>::type>::value>::type> {
 
   typedef Source raw_source_type;
   typedef typename RemoveReference<Source>::type source_type;

@@ -119,7 +119,7 @@ struct StringRefWrapperHelper<TString,
 #endif
 
 template <typename TString>
-struct StringTraitsImpl<StringRefWrapper<TString>> :
+struct StringTraitsImpl<StringRefWrapper<TString>, void> :
   StringTraits<TString> {
 };
 

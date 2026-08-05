@@ -8,9 +8,8 @@
 
 #if ARDUINOJSON_ENABLE_PROGMEM
 
-#include "../Readers/FlashString.hpp"
 #include "../Strings/FlashString.hpp"
-#include "../Strings/CharPointer.hpp"
+#include "../Readers/FlashString.hpp"
 
 #include "StringTraitsBase.hpp"
 

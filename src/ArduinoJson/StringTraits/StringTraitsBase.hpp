@@ -87,7 +87,7 @@ struct StringTraitsHelper {
 
 template <typename TString>
 struct StringTraitsHelper<TString,
-  typename EnableIf<IsArray<typename RemoveReference<TString>::type>::value, void>::type> {
+  typename EnableIf<IsArray<typename RemoveReference<TString>::type>::value>::type> {
 
   typedef TString raw_string_type;
   typedef typename RemoveReference<TString>::type string_type;
