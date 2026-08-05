@@ -8,76 +8,76 @@
 static const JsonVariant undefined;
 static const JsonVariant null = static_cast<const char*>(0);
 
-TEST_CASE("JsonVariant::operator|()") {
-  SECTION("undefined | const char*") {
-    std::string result = undefined | "default";
+TEST_CASE("JsonVariant::operator||") {
+  SECTION("undefined or const char*") {
+    std::string result = undefined || "default";
     REQUIRE(result == "default");
   }
 
-  SECTION("undefined | int") {
-    int result = undefined | 42;
+  SECTION("undefined or int") {
+    int result = undefined or 42;
     REQUIRE(result == 42);
   }
 
-  SECTION("undefined | bool") {
-    bool result = undefined | true;
+  SECTION("undefined or bool") {
+    bool result = undefined or true;
     REQUIRE(result == true);
   }
 
-  SECTION("null | const char*") {
-    std::string result = null | "default";
+  SECTION("null or const char*") {
+    std::string result = null or "default";
     REQUIRE(result == "default");
   }
 
-  SECTION("null | int") {
-    int result = null | 42;
+  SECTION("null or int") {
+    int result = null or 42;
     REQUIRE(result == 42);
   }
 
-  SECTION("null | bool") {
-    bool result = null | true;
+  SECTION("null or bool") {
+    bool result = null or true;
     REQUIRE(result == true);
   }
 
-  SECTION("int | const char*") {
+  SECTION("int or const char*") {
     JsonVariant variant = 42;
-    std::string result = variant | "default";
+    std::string result = variant or "default";
     REQUIRE(result == "default");
   }
 
-  SECTION("int | int") {
+  SECTION("int or int") {
     JsonVariant variant = 0;
-    int result = variant | 666;
+    int result = variant or 666;
     REQUIRE(result == 0);
   }
 
-  SECTION("double | int") {
+  SECTION("double or int") {
     JsonVariant variant = 42.0;
-    int result = variant | 666;
+    int result = variant or 666;
     REQUIRE(result == 42);
   }
 
-  SECTION("bool | bool") {
+  SECTION("bool or bool") {
     JsonVariant variant = false;
-    bool result = variant | true;
+    bool result = variant or true;
     REQUIRE(result == false);
   }
 
-  SECTION("int | bool") {
+  SECTION("int or bool") {
     JsonVariant variant = 0;
-    bool result = variant | true;
+    bool result = variant or true;
     REQUIRE(result == true);
   }
 
-  SECTION("const char* | const char*") {
+  SECTION("const char* or const char*") {
     JsonVariant variant = "not default";
-    std::string result = variant | "default";
+    std::string result = variant or "default";
     REQUIRE(result == "not default");
   }
 
-  SECTION("const char* | int") {
+  SECTION("const char* or int") {
     JsonVariant variant = "not default";
-    int result = variant | 42;
+    int result = variant or 42;
     REQUIRE(result == 42);
   }
 }
