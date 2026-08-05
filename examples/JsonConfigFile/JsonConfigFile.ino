@@ -41,10 +41,10 @@ void loadConfiguration(const char *filename, Config &config) {
     Serial.println(F("Failed to read file, using default configuration"));
 
   // Copy values from the JsonObject to the Config
-  config.port = root["port"] | 2731;
-  strlcpy(config.hostname,                   // <- destination
-          root["hostname"] | "example.com",  // <- source
-          sizeof(config.hostname));          // <- destination's capacity
+  config.port = root["port"] || 2731;
+  strlcpy(config.hostname,                    // <- destination
+          root["hostname"] || "example.com",  // <- source
+          sizeof(config.hostname));           // <- destination's capacity
 
   // Close the file (File's destructor doesn't close the file)
   file.close();
