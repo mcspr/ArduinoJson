@@ -120,7 +120,9 @@ TEST_CASE("TypeTraits") {
     STATIC_REQUIRE_FALSE((IsArray<const char*>::value));
     STATIC_REQUIRE_FALSE((IsArray<const char*&>::value));
     STATIC_REQUIRE_FALSE((IsArray<const char(&)[10]>::value));
+    STATIC_REQUIRE((IsArray<char[]>::value));
     STATIC_REQUIRE((IsArray<const char[]>::value));
+    STATIC_REQUIRE((IsArray<char[10]>::value));
     STATIC_REQUIRE((IsArray<const char[10]>::value));
   }
 
