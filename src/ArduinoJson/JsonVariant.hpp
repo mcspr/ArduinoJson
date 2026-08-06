@@ -195,7 +195,7 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
     Internals::And<Internals::Not<Internals::IsSame<T, const char *>>,
                    Internals::Not<Internals::IsSame<T, char *>>,
                    Internals::CanReference<Internals::StringTraits<T>>>::value,
-    T>::type
+    const char *>::type
   as() const {
     using reference_for = typename Internals::StringTraits<T>::Reference;
     return reference_for::Operator(variantAsString());

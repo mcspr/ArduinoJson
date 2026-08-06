@@ -5,79 +5,118 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-static const JsonVariant undefined;
-static const JsonVariant null = static_cast<const char*>(0);
-
 TEST_CASE("JsonVariant::operator||") {
+  JsonVariant variant;
+
   SECTION("undefined or const char*") {
-    std::string result = undefined || "default";
+    std::string result = variant or "default";
     REQUIRE(result == "default");
   }
 
   SECTION("undefined or int") {
-    int result = undefined or 42;
+    int result = variant or 42;
     REQUIRE(result == 42);
   }
 
   SECTION("undefined or bool") {
-    bool result = undefined or true;
+    bool result = variant or true;
     REQUIRE(result == true);
   }
 
   SECTION("null or const char*") {
-    std::string result = null or "default";
+    variant = JsonNull{};
+    std::string result = variant or "default";
     REQUIRE(result == "default");
   }
 
   SECTION("null or int") {
-    int result = null or 42;
+    variant = JsonNull{};
+    int result = variant or 42;
     REQUIRE(result == 42);
   }
 
   SECTION("null or bool") {
-    bool result = null or true;
+    variant = JsonNull{};
+    bool result = variant or true;
     REQUIRE(result == true);
   }
 
   SECTION("int or const char*") {
-    JsonVariant variant = 42;
+    variant = 42;
     std::string result = variant or "default";
     REQUIRE(result == "default");
   }
 
   SECTION("int or int") {
-    JsonVariant variant = 0;
+    variant = 0;
     int result = variant or 666;
     REQUIRE(result == 0);
   }
 
   SECTION("double or int") {
-    JsonVariant variant = 42.0;
+    variant = 42.0;
     int result = variant or 666;
     REQUIRE(result == 42);
   }
 
   SECTION("bool or bool") {
-    JsonVariant variant = false;
+    variant = false;
     bool result = variant or true;
     REQUIRE(result == false);
   }
 
   SECTION("int or bool") {
-    JsonVariant variant = 0;
+    variant = 0;
     bool result = variant or true;
     REQUIRE(result == true);
   }
 
-  SECTION("const char* or const char*") {
-    JsonVariant variant = "not default";
+  SECTION("const char* or const char* w/ valid pointer") {
+    variant = "not default";
     std::string result = variant or "default";
     REQUIRE(result == "not default");
   }
 
+  SECTION("const char* or const char* w/ nullptr") {
+    variant = static_cast<const char *>(nullptr);
+    std::string result = variant or "default";
+    REQUIRE(result == "default");
+  }
+
   SECTION("const char* or int") {
-    JsonVariant variant = "not default";
-    int result = variant or 42;
-    REQUIRE(result == 42);
+    variant = "not default";
+    REQUIRE((variant or 42) == 42);
+  }
+
+  SECTION("JsonObject or JsonObject") {
+    JsonObject& invalid = JsonObject::invalid();
+    REQUIRE(std::addressof(variant or invalid) ==
+            std::addressof(JsonObject::invalid()));
+
+    StaticJsonBuffer <JSON_OBJECT_SIZE(1)> jsonBuffer;
+    JsonObject& obj = jsonBuffer.createObject();
+    REQUIRE(std::addressof(variant or obj) ==
+            std::addressof(obj));
+  }
+
+  SECTION("JsonArray or JsonArray") {
+    JsonArray& invalid = JsonArray::invalid();
+    REQUIRE(std::addressof(variant or invalid) ==
+            std::addressof(invalid));
+
+    StaticJsonBuffer <JSON_OBJECT_SIZE(1)> jsonBuffer;
+    JsonArray& arr = jsonBuffer.createArray();
+    REQUIRE(std::addressof(variant or arr) ==
+            std::addressof(arr));
+  }
+
+  SECTION("JsonVariant or JsonVariant") {
+    const JsonVariant defaultValue = "default";
+    REQUIRE((variant or defaultValue) == "default");
+    REQUIRE((defaultValue or variant) == "default");
+
+    variant = static_cast<const char *>(nullptr);
+    REQUIRE((variant or defaultValue) == "default");
+    REQUIRE((defaultValue or variant) == "default");
   }
 }
