@@ -16,6 +16,16 @@ TEST_CASE("JsonVariant::success()") {
     REQUIRE(variant.success());
   }
 
+  SECTION("ReturnsTrue_WhenString") {
+    JsonVariant variant = "hello";
+    REQUIRE(variant.success());
+  }
+
+  SECTION("ReturnsTrue_WhenStringNullptr") {
+    JsonVariant variant = static_cast<const char *>(nullptr);
+    REQUIRE_FALSE(variant.success());
+  }
+
   SECTION("ReturnsTrue_WhenEmptyArray") {
     DynamicJsonBuffer jsonBuffer;
 

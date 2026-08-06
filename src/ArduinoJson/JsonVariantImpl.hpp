@@ -357,6 +357,10 @@ struct JsonVariantSuccess {
     return true;
   }
 
+  static bool Operator(JsonStringPointer str) {
+    return str.data != nullptr;
+  }
+
   static bool Operator(JsonObject* object) {
     return object->success();
   }
