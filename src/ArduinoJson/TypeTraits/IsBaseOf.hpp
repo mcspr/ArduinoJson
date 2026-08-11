@@ -5,27 +5,23 @@
 #pragma once
 
 #include "Constant.hpp"
-#include "RemoveReference.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
-namespace TypeTraitsImpl {
+namespace TypeTraits {
 
+// nb. polyfill unused due to missing private inheritance check & mandatory complete type assertion
 template <typename TBase, typename TDerived>
-struct IsBaseOfProbe {
-  static TrueType probe(const TBase *);
-  static FalseType probe(...);
+struct IsBaseOfProbe :
+  IntegralConstant<bool, __is_base_of(TBase, TDerived)>::type {
+
 };
-
-template <typename TBase, typename TDerived>
-using IsBaseOfProbeImpl = decltype(IsBaseOfProbe<TBase, TDerived>::probe(
-    static_cast<typename RemoveReference<TDerived>::type *>(nullptr)));
 
 }
 
 // A meta-function that returns true if TDerived inherits from TBase
 template <typename TBase, typename TDerived>
-struct IsBaseOf : TypeTraitsImpl::IsBaseOfProbeImpl<TBase, TDerived>::type {
+struct IsBaseOf : TypeTraits::IsBaseOfProbe<TBase, TDerived>::type {
 };
 
 }  // namespace Internals
