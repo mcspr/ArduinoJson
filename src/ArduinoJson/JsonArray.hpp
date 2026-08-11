@@ -93,7 +93,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   template <typename TValue>
   typename Internals::EnableIf<
-    Internals::IsReferenceType<TValue>::value, bool>::type
+    Internals::IsJsonReference<TValue>::value, bool>::type
   ARDUINOJSON_FORCE_INLINE add(TValue& ref) {
     return add_impl(JsonVariant(ref));
   }
@@ -139,7 +139,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
   template <typename TValue>
   typename Internals::EnableIf<
-    Internals::IsReferenceType<TValue>::value, bool>::type
+    Internals::IsJsonReference<TValue>::value, bool>::type
   ARDUINOJSON_FORCE_INLINE set(size_t index, TValue& ref) {
     return set_impl(index, JsonVariant(ref));
   }

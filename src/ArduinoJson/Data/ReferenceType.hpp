@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "../TypeTraits/IsBaseOf.hpp"
-
 namespace ArduinoJson {
 namespace Internals {
 
@@ -21,14 +19,6 @@ class ReferenceType {
   bool operator!=(const ReferenceType& other) const {
     return this != &other;
   }
-};
-
-template <typename T>
-struct IsReferenceType : IsBaseOf<ReferenceType, T>::type {
-};
-
-template <typename T>
-struct IsReferenceType<T&> : IsBaseOf<ReferenceType, T>::type {
 };
 
 }  // namespace Internals

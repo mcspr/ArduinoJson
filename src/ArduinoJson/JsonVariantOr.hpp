@@ -11,6 +11,8 @@
 #include "TypeTraits/IsIntegral.hpp"
 #include "TypeTraits/IsFloatingPoint.hpp"
 #include "TypeTraits/IsSame.hpp"
+#include "TypeTraits/IsCharPointer.hpp"
+#include "TypeTraits/IsJsonReference.hpp"
 
 #include "TypeTraits/And.hpp"
 #include "TypeTraits/Not.hpp"
@@ -30,9 +32,7 @@ class JsonVariantOr {
   // Special case for cstring: null is treated as undefined
   template <typename T>
   typename EnableIf<
-    Or<IsSame<T, const char *>,
-       IsSame<T, char *>>::value,
-    const char *>::type
+    IsCharPointer<T>::value, const char *>::type
   operator||(T defaultValue) const {
     const char* value = impl()->template as<const char *>();
     return value != nullptr
@@ -42,8 +42,7 @@ class JsonVariantOr {
 
   template <typename T>
   typename EnableIf<
-    And<Not<IsSame<typename RemoveReference<T>::type, const char *>>,
-        Not<IsSame<typename RemoveReference<T>::type, char *>>,
+    And<Not<IsCharPointer<T>>,
         Not<IsArray<typename RemoveReference<T>::type>>,
         CanReference<StringTraits<T>>>::value,
     const char *>::type
@@ -85,9 +84,7 @@ class JsonVariantOr {
 
   template <typename T>
   typename EnableIf<
-    Or<IsSame<typename RemoveConst<T>::type, JsonObject>,
-       IsSame<typename RemoveConst<T>::type, JsonArray>>::value,
-    typename JsonVariantAs<T>::type>::type
+    IsJsonReference<T>::value, typename JsonVariantAs<T>::type>::type
   operator||(T& defaultValue) const {
     if (impl()->template is<T&>())
       return impl()->template as<T&>();

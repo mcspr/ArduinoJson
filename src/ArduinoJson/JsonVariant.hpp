@@ -13,13 +13,14 @@
 
 #include "TypeTraits/EnableIf.hpp"
 #include "TypeTraits/IsChar.hpp"
+#include "TypeTraits/IsCharPointer.hpp"
 #include "TypeTraits/IsFloatingPoint.hpp"
 #include "TypeTraits/IsIntegral.hpp"
 #include "TypeTraits/IsSame.hpp"
 #include "TypeTraits/IsSignedIntegral.hpp"
 #include "TypeTraits/IsUnsignedIntegral.hpp"
-#include "TypeTraits/RemoveReference.hpp"
 #include "TypeTraits/Or.hpp"
+#include "TypeTraits/RemoveReference.hpp"
 
 #include "Data/JsonNull.hpp"
 #include "Data/JsonVariantContent.hpp"
@@ -181,13 +182,13 @@ class JsonVariant :
     return variantAsFloat<T>();
   }
   //
+  // const char* as<const unsigned char*>() const;
   // const char* as<const char*>() const;
+  // const char* as<unsigned char*>() const;
   // const char* as<char*>() const;
   template <typename T>
   typename Internals::EnableIf<
-    Internals::Or<Internals::IsSame<T, const char *>,
-                  Internals::IsSame<T, char *>>::value,
-    const char *>::type
+    Internals::IsCharPointer<T>::value, const char*>::type
   as() const {
     return variantAsString();
   }
@@ -195,8 +196,7 @@ class JsonVariant :
   // allow `const char*` conversion for types that could hold a reference to our data
   template <typename T>
   typename Internals::EnableIf<
-    Internals::And<Internals::Not<Internals::IsSame<T, const char *>>,
-                   Internals::Not<Internals::IsSame<T, char *>>,
+    Internals::And<Internals::Not<Internals::IsCharPointer<T>>,
                    Internals::CanReference<Internals::StringTraits<T>>>::value,
     T>::type
   as() const {
@@ -327,13 +327,14 @@ class JsonVariant :
   }
   //
   // bool is<char*>() const;
+  // bool is<unsigned char*>() const;
   // bool is<const char*>() const;
+  // bool is<const unsigned char*>() const;
   //
   // Also supports any other string type that is implemented in Internals::StringTraits and provides Append implementation
   template <typename T>
   typename Internals::EnableIf<
-    Internals::Or<Internals::IsSame<T, const char *>,
-                  Internals::IsSame<T, char *>,
+    Internals::Or<Internals::IsCharPointer<T>,
                   Internals::HasAppend<Internals::StringTraits<T>>>::value,
     bool>::type
   is() const {

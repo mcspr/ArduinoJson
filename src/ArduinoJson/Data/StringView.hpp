@@ -5,10 +5,7 @@
 #include "../TypeTraits/And.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsChar.hpp"
-#include "../TypeTraits/IsPointer.hpp"
 #include "../TypeTraits/Not.hpp"
-#include "../TypeTraits/RemoveConst.hpp"
-#include "../TypeTraits/RemovePointer.hpp"
 
 #include "../JsonBuffer.hpp"
 
@@ -21,6 +18,76 @@
 
 namespace ArduinoJson {
 namespace Internals {
+namespace TypeTraits {
+
+template <typename, typename>
+struct IsSameConst : FalseType {
+};
+
+template <typename T>
+struct IsSameConst<T, T> : TrueType {
+};
+
+template <typename T>
+struct IsSameConst<T const, T> : TrueType {
+};
+
+template <typename T>
+struct IsSameConst<T, T const> : TrueType {
+};
+
+template <typename T>
+struct IsSameConst<T const, T const> : TrueType {
+};
+
+template <typename, typename>
+struct IsConvertibleConst : TrueType {
+};
+
+template <typename T, typename U>
+struct IsConvertibleConst<T const, U const> : TrueType {
+};
+
+template <typename T, typename U>
+struct IsConvertibleConst<T const, U> : TrueType {
+};
+
+template <typename T, typename U>
+struct IsConvertibleConst<T, U const> : FalseType {
+};
+
+template <typename T, typename U>
+struct IsConvertibleChar :
+    And<IsConvertibleConst<T, U>,
+        IsChar<T>, IsChar<U>>::type {
+};
+
+template <typename, typename>
+struct IsConvertibleCharPointer : FalseType {
+};
+
+template <typename T, typename U>
+struct IsConvertibleCharPointer<T*, U*> :
+    IsConvertibleChar<T, U>::type {
+};
+
+template <typename T, typename U>
+struct IsCastableChar :
+    And<Not<IsSameConst<T, U>>,
+        IsConvertibleConst<T, U>,
+        IsChar<T>, IsChar<U>>::type {
+};
+
+template <typename, typename>
+struct IsCastableCharPointer : FalseType {
+};
+
+template <typename T, typename U>
+struct IsCastableCharPointer<T*, U*> :
+    IsCastableChar<T, U>::type {
+};
+
+}
 
 // generalize raw char pointers / char arrays refs through internal span
 // specifically for T[], bind size to runtime value instead of type info
@@ -28,25 +95,27 @@ namespace Internals {
 template <typename TChar>
 class BaseStringView : public JsonSpan<TChar> {
  public:
-  template <typename T, size_t Size,
-    typename EnableIf<
-      IsSame<typename RemoveConst<T>::type,
-             typename RemoveConst<TChar>::type>::value>::type* = nullptr>
+  template <typename T, size_t Size, typename EnableIf<
+    TypeTraits::IsConvertibleChar<TChar, T>::value>::type* = nullptr>
   constexpr BaseStringView(T (&buf)[Size]) :
     JsonSpan<TChar>(&buf[0], Size - 1)
   {}
 
-  template <typename T, size_t Size,
-    typename EnableIf<
-      And<Not<IsSame<typename RemoveConst<T>::type, typename RemoveConst<TChar>::type>>,
-          IsChar<typename RemoveConst<T>::type>>::value>::type* = nullptr>
+  template <typename T, size_t Size, typename EnableIf<
+    TypeTraits::IsCastableChar<TChar, T>::value>::type* = nullptr>
   BaseStringView(T (&buf)[Size]) :
     JsonSpan<TChar>(reinterpret_cast<TChar*>(&buf[0]), Size - 1)
   {}
 
-  template <typename T,
-    typename EnableIf<And<IsPointer<T>, IsChar<typename RemovePointer<T>::type>>::value>::type* = nullptr>
+  template <typename T, typename EnableIf<
+    TypeTraits::IsConvertibleCharPointer<TChar*, T>::value>::type* = nullptr>
   constexpr BaseStringView(T ptr, size_t ptr_size) :
+    JsonSpan<TChar>(ptr, ptr_size)
+  {}
+
+  template <typename T, typename EnableIf<
+    TypeTraits::IsCastableCharPointer<TChar*, T>::value>::type* = nullptr>
+  BaseStringView(T ptr, size_t ptr_size) :
     JsonSpan<TChar>(reinterpret_cast<TChar*>(ptr), ptr_size)
   {}
 
@@ -166,22 +235,18 @@ class UnsizedStringView : public BaseStringView<TChar> {
  public:
   using JsonSpan<TChar>::data;
 
-  template <typename T,
-    typename EnableIf<
-      And<IsPointer<T>,
-          IsSame<typename RemovePointer<T>::type,
-                 typename RemoveConst<TChar>::type>>::value>::type* = nullptr>
+  constexpr UnsizedStringView(std::nullptr_t) = delete;
+
+  template <typename T, typename EnableIf<
+    TypeTraits::IsConvertibleCharPointer<TChar*, T>::value>::type* = nullptr>
   constexpr UnsizedStringView(T ptr) :
     BaseStringView<TChar>(ptr, 0)
   {}
 
-  template <typename T,
-    typename EnableIf<
-      And<IsPointer<T>,
-          Not<IsSame<typename RemovePointer<T>::type, typename RemoveConst<TChar>::type>>,
-          IsChar<typename RemovePointer<T>::type>>::value>::type* = nullptr>
+  template <typename T, typename EnableIf<
+    TypeTraits::IsCastableCharPointer<TChar*, T>::value>::type* = nullptr>
   UnsizedStringView(T ptr) :
-    BaseStringView<TChar>(ptr, 0)
+    BaseStringView<TChar>(reinterpret_cast<TChar*>(ptr), 0)
   {}
 
   constexpr operator TChar*() const {

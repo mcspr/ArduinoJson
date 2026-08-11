@@ -99,8 +99,8 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   template <typename TKey, typename TValue>
   typename Internals::EnableIf<
-    Internals::IsReferenceType<typename Internals::RemoveReference<TValue>::type>::value, bool>::type
-  ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue&& ref) {
+    Internals::IsJsonReference<TValue>::value, bool>::type
+  ARDUINOJSON_FORCE_INLINE set(TKey&& key, TValue& ref) {
     return set_impl(
       Internals::MakeStringRef(std::forward<TKey>(key)),
       JsonVariant(ref));

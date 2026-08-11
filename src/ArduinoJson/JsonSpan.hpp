@@ -5,7 +5,6 @@
 #include "Polyfills/math.hpp"
 
 #include "TypeTraits/IsChar.hpp"
-#include "TypeTraits/RemoveConst.hpp"
 
 #include <cstddef>
 
@@ -43,8 +42,7 @@ private:
 
 template <typename T, size_t Extent = JsonSpanDynamicExtent>
 struct JsonSpan {
-  static_assert(Internals::IsChar<
-    typename Internals::RemoveConst<T>::type>::value, "");
+  static_assert(Internals::IsChar<T>::value, "");
 
   constexpr explicit JsonSpan(std::nullptr_t) :
     _data(nullptr)
