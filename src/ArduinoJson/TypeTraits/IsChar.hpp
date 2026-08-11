@@ -5,21 +5,48 @@
 #pragma once
 
 #include "Constant.hpp"
-#include "IsSame.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+namespace TypeTraits {
 
-// A meta-function that returns true if T is a charater
-template <typename T>
-struct IsChar : IntegralConstant<bool,
-    IsSame<T, char>::value ||
-    IsSame<T, signed char>::value ||
-    IsSame<T, unsigned char> ::value> {
+template <typename>
+struct IsCharType : FalseType {
+};
+
+template <>
+struct IsCharType<char> : TrueType {
+};
+
+template <>
+struct IsCharType<signed char> : TrueType {
+};
+
+template <>
+struct IsCharType<unsigned char> : TrueType {
 };
 
 template <typename T>
-struct IsChar<const T> : IsChar<T> {
+struct IsCharImpl : IsCharType<T>::type {
+};
+
+template <typename T>
+struct IsCharImpl<T const> : IsCharType<T>::type {
+};
+
+template <typename T>
+struct IsCharImpl<T volatile> : IsCharType<T>::type {
+};
+
+template <typename T>
+struct IsCharImpl<T const volatile> : IsCharType<T>::type {
+};
+
+}
+
+// A meta-function that returns true if T is a charater
+template <typename T>
+struct IsChar : TypeTraits::IsCharImpl<T>::type {
 };
 
 }  // namespace Internals
