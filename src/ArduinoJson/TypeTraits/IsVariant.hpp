@@ -9,7 +9,8 @@
 namespace ArduinoJson {
 namespace Internals {
 
-class JsonVariantTag {};
+struct JsonVariantTag {
+};
 
 template <typename T>
 struct IsVariant : IsBaseOf<JsonVariantTag, T>::type {

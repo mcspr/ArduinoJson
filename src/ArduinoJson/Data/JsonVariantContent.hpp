@@ -136,11 +136,19 @@ union JsonVariantContent {
   {}
 
   explicit JsonVariantContent(JsonObject* pointer) noexcept :
-    asObject({JsonVariantType::JSON_OBJECT, pointer})
+    asObject({JsonVariantType::JSON_MUTABLE_OBJECT, pointer})
+  {}
+
+  explicit JsonVariantContent(const JsonObject* pointer) noexcept :
+    asObject({JsonVariantType::JSON_CONST_OBJECT, const_cast<JsonObject*>(pointer)})
   {}
 
   explicit JsonVariantContent(JsonArray* pointer) noexcept :
-    asArray({JsonVariantType::JSON_ARRAY, pointer})
+    asArray({JsonVariantType::JSON_MUTABLE_ARRAY, pointer})
+  {}
+
+  explicit JsonVariantContent(const JsonArray* pointer) noexcept :
+    asArray({JsonVariantType::JSON_CONST_ARRAY, const_cast<JsonArray*>(pointer)})
   {}
 
   explicit JsonVariantContent(JsonFloat value) noexcept :
@@ -175,6 +183,9 @@ union JsonVariantContent {
   UnsignedInteger asUnsignedInteger;
   StringPointer asStringPointer;
   StringBuffer asStringBuffer;
+
+  template <typename R, typename T>
+  R visit(T&& visitor) const;
 };
 
 }  // namespace Internals

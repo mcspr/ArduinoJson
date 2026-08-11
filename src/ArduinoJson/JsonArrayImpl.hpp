@@ -115,17 +115,6 @@ ARDUINOJSON_FORCE_INLINE JsonConstArraySubscript::is() const {
   return _array.is<TValue>(_index);
 }
 
-template <typename TImpl>
-inline JsonConstArraySubscript
-ARDUINOJSON_FORCE_INLINE JsonVariantSubscripts<TImpl>::operator[](size_t index) const {
-  return impl()->template as<const JsonArray &>()[index];
-}
-
-template <typename TImpl>
-inline JsonMutableArraySubscript JsonVariantSubscripts<TImpl>::operator[](size_t index) {
-  return impl()->template as<JsonArray &>()[index];
-}
-
 #if ARDUINOJSON_ENABLE_STD_STREAM
 inline std::ostream&
 operator<<(std::ostream& os, const JsonMutableArraySubscript& source) {

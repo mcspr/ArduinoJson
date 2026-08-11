@@ -26,7 +26,6 @@ using ArduinoJson::Internals::JsonConstArraySubscript;
 using ArduinoJson::Internals::JsonMutableObjectSubscript;
 using ArduinoJson::Internals::JsonConstObjectSubscript;
 using ArduinoJson::Internals::JsonSubscriptBase;
-using ArduinoJson::Internals::JsonVariantBase;
 
 template <typename>
 struct TemplateOne {
@@ -62,8 +61,6 @@ TEST_CASE("TypeTraits") {
   }
 
   SECTION("Recursive IsBaseOf") {
-    STATIC_REQUIRE(IsBaseOf<JsonVariantBase<JsonVariant>, JsonVariant>::value);
-
     using mutable_object_subscript_type = JsonMutableObjectSubscript<const char*>;
     using mutable_object_subscript_base = JsonSubscriptBase<JsonObject, mutable_object_subscript_type>;
     STATIC_REQUIRE(IsBaseOf<mutable_object_subscript_base, mutable_object_subscript_type>::value);

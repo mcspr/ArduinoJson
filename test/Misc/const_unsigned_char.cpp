@@ -41,24 +41,6 @@ TEST_CASE("const unsigned char string") {
     REQUIRE(42 == variant.as<int>());
   }
 
-  SECTION("JsonVariant::operator[]") {
-    const unsigned char key[] = "hello";
-
-    DynamicJsonBuffer jsonBuffer;
-    JsonVariant variant = jsonBuffer.parseObject("{\"hello\":\"world\"}");
-
-    REQUIRE(std::string("world") == variant[key]);
-  }
-
-  SECTION("JsonVariant::operator[] const") {
-    const unsigned char key[] = "hello";
-
-    DynamicJsonBuffer jsonBuffer;
-    const JsonVariant variant = jsonBuffer.parseObject("{\"hello\":\"world\"}");
-
-    REQUIRE(std::string("world") == variant[key]);
-  }
-
   SECTION("JsonVariant::operator==") {
     const unsigned char comparand[] = "hello";
 

@@ -11,8 +11,6 @@
 #include "TypeTraits/IsIntegral.hpp"
 #include "TypeTraits/IsFloatingPoint.hpp"
 #include "TypeTraits/IsSame.hpp"
-#include "TypeTraits/IsVariant.hpp"
-#include "TypeTraits/RemoveExtent.hpp"
 
 #include "TypeTraits/And.hpp"
 #include "TypeTraits/Not.hpp"
@@ -87,28 +85,19 @@ class JsonVariantOr {
 
   template <typename T>
   typename EnableIf<
-    Or<IsSame<typename RemoveReference<T>::type, JsonObject>,
-       IsSame<typename RemoveReference<T>::type, JsonArray>>::value,
-    typename JsonVariantAsConst<T>::type>::type
-  operator||(const T& defaultValue) const {
-    if (impl()->template is<const T&>())
-      return impl()->template as<const T&>();
-    return defaultValue;
-  }
-
-  template <typename T>
-  typename EnableIf<
-    Or<IsSame<typename RemoveReference<T>::type, JsonObject>,
-       IsSame<typename RemoveReference<T>::type, JsonArray>>::value,
+    Or<IsSame<typename RemoveConst<T>::type, JsonObject>,
+       IsSame<typename RemoveConst<T>::type, JsonArray>>::value,
     typename JsonVariantAs<T>::type>::type
-  operator||(T& defaultValue) {
+  operator||(T& defaultValue) const {
     if (impl()->template is<T&>())
       return impl()->template as<T&>();
     return defaultValue;
   }
 
   template <typename T>
-  typename EnableIf<IsVariant<T>::value, JsonVariant>::type
+  typename EnableIf<
+    IsSame<typename RemoveConstReference<T>::type, JsonVariant>::value,
+    JsonVariant>::type
   operator||(T&& defaultValue) const {
     if (impl()->success())
       return impl()->template as<JsonVariant>();
@@ -118,10 +107,6 @@ class JsonVariantOr {
  private:
   const TImpl *impl() const {
     return static_cast<const TImpl *>(this);
-  }
-
-  TImpl *impl() {
-    return static_cast<TImpl *>(this);
   }
 };
 

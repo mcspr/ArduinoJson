@@ -5,6 +5,8 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+using ArduinoJson::Internals::IsSame;
+
 TEST_CASE("JsonVariant::operator||") {
   JsonVariant variant;
 
@@ -89,29 +91,49 @@ TEST_CASE("JsonVariant::operator||") {
   }
 
   SECTION("JsonObject or JsonObject") {
-    JsonObject& invalid = JsonObject::invalid();
-    REQUIRE(std::addressof(variant or invalid) ==
-            std::addressof(JsonObject::invalid()));
+    const JsonObject& invalid = JsonObject::invalid();
+
+    auto& is_invalid = variant.operator||(invalid);
+    STATIC_REQUIRE(IsSame<
+      decltype(is_invalid), const JsonObject &>::value);
+    REQUIRE(std::addressof(is_invalid) ==
+            std::addressof(invalid));
 
     StaticJsonBuffer <JSON_OBJECT_SIZE(1)> jsonBuffer;
-    JsonObject& obj = jsonBuffer.createObject();
-    REQUIRE(std::addressof(variant or obj) ==
+    const JsonObject& obj = jsonBuffer.createObject();
+
+    auto& is_obj = variant or obj;
+    STATIC_REQUIRE(IsSame<
+      decltype(is_obj), const JsonObject &>::value);
+    REQUIRE(std::addressof(is_obj) ==
             std::addressof(obj));
   }
 
   SECTION("JsonArray or JsonArray") {
-    JsonArray& invalid = JsonArray::invalid();
-    REQUIRE(std::addressof(variant or invalid) ==
+    const JsonArray& invalid = JsonArray::invalid();
+
+    auto& is_invalid = variant or invalid;
+    STATIC_REQUIRE(ArduinoJson::Internals::IsSame<
+        decltype(is_invalid), const JsonArray &>::value);
+    REQUIRE(std::addressof(is_invalid) ==
             std::addressof(invalid));
 
     StaticJsonBuffer <JSON_OBJECT_SIZE(1)> jsonBuffer;
-    JsonArray& arr = jsonBuffer.createArray();
-    REQUIRE(std::addressof(variant or arr) ==
+    const JsonArray& arr = jsonBuffer.createArray();
+
+    auto& is_arr = variant or arr;
+    STATIC_REQUIRE(IsSame<
+      decltype(is_arr), const JsonArray &>::value);
+    REQUIRE(std::addressof(is_arr) ==
             std::addressof(arr));
   }
 
   SECTION("JsonVariant or JsonVariant") {
-    const JsonVariant defaultValue = "default";
+    JsonVariant defaultValue = "default";
+
+    auto default_when_undefined = variant or defaultValue;
+    STATIC_REQUIRE(IsSame<
+      decltype(default_when_undefined), decltype(defaultValue)>::value);
     REQUIRE((variant or defaultValue) == "default");
     REQUIRE((defaultValue or variant) == "default");
 

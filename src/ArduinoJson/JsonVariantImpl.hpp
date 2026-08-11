@@ -118,7 +118,63 @@ struct JsonVariantAsBoolean {
   }
 };
 
-struct JsonVariantAsObject {
+struct JsonVariantAsConstArray {
+  template <typename... TArgs>
+  static JsonArray& Operator(TArgs&&...) {
+    return defaultValue();
+  }
+
+  static JsonArray& Operator(const JsonArray* array) {
+    return *const_cast<JsonArray*>(array);
+  }
+
+  static JsonArray& Operator(JsonArray* array) {
+    return *array;
+  }
+
+ private:
+  static JsonArray& defaultValue() {
+    return JsonVariantDefault<JsonArray>::get();
+  }
+};
+
+struct JsonVariantAsMutableArray {
+  template <typename... TArgs>
+  static JsonArray& Operator(TArgs&&...) {
+    return defaultValue();
+  }
+
+  static JsonArray& Operator(JsonArray* array) {
+    return *array;
+  }
+
+ private:
+  static JsonArray& defaultValue() {
+    return JsonVariantDefault<JsonArray>::get();
+  }
+};
+
+struct JsonVariantAsConstObject {
+  template <typename... TArgs>
+  static JsonObject& Operator(TArgs&&...) {
+    return defaultValue();
+  }
+
+  static JsonObject& Operator(const JsonObject* object) {
+    return const_cast<JsonObject&>(*object);
+  }
+
+  static JsonObject& Operator(JsonObject* object) {
+    return *object;
+  }
+
+ private:
+  static JsonObject& defaultValue() {
+    return JsonVariantDefault<JsonObject>::get();
+  }
+};
+
+struct JsonVariantAsMutableObject {
   template <typename... TArgs>
   static JsonObject& Operator(TArgs&&...) {
     return defaultValue();
@@ -134,21 +190,6 @@ struct JsonVariantAsObject {
   }
 };
 
-struct JsonVariantAsArray {
-  template <typename... TArgs>
-  static JsonArray& Operator(TArgs&&...) {
-    return defaultValue();
-  }
-
-  static JsonArray& Operator(JsonArray* array) {
-    return *array;
-  }
-
- private:
-  static JsonArray& defaultValue() {
-    return JsonVariantDefault<JsonArray>::get();
-  }
-};
 
 template <typename TOut>
 struct JsonVariantAsFloat {
@@ -165,7 +206,15 @@ struct JsonVariantAsFloat {
     return defaultValue();
   }
 
+  static TOut Operator(const JsonObject*) {
+    return defaultValue();
+  }
+
   static TOut Operator(JsonObject*) {
+    return defaultValue();
+  }
+
+  static TOut Operator(const JsonArray*) {
     return defaultValue();
   }
 
@@ -203,7 +252,15 @@ struct JsonVariantAsInteger {
     return defaultValue();
   }
 
+  static TOut Operator(const JsonObject*) {
+    return defaultValue();
+  }
+
   static TOut Operator(JsonObject*) {
+    return defaultValue();
+  }
+
+  static TOut Operator(const JsonArray*) {
     return defaultValue();
   }
 
@@ -272,38 +329,6 @@ struct JsonVariantMaybeBoolean {
   }
 };
 
-struct JsonVariantIsObject {
-  template <typename... TArgs>
-  static bool Operator(TArgs&&...) {
-    return defaultValue();
-  }
-
-  static bool Operator(JsonObject*) {
-    return true;
-  }
-
- private:
-  static bool defaultValue() {
-    return false;
-  }
-};
-
-struct JsonVariantIsArray {
-  template <typename... TArgs>
-  static bool Operator(TArgs&&...) {
-    return defaultValue();
-  }
-
-  static bool Operator(JsonArray*) {
-    return true;
-  }
-
- private:
-  static bool defaultValue() {
-    return false;
-  }
-};
-
 struct JsonVariantMaybeInteger {
   template <typename... TArgs>
   static bool Operator(TArgs&&...) {
@@ -361,8 +386,16 @@ struct JsonVariantSuccess {
     return str.data != nullptr;
   }
 
+  static bool Operator(const JsonObject* object) {
+    return object->success();
+  }
+
   static bool Operator(JsonObject* object) {
     return object->success();
+  }
+
+  static bool Operator(const JsonArray* array) {
+    return array->success();
   }
 
   static bool Operator(JsonArray* array) {
@@ -399,6 +432,50 @@ struct JsonStringVisitor {
   bool _parsed;
 };
 
+template <typename R, typename T>
+R JsonVariantContent::visit(T&& visitor) const {
+  using Internals::JsonVariantType;
+
+  if (null.type == JsonVariantType::JSON_NULL) {
+    return visitor.Operator(JsonNull{});
+
+  } else if (asBoolean.type == JsonVariantType::JSON_BOOLEAN) {
+    return visitor.Operator(asBoolean.value);
+
+  } else if (asObject.type == JsonVariantType::JSON_CONST_OBJECT) {
+    return visitor.Operator(static_cast<const JsonObject*>(asObject.pointer));
+
+  } else if (asObject.type == JsonVariantType::JSON_MUTABLE_OBJECT) {
+    return visitor.Operator(asObject.pointer);
+
+  } else if (asArray.type == JsonVariantType::JSON_CONST_ARRAY) {
+    return visitor.Operator(static_cast<const JsonArray*>(asArray.pointer));
+
+  } else if (asArray.type == JsonVariantType::JSON_MUTABLE_ARRAY) {
+    return visitor.Operator(asArray.pointer);
+
+  } else if (asFloat.type == JsonVariantType::JSON_FLOAT) {
+    return visitor.Operator(asFloat.value);
+
+  } else if (asSignedInteger.type == JsonVariantType::JSON_SIGNED_INTEGER) {
+    return visitor.Operator(asSignedInteger.value);
+
+  } else if (asUnsignedInteger.type == JsonVariantType::JSON_UNSIGNED_INTEGER) {
+    return visitor.Operator(asUnsignedInteger.value);
+
+  } else if (asStringPointer.type == JsonVariantType::JSON_STRING) {
+    return visitor.Operator(Internals::JsonStringPointer{
+      asStringPointer.pointer, asStringPointer.parsed});
+
+  } else if (asStringBuffer.type == JsonVariantType::JSON_STRING_BUFFER) {
+    return visitor.Operator(Internals::JsonStringPointer{
+      &asStringBuffer.buffer.value[0], asStringPointer.parsed});
+
+  }
+
+  return Internals::JsonVariantDefault<R>::get();
+}
+
 }
 
 inline JsonVariant::JsonVariant(Internals::JsonString other, bool parsed) noexcept :
@@ -407,97 +484,77 @@ inline JsonVariant::JsonVariant(Internals::JsonString other, bool parsed) noexce
 {}
 
 inline JsonVariant::JsonVariant(const JsonArray &array) noexcept :
-  _content(const_cast<JsonArray *>(std::addressof(array)))
+  _content(std::addressof(array))
+{}
+
+inline JsonVariant::JsonVariant(JsonArray &array) noexcept :
+  _content(std::addressof(array))
 {}
 
 inline JsonVariant::JsonVariant(const JsonObject &object) noexcept :
-  _content(const_cast<JsonObject *>(std::addressof(object)))
+  _content(std::addressof(object))
 {}
 
-template <typename R, typename T>
-R JsonVariant::visit(T&& visitor) const {
-  using Internals::JsonVariantType;
-
-  if (_content.null.type == JsonVariantType::JSON_NULL) {
-    return visitor.Operator(JsonNull{});
-
-  } else if (_content.asBoolean.type == JsonVariantType::JSON_BOOLEAN) {
-    return visitor.Operator(_content.asBoolean.value);
-
-  } else if (_content.asObject.type == JsonVariantType::JSON_OBJECT) {
-    return visitor.Operator(_content.asObject.pointer);
-
-  } else if (_content.asArray.type == JsonVariantType::JSON_ARRAY) {
-    return visitor.Operator(_content.asArray.pointer);
-
-  } else if (_content.asFloat.type == JsonVariantType::JSON_FLOAT) {
-    return visitor.Operator(_content.asFloat.value);
-
-  } else if (_content.asSignedInteger.type == JsonVariantType::JSON_SIGNED_INTEGER) {
-    return visitor.Operator(_content.asSignedInteger.value);
-
-  } else if (_content.asUnsignedInteger.type == JsonVariantType::JSON_UNSIGNED_INTEGER) {
-    return visitor.Operator(_content.asUnsignedInteger.value);
-
-  } else if (_content.asStringPointer.type == JsonVariantType::JSON_STRING) {
-    return visitor.Operator(Internals::JsonStringPointer{
-      _content.asStringPointer.pointer, _content.asStringPointer.parsed});
-
-  } else if (_content.asStringBuffer.type == JsonVariantType::JSON_STRING_BUFFER) {
-    return visitor.Operator(Internals::JsonStringPointer{
-      &_content.asStringBuffer.buffer.value[0], _content.asStringPointer.parsed});
-
-  }
-
-  return Internals::JsonVariantDefault<R>::get();
-}
+inline JsonVariant::JsonVariant(JsonObject &object) noexcept :
+  _content(std::addressof(object))
+{}
 
 inline bool JsonVariant::variantAsBoolean() const {
-  return visit<bool>(Internals::JsonVariantAsBoolean());
+  return _content.visit<bool>(Internals::JsonVariantAsBoolean());
 }
 
-inline JsonObject &JsonVariant::variantAsObject() const {
-  return visit<decltype(JsonObject::invalid())>(
-    Internals::JsonVariantAsObject());
+inline const JsonObject& JsonVariant::variantAsConstObject() const {
+  return _content.visit<JsonObject&>(
+    Internals::JsonVariantAsConstObject());
 }
 
-inline JsonArray &JsonVariant::variantAsArray() const {
-  return visit<decltype(JsonArray::invalid())>(
-    Internals::JsonVariantAsArray());
+inline JsonObject& JsonVariant::variantAsMutableObject() const {
+  return _content.visit<JsonObject&>(
+    Internals::JsonVariantAsMutableObject());
+}
+
+inline const JsonArray& JsonVariant::variantAsConstArray() const {
+  return _content.visit<JsonArray&>(
+    Internals::JsonVariantAsConstArray());
+}
+
+inline JsonArray& JsonVariant::variantAsMutableArray() const {
+  return _content.visit<JsonArray&>(
+    Internals::JsonVariantAsMutableArray());
 }
 
 template <typename T>
 inline T JsonVariant::variantAsFloat() const {
-  return visit<T>(Internals::JsonVariantAsFloat<T>());
+  return _content.visit<T>(Internals::JsonVariantAsFloat<T>());
 }
 
 template <typename T>
 inline T JsonVariant::variantAsInteger() const {
-  return visit<T>(Internals::JsonVariantAsInteger<T>());
+  return _content.visit<T>(Internals::JsonVariantAsInteger<T>());
 }
 
 inline const char *JsonVariant::variantAsString() const {
-  return visit<const char*>(Internals::JsonVariantMaybeString());
+  return _content.visit<const char*>(Internals::JsonVariantMaybeString());
 }
 
 inline bool JsonVariant::variantMaybeNull() const {
-  return visit<bool>(Internals::JsonVariantMaybeNull());
+  return _content.visit<bool>(Internals::JsonVariantMaybeNull());
 }
 
 inline bool JsonVariant::variantMaybeBoolean() const {
-  return visit<bool>(Internals::JsonVariantMaybeBoolean());
+  return _content.visit<bool>(Internals::JsonVariantMaybeBoolean());
 }
 
 inline bool JsonVariant::variantMaybeInteger() const {
-  return visit<bool>(Internals::JsonVariantMaybeInteger());
+  return _content.visit<bool>(Internals::JsonVariantMaybeInteger());
 }
 
 inline bool JsonVariant::variantMaybeFloat() const {
-  return visit<bool>(Internals::JsonVariantMaybeFloat());
+  return _content.visit<bool>(Internals::JsonVariantMaybeFloat());
 }
 
 inline bool JsonVariant::success() const {
-  return visit<bool>(Internals::JsonVariantSuccess());
+  return _content.visit<bool>(Internals::JsonVariantSuccess());
 }
 
 #if ARDUINOJSON_ENABLE_STD_STREAM

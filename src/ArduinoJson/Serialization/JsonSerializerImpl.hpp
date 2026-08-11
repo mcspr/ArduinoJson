@@ -90,8 +90,18 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Oper
 }
 
 template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(const JsonObject* object) {
+  serialize(*object, _writer);
+}
+
+template <typename Writer>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonObject* object) {
   serialize(*object, _writer);
+}
+
+template <typename Writer>
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(const JsonArray* array) {
+  serialize(*array, _writer);
 }
 
 template <typename Writer>
@@ -126,5 +136,5 @@ template <typename Writer>
 inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
     JsonVariant variant, Writer& writer) {
 
-  variant.visit<void>(VariantVisitor(writer));
+  variant._content.visit<void>(VariantVisitor(writer));
 }

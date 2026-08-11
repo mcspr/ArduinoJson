@@ -3,11 +3,9 @@
 #pragma once
 
 #include "JsonImplicitConversions.hpp"
-#include "JsonImplicitReferenceConversions.hpp"
 
 #include "JsonVariantComparisons.hpp"
 #include "JsonVariantOr.hpp"
-#include "JsonVariantSubscripts.hpp"
 
 #include "Serialization/JsonPrintable.hpp"
 
@@ -23,21 +21,19 @@ namespace Internals {
 // for const, deletes them (xxx: note that base class *may* keep copy operators, take care to delete those)
 
 template <typename T, typename TImpl>
-using JsonSubscriptReferenceConversions =
+using JsonSubscriptConversions =
   Conditional<IsConst<T>::value,
-    JsonImplicitConstReferenceConversions<TImpl>,
-    JsonImplicitReferenceConversions<TImpl>>;
+    JsonImplicitConversions<TImpl, JsonImplicitConstReference>,
+    JsonImplicitConversions<TImpl, JsonImplicitAnyReference>>;
 
 // subscript types inherit from this instead of variant base,
-// but are expected to keep other JsonVariantBase properties
+// but are expected to keep other JsonVariant properties
 template <typename T, typename TImpl>
 class JsonSubscriptBase :
     public JsonPrintable<TImpl>,
-    public JsonImplicitConversions<TImpl>,
-    public JsonSubscriptReferenceConversions<T, TImpl>,
+    public JsonSubscriptConversions<T, TImpl>,
     public JsonVariantComparisons<TImpl>,
     public JsonVariantOr<TImpl>,
-    public JsonVariantSubscripts<TImpl>,
     public JsonSubscriptTag,
     public JsonVariantTag {
 

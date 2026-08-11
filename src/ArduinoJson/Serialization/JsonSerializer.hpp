@@ -50,7 +50,9 @@ class JsonSerializer {
 
     void Operator(JsonNull);
     void Operator(bool);
+    void Operator(const JsonObject*);
     void Operator(JsonObject*);
+    void Operator(const JsonArray*);
     void Operator(JsonArray*);
     void Operator(JsonFloat);
     void Operator(JsonInteger);

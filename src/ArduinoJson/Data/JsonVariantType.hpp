@@ -18,8 +18,10 @@ enum class JsonVariantType : uint8_t {
   JSON_UNDEFINED,         // JsonVariant has not been initialized
   JSON_NULL,              // JsonVariant contains a null
   JSON_BOOLEAN,           // JsonVariant stores a bool
-  JSON_OBJECT,            // JsonVariant stores a pointer to a JsonObject
-  JSON_ARRAY,             // JsonVariant stores a pointer to a JsonArray
+  JSON_CONST_OBJECT,      // JsonVariant stores a pointer to either mutable or const JsonObject
+  JSON_MUTABLE_OBJECT,
+  JSON_CONST_ARRAY,       // JsonVariant stores a pointer to either mutable or const JsonArray
+  JSON_MUTABLE_ARRAY,
   JSON_FLOAT,             // JsonVariant stores a JsonFloat
   JSON_SIGNED_INTEGER,    // JsonVariant stores a JsonInteger
   JSON_UNSIGNED_INTEGER,  // JsonVariant stores a JsonUnsignedIntger

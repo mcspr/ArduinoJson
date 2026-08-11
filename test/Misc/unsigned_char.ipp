@@ -45,24 +45,6 @@ TEST_CASE(ARDUINOJSON_UNSIGNED_CHAR_TEST_CASE) {
     REQUIRE(42 == variant.as<int>());
   }
 
-  SECTION("JsonVariant::operator[]") {
-    unsigned char key[] = "hello";
-
-    DynamicJsonBuffer jsonBuffer;
-    JsonVariant variant = jsonBuffer.parseObject("{\"hello\":\"world\"}");
-
-    REQUIRE(std::string("world") == variant[key]);
-  }
-
-  SECTION("JsonVariant::operator[] const") {
-    unsigned char key[] = "hello";
-
-    DynamicJsonBuffer jsonBuffer;
-    const JsonVariant variant = jsonBuffer.parseObject("{\"hello\":\"world\"}");
-
-    REQUIRE(std::string("world") == variant[key]);
-  }
-
   SECTION("JsonVariant::operator==") {
     unsigned char comparand[] = "hello";
 

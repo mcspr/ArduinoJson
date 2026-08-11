@@ -5,12 +5,12 @@
 add_executable(JsonVariantTests
 	as.cpp
 	compare.cpp
+	const_as.cpp
 	copy.cpp
 	is.cpp
 	or.cpp
 	printTo.cpp
 	set_get.cpp
-	subscript.cpp
 	success.cpp
 	undefined.cpp
 )

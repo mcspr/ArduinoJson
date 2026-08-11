@@ -115,23 +115,17 @@ class JsonVariantComparisons {
   }
 
  private:
-  TImpl *impl() {
-    return static_cast<TImpl *>(this);
-  }
-
   const TImpl *impl() const {
     return static_cast<const TImpl *>(this);
   }
 
-  template <typename T>
-  typename JsonVariantAs<T>::type as() {
-    return impl()->template as<typename JsonVariantAs<T>::type>();
+  TImpl *impl() {
+    return static_cast<TImpl *>(this);
   }
 
   template <typename T>
-  typename JsonVariantAsConst<T>::type as() const {
-    return const_cast<JsonVariantComparisons *>(this)->
-      as<typename JsonVariantAsConst<T>::type>();
+  typename JsonVariantAs<T>::type as() const {
+    return impl()->template as<typename JsonVariantAs<T>::type>();
   }
 
   template <typename T>
@@ -140,16 +134,17 @@ class JsonVariantComparisons {
   }
 
   template <typename TString>
-  typename EnableIf<HasEquals<StringTraits<TString>>::value, bool>::type
+  typename EnableIf<
+      HasEquals<StringTraits<TString>>::value, bool>::type
   equals(const TString &comparand) const {
     return StringTraits<TString>::Equals::Operator(comparand, as<const char *>());
   }
 
   template <typename TComparand>
   typename EnableIf<
-    And<Not<IsVariant<TComparand>>,
-        Not<HasEquals<StringTraits<TComparand>>>>::value,
-    bool>::type
+      And<Not<IsVariant<TComparand>>,
+          Not<HasEquals<StringTraits<TComparand>>>>::value,
+      bool>::type
   equals(const TComparand &comparand) const {
     return as<TComparand>() == comparand;
   }
