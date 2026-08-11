@@ -84,11 +84,7 @@ class JsonParser {
   JsonArray &parseArray();
   JsonObject &parseObject();
 
-  JsonVariant parseVariant() {
-    JsonVariant result;
-    parseAnythingTo(&result);
-    return result;
-  }
+  JsonVariant parseVariant();
 
  protected:
   static bool eat(TReader &, char charToSkip);

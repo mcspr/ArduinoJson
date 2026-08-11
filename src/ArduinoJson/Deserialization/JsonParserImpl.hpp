@@ -158,6 +158,13 @@ ERROR_NO_MEMORY:
 }
 
 template <typename TReader, typename TWriter>
+inline JsonVariant JsonParser<TReader, TWriter>::parseVariant() {
+  JsonVariant result;
+  parseAnythingTo(&result);
+  return result;
+}
+
+template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::parseObjectTo(
     JsonVariant *destination) {
   JsonObject &object = parseObject();
