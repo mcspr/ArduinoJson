@@ -123,12 +123,16 @@ class JsonConstObjectSubscript final
   TJsonObjectSubscriptKeyType<TKey> _key;
 };
 
-template <typename TJsonObject, typename TKey>
-struct JsonObjectSubscriptHelper {
-  typedef TJsonObjectSubscriptKeyType<TKey> key_type;
-  typedef Conditional<IsConst<TJsonObject>::value,
-    JsonConstObjectSubscript<typename key_type::string_type>,
-    JsonMutableObjectSubscript<typename key_type::string_type>> subscript_type;
+template <typename TKey>
+struct TJsonMutableObjectSubscriptType {
+  using key_type = TJsonObjectSubscriptKeyType<TKey>;
+  using subscript_type = JsonMutableObjectSubscript<typename key_type::string_type>;
+};
+
+template <typename TKey>
+struct TJsonConstObjectSubscriptType {
+  using key_type = TJsonObjectSubscriptKeyType<TKey>;
+  using subscript_type = JsonConstObjectSubscript<typename key_type::string_type>;
 };
 
 }  // namespace Internals

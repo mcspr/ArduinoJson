@@ -233,16 +233,16 @@ inline JsonObject& JsonObject::createNestedObject_impl(TKey key) {
 }
 
 template <typename TKey>
-typename Internals::JsonObjectSubscriptHelper<const JsonObject, TKey>::subscript_type
+typename Internals::TJsonConstObjectSubscriptType<TKey>::subscript_type
 inline JsonObject::operator[](TKey&& key) const {
-  return typename Internals::JsonObjectSubscriptHelper<const JsonObject, TKey>::subscript_type(
+  return typename Internals::TJsonConstObjectSubscriptType<TKey>::subscript_type(
     *this, std::forward<TKey>(key));
 }
 
 template <typename TKey>
-typename Internals::JsonObjectSubscriptHelper<JsonObject, TKey>::subscript_type
+typename Internals::TJsonMutableObjectSubscriptType<TKey>::subscript_type
 inline JsonObject::operator[](TKey&& key) {
-  return typename Internals::JsonObjectSubscriptHelper<JsonObject, TKey>::subscript_type(
+  return typename Internals::TJsonMutableObjectSubscriptType<TKey>::subscript_type(
     *this, std::forward<TKey>(key));
 }
 

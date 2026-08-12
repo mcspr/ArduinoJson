@@ -33,8 +33,11 @@ class JsonBuffer;
 
 namespace Internals {
 
-template <typename, typename>
-struct JsonObjectSubscriptHelper;
+template <typename>
+struct TJsonMutableObjectSubscriptType;
+
+template <typename>
+struct TJsonConstObjectSubscriptType;
 
 }
 
@@ -59,12 +62,12 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   // Gets the value associated with the specified key.
   template <typename TKey>
-  typename Internals::JsonObjectSubscriptHelper<const JsonObject, TKey>::subscript_type
+  typename Internals::TJsonConstObjectSubscriptType<TKey>::subscript_type
   operator[](TKey&&) const;
 
   // Gets or sets the value associated with the specified key.
   template <typename TKey>
-  typename Internals::JsonObjectSubscriptHelper<JsonObject, TKey>::subscript_type
+  typename Internals::TJsonMutableObjectSubscriptType<TKey>::subscript_type
   operator[](TKey&&);
 
   // Sets the specified key with the specified value.

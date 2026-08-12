@@ -9,9 +9,7 @@
 
 #include "Serialization/JsonPrintable.hpp"
 
-#include "TypeTraits/IsConst.hpp"
 #include "TypeTraits/IsSubscript.hpp"
-#include "TypeTraits/Conditional.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -21,17 +19,21 @@ namespace Internals {
 // for const, deletes them (xxx: note that base class *may* keep copy operators, take care to delete those)
 
 template <typename T, typename TImpl>
-using JsonSubscriptConversions =
-  Conditional<IsConst<T>::value,
-    JsonImplicitConversions<TImpl, JsonImplicitConstReference>,
-    JsonImplicitConversions<TImpl, JsonImplicitAnyReference>>;
+struct JsonSubscriptConversions {
+  using type = JsonImplicitConversions<TImpl, JsonImplicitAnyReference>;
+};
+
+template <typename T, typename TImpl>
+struct JsonSubscriptConversions<T const, TImpl> {
+  using type = JsonImplicitConversions<TImpl, JsonImplicitConstReference>;
+};
 
 // subscript types inherit from this instead of variant base,
 // but are expected to keep other JsonVariant properties
 template <typename T, typename TImpl>
 class JsonSubscriptBase :
     public JsonPrintable<TImpl>,
-    public JsonSubscriptConversions<T, TImpl>,
+    public JsonSubscriptConversions<T, TImpl>::type,
     public JsonVariantComparisons<TImpl>,
     public JsonVariantOr<TImpl>,
     public JsonSubscriptTag,
