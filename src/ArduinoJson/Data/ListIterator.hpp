@@ -6,11 +6,8 @@
 
 #include "ListNode.hpp"
 
-#include "../TypeTraits/And.hpp"
-#include "../TypeTraits/Conditional.hpp"
+#include "../TypeTraits/Constant.hpp"
 #include "../TypeTraits/EnableIf.hpp"
-#include "../TypeTraits/IsConst.hpp"
-#include "../TypeTraits/IsSame.hpp"
 #include "../TypeTraits/RemoveConst.hpp"
 
 #include <memory>
@@ -18,6 +15,41 @@
 
 namespace ArduinoJson {
 namespace Internals {
+namespace TypeTraits {
+
+template <typename, typename>
+struct IsListConstConvertible : FalseType {
+};
+
+template <typename T>
+struct IsListConstConvertible<T const, T> : TrueType {
+};
+
+template <typename T>
+struct IsListConstConvertible<T const, T const> : TrueType {
+};
+
+template <typename T>
+struct ListPointerType {
+  using type = T*;
+};
+
+template <typename T>
+struct ListPointerType<T const> {
+  using type = const T*;
+};
+
+template <typename T>
+struct ListReferenceType {
+  using type = T&;
+};
+
+template <typename T>
+struct ListReferenceType<T const> {
+  using type = const T&;
+};
+
+}
 
 template <typename T>
 class List;
@@ -26,14 +58,13 @@ class List;
 template <typename T>
 class ListIterator {
  public:
-  using value_type = typename RemoveConst<T>::type;
-  using node_type = ListNode<value_type>;
-  using pointer_type = Conditional<IsConst<T>::value, const value_type*, value_type*>;
-  using reference_type = Conditional<IsConst<T>::value, const value_type&, value_type&>;
+  using node_type = ListNode<typename RemoveConst<T>::type>;
+  using pointer_type = typename TypeTraits::ListPointerType<T>::type;
+  using reference_type = typename TypeTraits::ListReferenceType<T>::type;
 
  private:
   template <typename TOther>
-  using is_const_convertible = And<IsConst<T>, IsSame<typename RemoveConst<TOther>::type, value_type>>;
+  using is_const_convertible = typename TypeTraits::IsListConstConvertible<T, TOther>::type;
 
  public:
   ListIterator() = delete;
@@ -109,5 +140,6 @@ class ListIterator {
 
   node_type *_node;
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson
