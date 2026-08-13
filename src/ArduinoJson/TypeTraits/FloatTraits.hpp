@@ -52,15 +52,17 @@ struct FloatTraits {
 };
 
 template <typename T>
-struct FloatTraits<T, 8 /*64bits*/> {
-  typedef int64_t mantissa_type;
-  static const short mantissa_bits = 52;
-  static const mantissa_type mantissa_max =
+struct FloatTraits<T, 8> {
+  static constexpr short bits = 64;
+  static constexpr short mantissa_bits = 52;
+
+  using mantissa_type = int64_t;
+  static constexpr mantissa_type mantissa_max =
       (static_cast<mantissa_type>(1) << mantissa_bits) - 1;
 
-  typedef int16_t exponent_type;
-  static const exponent_type exponent_min = -323;
-  static const exponent_type exponent_max = 308;
+  using exponent_type = int16_t;
+  static constexpr exponent_type exponent_min = -323;
+  static constexpr exponent_type exponent_max = 308;
 
   template <typename TExponent>
   static T make_float(T m, TExponent e) {
@@ -81,7 +83,7 @@ struct FloatTraits<T, 8 /*64bits*/> {
     return m;
   }
 
-  static const size_t binaryPowersOfTen = 9;
+  static constexpr size_t binaryPowersOfTen = 9;
 
   static T positiveBinaryPowerOfTen(int index) {
     static T factors[binaryPowersOfTen] = {
@@ -157,15 +159,17 @@ struct FloatTraits<T, 8 /*64bits*/> {
 };
 
 template <typename T>
-struct FloatTraits<T, 4 /*32bits*/> {
-  typedef int32_t mantissa_type;
-  static const short mantissa_bits = 23;
-  static const mantissa_type mantissa_max =
+struct FloatTraits<T, 4> {
+  static constexpr short bits = 32;
+  static constexpr short mantissa_bits = 23;
+
+  using mantissa_type = int32_t;
+  static constexpr mantissa_type mantissa_max =
       (static_cast<mantissa_type>(1) << mantissa_bits) - 1;
 
-  typedef int8_t exponent_type;
-  static const exponent_type exponent_min = -45;
-  static const exponent_type exponent_max = 38;
+  using exponent_type = int8_t;
+  static constexpr exponent_type exponent_min = -45;
+  static constexpr exponent_type exponent_max = 38;
 
   template <typename TExponent>
   static T make_float(T m, TExponent e) {
@@ -186,7 +190,7 @@ struct FloatTraits<T, 4 /*32bits*/> {
     return m;
   }
 
-  static const size_t binaryPowersOfTen = 6;
+  static constexpr size_t binaryPowersOfTen = 6;
 
   static T positiveBinaryPowerOfTen(int index) {
     static T factors[] = {1e1f, 1e2f, 1e4f, 1e8f, 1e16f, 1e32f};
@@ -203,8 +207,8 @@ struct FloatTraits<T, 4 /*32bits*/> {
     return factors[index];
   }
 
-  static T forge(uint32_t bits) {
-    return bit_cast<T>(bits);
+  static T forge(uint32_t carrier) {
+    return bit_cast<T>(carrier);
   }
 
   static T nan() {
