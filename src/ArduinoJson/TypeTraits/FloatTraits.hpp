@@ -6,6 +6,7 @@
 
 #include "../Polyfills/bit_cast.hpp"
 
+#include "../TypeTraits/Constant.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsSignedIntegral.hpp"
 #include "../TypeTraits/IsUnsignedIntegral.hpp"
@@ -15,9 +16,40 @@
 
 namespace ArduinoJson {
 namespace Internals {
+namespace TypeTraits {
+
+// floating point conversion has to know output type size limits
+template <typename TReference, typename TOther>
+struct IsSameSize : BooleanConstant<sizeof(TReference) == sizeof(TOther)>::type {
+};
+
+// int32_t, uint32_t
+template <typename T>
+struct IsDoubleWordSigned :
+    And<IsSignedIntegral<T>, IsSameSize<int32_t, T>>::type {
+};
+
+template <typename T>
+struct IsDoubleWordUnsigned :
+    And<IsUnsignedIntegral<T>, IsSameSize<int32_t, T>>::type {
+};
+
+// int64_t, uint64_t
+template <typename T>
+struct IsQuadWordSigned :
+    And<IsSignedIntegral<T>, IsSameSize<int64_t, T>>::type {
+};
+
+template <typename T>
+struct IsQuadWordUnsigned :
+    And<IsUnsignedIntegral<T>, IsSameSize<int64_t, T>>::type {
+};
+
+}
 
 template <typename T, size_t = sizeof(T)>
-struct FloatTraits {};
+struct FloatTraits {
+};
 
 template <typename T>
 struct FloatTraits<T, 8 /*64bits*/> {
@@ -111,19 +143,15 @@ struct FloatTraits<T, 8 /*64bits*/> {
     return bit_cast<T>((uint64_t(msb) << 32) | lsb);
   }
 
-  template <typename TOut>  // int64_t
-  static T highest_for(
-      typename EnableIf<
-        IsSignedIntegral<TOut>::value &&
-        sizeof(TOut) == 8, signed>::type* = nullptr) {
+  template <typename TOut, typename EnableIf<
+    TypeTraits::IsQuadWordSigned<TOut>::value, signed>::type* = nullptr>
+  static T highest_for() {  // int64_t
     return forge(0x43DFFFFF, 0xFFFFFFFF);  //  9.2233720368547748e+18
   }
 
-  template <typename TOut>  // uint64_t
-  static T highest_for(
-      typename EnableIf<
-        IsUnsignedIntegral<TOut>::value &&
-        sizeof(TOut) == 8, unsigned>::type* = nullptr) {
+  template <typename TOut, typename EnableIf<
+    TypeTraits::IsQuadWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
+  static T highest_for() {  // uint64_t
     return forge(0x43EFFFFF, 0xFFFFFFFF);  //  1.8446744073709549568e+19
   }
 };
@@ -187,37 +215,30 @@ struct FloatTraits<T, 4 /*32bits*/> {
     return forge(0x7f800000);
   }
 
-  template <typename TOut>  // int32_t
-  static T highest_for(
-      typename EnableIf<
-        IsSignedIntegral<TOut>::value &&
-        sizeof(TOut) == 4, signed>::type* = nullptr) {
+  template <typename TOut, typename EnableIf<
+    TypeTraits::IsDoubleWordSigned<TOut>::value, signed>::type* = nullptr>
+  static T highest_for() {
     return forge(0x4EFFFFFF);  // 2.14748352E9
   }
 
-  template <typename TOut>  // uint32_t
-  static T highest_for(
-      typename EnableIf<
-        IsUnsignedIntegral<TOut>::value &&
-        sizeof(TOut) == 4, unsigned>::type* = nullptr) {
+  template <typename TOut, typename EnableIf<
+    TypeTraits::IsDoubleWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
+  static T highest_for() {  // uint32_t
     return forge(0x4F7FFFFF);  // 4.29496704E9
   }
 
-  template <typename TOut>  // int64_t
-  static T highest_for(
-      typename EnableIf<
-        IsSignedIntegral<TOut>::value &&
-        sizeof(TOut) == 8, signed>::type* = nullptr) {
+  template <typename TOut, typename EnableIf<
+    TypeTraits::IsQuadWordSigned<TOut>::value, signed>::type* = nullptr>
+  static T highest_for() {  // int64_t
     return forge(0x5EFFFFFF);  // 9.22337148709896192E18
   }
 
-  template <typename TOut>  // uint64_t
-  static T highest_for(
-      typename EnableIf<
-        IsUnsignedIntegral<TOut>::value &&
-        sizeof(TOut) == 8, unsigned>::type* = nullptr) {
+  template <typename TOut, typename EnableIf<
+    TypeTraits::IsQuadWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
+  static T highest_for() {  // uint64_t
     return forge(0x5F7FFFFF);  // 1.844674297419792384E19
   }
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson
