@@ -21,7 +21,7 @@ TEST_CASE("JsonVariant::success()") {
     REQUIRE(variant.success());
   }
 
-  SECTION("ReturnsTrue_WhenStringNullptr") {
+  SECTION("ReturnsFalse_WhenStringNullptr") {
     JsonVariant variant = static_cast<const char *>(nullptr);
     REQUIRE_FALSE(variant.success());
   }
