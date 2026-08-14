@@ -134,22 +134,6 @@ struct FloatTraits<T, 8> {
     return forge(factors[index]);
   }
 
-  static T negativeBinaryPowerOfTenPlusOne(int index) {
-    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
-      0x3ff0000000000000,  // 1e0
-      0x3fb999999999999a,  // 1e-1
-      0x3f50624dd2f1a9fc,  // 1e-3
-      0x3e7ad7f29abcaf48,  // 1e-7
-      0x3cd203af9ee75616,  // 1e-15
-      0x398039d665896880,  // 1e-31
-      0x32da53fc9631d10d,  // 1e-63
-      0x2591544581b7dec2,  // 1e-127
-      0x0afe07b27dd78b14,  // 1e-255
-    };
-
-    return forge(factors[index]);
-  }
-
   static T nan() {
     return forge(0x7ff8000000000000);
   }
@@ -234,19 +218,6 @@ struct FloatTraits<T, 4> {
       0x322bcc77,  // 1e-8f
       0x24e69595,  // 1e-16f
       0x0a4fb11f,  // 1e-32f
-    };
-
-    return forge(factors[index]);
-  }
-
-  static T negativeBinaryPowerOfTenPlusOne(int index) {
-    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {
-      0x3f800000,  // 1e0
-      0x3dcccccd,  // 1e-1
-      0x3a83126f,  // 1e-3
-      0x33d6bf95,  // 1e-7
-      0x26901d7d,  // 1e-15
-      0x0c01ceb3,  // 1e-31
     };
 
     return forge(factors[index]);
