@@ -23,58 +23,59 @@ TEST_CASE("JsonArray::printTo()") {
   }
 
   SECTION("NullPtr") {
-    array.add(static_cast<char *>(0));
+    REQUIRE_FALSE(array.add(static_cast<const char *>(nullptr)));
 
     check(array, "[]");
   }
 
   SECTION("Null") {
-    array.add(JsonNull{});
+    REQUIRE(array.add(JsonNull{}));
 
     check(array, "[null]");
   }
 
   SECTION("OneString") {
-    array.add("hello");
+    REQUIRE(array.add("hello"));
 
     check(array, "[\"hello\"]");
   }
 
   SECTION("TwoStrings") {
-    array.add("hello");
-    array.add("world");
+    REQUIRE(array.add("hello"));
+    REQUIRE(array.add("world"));
 
     check(array, "[\"hello\",\"world\"]");
   }
 
   SECTION("OneStringOverCapacity") {
-    array.add("hello");
-    array.add("world");
-    array.add("lost");
+    REQUIRE(array.add("hello"));
+    REQUIRE(array.add("world"));
+    REQUIRE_FALSE(array.add("lost"));
 
     check(array, "[\"hello\",\"world\"]");
   }
 
   SECTION("One double") {
-    array.add(3.1415927);
+    REQUIRE(array.add(3.1415927));
+
     check(array, "[3.1415927]");
   }
 
   SECTION("OneInteger") {
-    array.add(1);
+    REQUIRE(array.add(1));
 
     check(array, "[1]");
   }
 
   SECTION("TwoIntegers") {
-    array.add(1);
-    array.add(2);
+    REQUIRE(array.add(1));
+    REQUIRE(array.add(2));
 
     check(array, "[1,2]");
   }
 
   SECTION("RawJson(const char*)") {
-    array.add(RawJson("{\"key\":\"value\"}"));
+    REQUIRE(array.add(RawJson("{\"key\":\"value\"}")));
 
     check(array, "[{\"key\":\"value\"}]");
   }
@@ -84,54 +85,56 @@ TEST_CASE("JsonArray::printTo()") {
     JsonArray &arr = jb2.createArray();
 
     char tmp[] = "{\"key\":\"value\"}";
-    arr.add(RawJson(tmp));
+    REQUIRE(arr.add(RawJson(tmp)));
 
     check(arr, "[{\"key\":\"value\"}]");
   }
 
   SECTION("OneIntegerOverCapacity") {
-    array.add(1);
-    array.add(2);
-    array.add(3);
+    REQUIRE(array.add(1));
+    REQUIRE(array.add(2));
+    REQUIRE_FALSE(array.add(3));
 
     check(array, "[1,2]");
   }
 
   SECTION("OneTrue") {
-    array.add(true);
+    REQUIRE(array.add(true));
 
     check(array, "[true]");
   }
 
   SECTION("OneFalse") {
-    array.add(false);
+    REQUIRE(array.add(false));
 
     check(array, "[false]");
   }
 
   SECTION("TwoBooleans") {
-    array.add(false);
-    array.add(true);
+    REQUIRE(array.add(false));
+    REQUIRE(array.add(true));
 
     check(array, "[false,true]");
   }
 
   SECTION("OneBooleanOverCapacity") {
-    array.add(false);
-    array.add(true);
-    array.add(false);
+    REQUIRE(array.add(false));
+    REQUIRE(array.add(true));
+    REQUIRE_FALSE(array.add(false));
 
     check(array, "[false,true]");
   }
 
   SECTION("OneEmptyNestedArray") {
-    array.createNestedArray();
+    const auto& arr = array.createNestedArray();
+    REQUIRE(arr.success());
 
     check(array, "[[]]");
   }
 
   SECTION("OneEmptyNestedHash") {
-    array.createNestedObject();
+    const auto& obj = array.createNestedObject();
+    REQUIRE(obj.success());
 
     check(array, "[{}]");
   }
