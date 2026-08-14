@@ -12,8 +12,7 @@ TEST_CASE("JsonArray::copyFrom()") {
     char json[32];
     int source[] = {1, 2, 3};
 
-    bool ok = array.copyFrom(source);
-    REQUIRE(ok);
+    REQUIRE(array.copyFrom(source));
 
     array.printTo(json, sizeof(json));
     REQUIRE(std::string("[1,2,3]") == json);

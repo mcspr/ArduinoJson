@@ -10,43 +10,51 @@ TEST_CASE("JsonArray::copyTo()") {
 
   SECTION("BiggerOneDimensionIntegerArray") {
     char json[] = "[1,2,3]";
-    JsonArray& array = jsonBuffer.parseArray(json);
+    const JsonArray& src = jsonBuffer.parseArray(json);
 
-    int destination[4] = {0};
-    size_t result = array.copyTo(destination);
+    int dst[4]{};
+    dst[3] = 12345;
+
+    size_t result = src.copyTo(dst);
 
     REQUIRE(3 == result);
-    REQUIRE(1 == destination[0]);
-    REQUIRE(2 == destination[1]);
-    REQUIRE(3 == destination[2]);
-    REQUIRE(0 == destination[3]);
+    REQUIRE(src[0] == dst[0]);
+    REQUIRE(src[1] == dst[1]);
+    REQUIRE(src[2] == dst[2]);
+    REQUIRE(12345 == dst[3]);
   }
 
   SECTION("SmallerOneDimensionIntegerArray") {
     char json[] = "[1,2,3]";
-    JsonArray& array = jsonBuffer.parseArray(json);
+    const JsonArray& src = jsonBuffer.parseArray(json);
 
-    int destination[2] = {0};
-    size_t result = array.copyTo(destination);
+    int dst[2];
+    size_t result = src.copyTo(dst);
 
     REQUIRE(2 == result);
-    REQUIRE(1 == destination[0]);
-    REQUIRE(2 == destination[1]);
+    REQUIRE(src[0] == dst[0]);
+    REQUIRE(src[1] == dst[1]);
   }
 
   SECTION("TwoOneDimensionIntegerArray") {
-    char json[] = "[[1,2],[3],[4]]";
+    char json[] = "[[1,2],[3],[4],[]]";
 
-    JsonArray& array = jsonBuffer.parseArray(json);
+    const JsonArray& src = jsonBuffer.parseArray(json);
 
-    int destination[3][2] = {{0}};
-    array.copyTo(destination);
+    int dst[4][2]{};
+    dst[1][1] = 12345;
+    dst[2][1] = 67890;
+    dst[3][0] = 11111;
+    dst[3][1] = 22222;
+    src.copyTo(dst);
 
-    REQUIRE(1 == destination[0][0]);
-    REQUIRE(2 == destination[0][1]);
-    REQUIRE(3 == destination[1][0]);
-    REQUIRE(0 == destination[1][1]);
-    REQUIRE(4 == destination[2][0]);
-    REQUIRE(0 == destination[2][1]);
+    REQUIRE(src[0][0] == dst[0][0]);
+    REQUIRE(src[0][1] == dst[0][1]);
+    REQUIRE(src[1][0] == dst[1][0]);
+    REQUIRE(12345 == dst[1][1]);
+    REQUIRE(src[2][0] == dst[2][0]);
+    REQUIRE(67890 == dst[2][1]);
+    REQUIRE(11111 == dst[3][0]);
+    REQUIRE(22222 == dst[3][1]);
   }
 }

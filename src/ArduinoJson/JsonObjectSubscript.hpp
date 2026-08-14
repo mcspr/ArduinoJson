@@ -22,6 +22,18 @@ using TJsonObjectSubscriptKeyType =
   typename StringRefWrapperHelper<TKey>::wrapper_type;
 
 template <typename TKey>
+struct TJsonMutableObjectSubscriptType {
+  using key_type = TJsonObjectSubscriptKeyType<TKey>;
+  using subscript_type = JsonMutableObjectSubscript<typename key_type::string_type>;
+};
+
+template <typename TKey>
+struct TJsonConstObjectSubscriptType {
+  using key_type = TJsonObjectSubscriptKeyType<TKey>;
+  using subscript_type = JsonConstObjectSubscript<typename key_type::string_type>;
+};
+
+template <typename TKey>
 class JsonMutableObjectSubscript final
     : public JsonSubscriptBase<JsonObject, JsonMutableObjectSubscript<TKey> > {
 
@@ -121,18 +133,6 @@ class JsonConstObjectSubscript final
  private:
   const JsonObject& _object;
   TJsonObjectSubscriptKeyType<TKey> _key;
-};
-
-template <typename TKey>
-struct TJsonMutableObjectSubscriptType {
-  using key_type = TJsonObjectSubscriptKeyType<TKey>;
-  using subscript_type = JsonMutableObjectSubscript<typename key_type::string_type>;
-};
-
-template <typename TKey>
-struct TJsonConstObjectSubscriptType {
-  using key_type = TJsonObjectSubscriptKeyType<TKey>;
-  using subscript_type = JsonConstObjectSubscript<typename key_type::string_type>;
 };
 
 }  // namespace Internals

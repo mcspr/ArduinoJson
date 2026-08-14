@@ -5,6 +5,8 @@
 #pragma once
 
 #include "JsonArray.hpp"
+#include "JsonArraySubscript.hpp"
+
 #include "JsonObject.hpp"
 #include "JsonObjectSubscript.hpp"
 
@@ -152,6 +154,24 @@ operator<<(std::ostream& os, const JsonConstObjectSubscript<TKey>& source) {
   return source.printTo(os);
 }
 #endif
+
+template <typename TImpl>
+template <typename TKey>
+typename EnableIf<HasStringTraits<TKey>::value,
+  typename TJsonConstObjectSubscriptType<TKey>::subscript_type>::type
+inline JsonConstSubscripts<TImpl>::operator[](TKey&& key) const {
+  return typename TJsonConstObjectSubscriptType<TKey>::subscript_type(
+    impl()->template as<const JsonObject&>(), std::forward<TKey>(key));
+}
+
+template <typename TImpl>
+template <typename TKey>
+typename EnableIf<HasStringTraits<TKey>::value,
+  typename TJsonMutableObjectSubscriptType<TKey>::subscript_type>::type
+inline JsonMutableSubscripts<TImpl>::operator[](TKey&& key) const {
+  return typename TJsonMutableObjectSubscriptType<TKey>::subscript_type(
+    impl()->template as<JsonObject&>(), std::forward<TKey>(key));
+}
 
 }
 

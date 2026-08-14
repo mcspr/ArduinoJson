@@ -144,6 +144,22 @@ TEST_CASE("JsonObject::operator[]") {
     REQUIRE(42 == _object["a"]);
   }
 
+  SECTION("array nested subscript assignment") {
+    JsonArray& arr = _jsonBuffer.createArray();
+    JsonObject& obj = arr.createNestedObject();
+    obj["b"] = 42;
+
+    // subscript chain does not create previous entries, only references existing ones
+    _object["a"][0]["b"] = 12345;
+
+    // only once array exists, assignment would actually work
+    _object["a"] = arr;
+    REQUIRE(42 == _object["a"][0]["b"]);
+
+    _object["a"][0]["b"] = 53;
+    REQUIRE(53 == _object["a"][0]["b"]);
+  }
+
   SECTION("array subscript set") {
     JsonArray& arr = _jsonBuffer.createArray();
     arr.add(42);
@@ -170,6 +186,19 @@ TEST_CASE("JsonObject::operator[]") {
     _object["a"] = obj["x"];
 
     REQUIRE(42 == _object["a"]);
+  }
+
+  SECTION("object nested subscript assignment") {
+    JsonObject& obj = _jsonBuffer.createObject();
+    obj.set("x", 42);
+
+    _object["a"]["x"] = 12345;
+    _object["a"] = obj;
+
+    REQUIRE(42 == _object["a"]["x"]);
+    _object["a"]["x"] = 53;
+
+    REQUIRE(53 == _object["a"]["x"]);
   }
 
   SECTION("object subscript move assignment") {

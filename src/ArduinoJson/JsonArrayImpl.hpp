@@ -127,6 +127,18 @@ operator<<(std::ostream& os, const JsonConstArraySubscript& source) {
 }
 #endif
 
+template <typename TImpl>
+JsonConstArraySubscript
+inline JsonConstSubscripts<TImpl>::operator[](size_t index) const {
+  return JsonConstArraySubscript(impl()->template as<const JsonArray&>(), index);
+}
+
+template <typename TImpl>
+JsonMutableArraySubscript
+inline JsonMutableSubscripts<TImpl>::operator[](size_t index) const {
+  return JsonMutableArraySubscript(impl()->template as<JsonArray&>(), index);
+}
+
 }  // namespace Internals
 
 inline Internals::JsonConstArraySubscript JsonArray::operator[](

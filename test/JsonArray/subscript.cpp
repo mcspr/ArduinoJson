@@ -116,6 +116,7 @@ TEST_CASE("JsonArray::operator[]") {
 
   SECTION("nested array") {
     JsonArray& arr = _jsonBuffer.createArray();
+    arr.add(42);
 
     _array[0] = arr;
 
@@ -123,16 +124,20 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<JsonArray>()));  // <- shorthand
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray&>()));
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray>()));  // shorthand
-    REQUIRE(_array[0].is<JsonArray&>());
 
+    REQUIRE(_array[0].is<JsonArray&>());
     REQUIRE_FALSE(_array[0].is<char>());
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+
+    REQUIRE(_array[0][0].is<int>());
+    REQUIRE(42 == _array[0][0]);
   }
 
   SECTION("nested object") {
     JsonObject& obj = _jsonBuffer.createObject();
+    obj["x"] = 42;
 
     _array[0] = obj;
 
@@ -140,12 +145,14 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<JsonObject>()));  // <- shorthand
     REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject&>()));
     REQUIRE(std::addressof(obj) == std::addressof(_array[0].as<const JsonObject>()));  // <- shorthand
-    REQUIRE(_array[0].is<JsonObject&>());
 
     REQUIRE_FALSE(_array[0].is<char>());
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+
+    REQUIRE(_array[0].is<JsonObject&>());
+    REQUIRE(42 == _array[0]["x"]);
   }
 
   SECTION("array subscript assignment") {
