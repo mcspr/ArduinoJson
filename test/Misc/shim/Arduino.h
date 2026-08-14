@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#define PROGMEM
+
 #define memcmp_P std::memcmp
 #define memcpy_P std::memcpy
 #define strcmp_P std::strcmp

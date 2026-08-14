@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
+
 #include "../Polyfills/bit_cast.hpp"
 
 #include "../TypeTraits/Constant.hpp"
@@ -13,6 +15,21 @@
 
 #include <cstdint>
 #include <cstddef>
+
+// rodata should also be explicitly placed into flash section, allowing to delay loading it into RAM
+
+#if ARDUINOJSON_ENABLE_PROGMEM
+#include <Arduino.h>
+#define ARDUINOJSON_FLOAT_TRAITS_PROGMEM_ATTR PROGMEM
+#else
+#define ARDUINOJSON_FLOAT_TRAITS_PROGMEM_ATTR
+#endif
+
+// nb. for current application, floating point data is always addressable through the normal memory access funcs
+// in case it is not, make sure that forge(...) below loads it through the necessary means first
+
+#define ARDUINOJSON_FLOAT_TRAITS_FACTORS(TYPE)\
+static constexpr TYPE factors[binaryPowersOfTen] ARDUINOJSON_FLOAT_TRAITS_PROGMEM_ATTR
 
 namespace ArduinoJson {
 namespace Internals {
@@ -64,6 +81,8 @@ struct FloatTraits<T, 8> {
   static constexpr exponent_type exponent_min = -323;
   static constexpr exponent_type exponent_max = 308;
 
+  static constexpr size_t binaryPowersOfTen = 9;
+
   template <typename TExponent>
   static T make_float(T m, TExponent e) {
     if (e > 0) {
@@ -83,78 +102,80 @@ struct FloatTraits<T, 8> {
     return m;
   }
 
-  static constexpr size_t binaryPowersOfTen = 9;
-
   static T positiveBinaryPowerOfTen(int index) {
-    static T factors[binaryPowersOfTen] = {
-        1e1,
-        1e2,
-        1e4,
-        1e8,
-        1e16,
-        forge(0x4693B8B5, 0xB5056E17),  // 1e32
-        forge(0x4D384F03, 0xE93FF9F5),  // 1e64
-        forge(0x5A827748, 0xF9301D32),  // 1e128
-        forge(0x75154FDD, 0x7F73BF3C)   // 1e256
+    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
+      0x4024000000000000,  // 1e1
+      0x4059000000000000,  // 1e2
+      0x40c3880000000000,  // 1e4
+      0x4197d78400000000,  // 1e8
+      0x4341c37937e08000,  // 1e16
+      0x4693b8b5b5056e17,  // 1e32
+      0x4d384f03e93ff9f5,  // 1e64
+      0x5a827748f9301d32,  // 1e128
+      0x75154fdd7f73bf3c,  // 1e256
     };
-    return factors[index];
+
+    return forge(factors[index]);
   }
 
   static T negativeBinaryPowerOfTen(int index) {
-    static T factors[binaryPowersOfTen] = {
-        forge(0x3FB99999, 0x9999999A),  // 1e-1
-        forge(0x3F847AE1, 0x47AE147B),  // 1e-2
-        forge(0x3F1A36E2, 0xEB1C432D),  // 1e-4
-        forge(0x3E45798E, 0xE2308C3A),  // 1e-8
-        forge(0x3C9CD2B2, 0x97D889BC),  // 1e-16
-        forge(0x3949F623, 0xD5A8A733),  // 1e-32
-        forge(0x32A50FFD, 0x44F4A73D),  // 1e-64
-        forge(0x255BBA08, 0xCF8C979D),  // 1e-128
-        forge(0x0AC80628, 0x64AC6F43)   // 1e-256
+    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
+      0x3fb999999999999a,  // 1e-1
+      0x3f847ae147ae147b,  // 1e-2
+      0x3f1a36e2eb1c432d,  // 1e-4
+      0x3e45798ee2308c3a,  // 1e-8
+      0x3c9cd2b297d889bc,  // 1e-16
+      0x3949f623d5a8a733,  // 1e-32
+      0x32a50ffd44f4a73d,  // 1e-64
+      0x255bba08cf8c979d,  // 1e-128
+      0x0ac8062864ac6f43   // 1e-256
     };
-    return factors[index];
+
+    return forge(factors[index]);
   }
 
   static T negativeBinaryPowerOfTenPlusOne(int index) {
-    static T factors[] = {
-        1e0,
-        forge(0x3FB99999, 0x9999999A),  // 1e-1
-        forge(0x3F50624D, 0xD2F1A9FC),  // 1e-3
-        forge(0x3E7AD7F2, 0x9ABCAF48),  // 1e-7
-        forge(0x3CD203AF, 0x9EE75616),  // 1e-15
-        forge(0x398039D6, 0x65896880),  // 1e-31
-        forge(0x32DA53FC, 0x9631D10D),  // 1e-63
-        forge(0x25915445, 0x81B7DEC2),  // 1e-127
-        forge(0x0AFE07B2, 0x7DD78B14)   // 1e-255
+    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
+      0x3ff0000000000000,  // 1e0
+      0x3fb999999999999a,  // 1e-1
+      0x3f50624dd2f1a9fc,  // 1e-3
+      0x3e7ad7f29abcaf48,  // 1e-7
+      0x3cd203af9ee75616,  // 1e-15
+      0x398039d665896880,  // 1e-31
+      0x32da53fc9631d10d,  // 1e-63
+      0x2591544581b7dec2,  // 1e-127
+      0x0afe07b27dd78b14,  // 1e-255
     };
-    return factors[index];
+
+    return forge(factors[index]);
   }
 
   static T nan() {
-    return forge(0x7ff80000, 0x00000000);
+    return forge(0x7ff8000000000000);
   }
 
   static T inf() {
-    return forge(0x7ff00000, 0x00000000);
+    return forge(0x7ff0000000000000);
   }
 
-  // constructs a double floating point values from its binary representation
-  // we use this function to workaround platforms with single precision literals
-  // (for example, when -fsingle-precision-constant is passed to GCC)
+  static T forge(uint64_t carrier) {
+    return bit_cast<T>(carrier);
+  }
+
   static T forge(uint32_t msb, uint32_t lsb) {
-    return bit_cast<T>((uint64_t(msb) << 32) | lsb);
+    return forge((static_cast<uint64_t>(msb) << (bits / 2)) | static_cast<uint64_t>(lsb));
   }
 
   template <typename TOut, typename EnableIf<
     TypeTraits::IsQuadWordSigned<TOut>::value, signed>::type* = nullptr>
   static T highest_for() {  // int64_t
-    return forge(0x43DFFFFF, 0xFFFFFFFF);  //  9.2233720368547748e+18
+    return forge(0x43dfffffffffffff);  //  9.2233720368547748e+18
   }
 
   template <typename TOut, typename EnableIf<
     TypeTraits::IsQuadWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
   static T highest_for() {  // uint64_t
-    return forge(0x43EFFFFF, 0xFFFFFFFF);  //  1.8446744073709549568e+19
+    return forge(0x43efffffffffffff);  //  1.8446744073709549568e+19
   }
 };
 
@@ -170,6 +191,8 @@ struct FloatTraits<T, 4> {
   using exponent_type = int8_t;
   static constexpr exponent_type exponent_min = -45;
   static constexpr exponent_type exponent_max = 38;
+
+  static constexpr size_t binaryPowersOfTen = 6;
 
   template <typename TExponent>
   static T make_float(T m, TExponent e) {
@@ -190,21 +213,43 @@ struct FloatTraits<T, 4> {
     return m;
   }
 
-  static constexpr size_t binaryPowersOfTen = 6;
-
   static T positiveBinaryPowerOfTen(int index) {
-    static T factors[] = {1e1f, 1e2f, 1e4f, 1e8f, 1e16f, 1e32f};
-    return factors[index];
+    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {
+      0x41200000,  // 1e1f
+      0x42c80000,  // 1e2f
+      0x461c4000,  // 1e4f
+      0x4cbebc20,  // 1e8f
+      0x5a0e1bca,  // 1e16f
+      0x749dc5ae,  // 1e32f
+    };
+
+    return forge(factors[index]);
   }
 
   static T negativeBinaryPowerOfTen(int index) {
-    static T factors[] = {1e-1f, 1e-2f, 1e-4f, 1e-8f, 1e-16f, 1e-32f};
-    return factors[index];
+    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {
+      0x3dcccccd,  // 1e-1f
+      0x3c23d70a,  // 1e-2f
+      0x38d1b717,  // 1e-4f
+      0x322bcc77,  // 1e-8f
+      0x24e69595,  // 1e-16f
+      0x0a4fb11f,  // 1e-32f
+    };
+
+    return forge(factors[index]);
   }
 
   static T negativeBinaryPowerOfTenPlusOne(int index) {
-    static T factors[] = {1e0f, 1e-1f, 1e-3f, 1e-7f, 1e-15f, 1e-31f};
-    return factors[index];
+    ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {
+      0x3f800000,  // 1e0
+      0x3dcccccd,  // 1e-1
+      0x3a83126f,  // 1e-3
+      0x33d6bf95,  // 1e-7
+      0x26901d7d,  // 1e-15
+      0x0c01ceb3,  // 1e-31
+    };
+
+    return forge(factors[index]);
   }
 
   static T forge(uint32_t carrier) {
@@ -222,27 +267,30 @@ struct FloatTraits<T, 4> {
   template <typename TOut, typename EnableIf<
     TypeTraits::IsDoubleWordSigned<TOut>::value, signed>::type* = nullptr>
   static T highest_for() {
-    return forge(0x4EFFFFFF);  // 2.14748352E9
+    return forge(0x4effffff);  // 2.14748352E9
   }
 
   template <typename TOut, typename EnableIf<
     TypeTraits::IsDoubleWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
   static T highest_for() {  // uint32_t
-    return forge(0x4F7FFFFF);  // 4.29496704E9
+    return forge(0x4f7fffff);  // 4.29496704E9
   }
 
   template <typename TOut, typename EnableIf<
     TypeTraits::IsQuadWordSigned<TOut>::value, signed>::type* = nullptr>
   static T highest_for() {  // int64_t
-    return forge(0x5EFFFFFF);  // 9.22337148709896192E18
+    return forge(0x5effffff);  // 9.22337148709896192E18
   }
 
   template <typename TOut, typename EnableIf<
     TypeTraits::IsQuadWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
   static T highest_for() {  // uint64_t
-    return forge(0x5F7FFFFF);  // 1.844674297419792384E19
+    return forge(0x5f7fffff);  // 1.844674297419792384E19
   }
 };
+
+#undef ARDUINOJSON_FLOAT_TRAITS_FACTORS
+#undef ARDUINOJSON_FLOAT_TRAITS_PROGMEM_ATTR
 
 }  // namespace Internals
 }  // namespace ArduinoJson
