@@ -17,7 +17,7 @@ void check(JsonVariant variant, const std::string &expected) {
 
 TEST_CASE("JsonVariant::printTo()") {
   SECTION("Empty") {
-    check(JsonVariant(), "");
+    check(JsonVariant(), "null");
   }
 
   SECTION("Null") {

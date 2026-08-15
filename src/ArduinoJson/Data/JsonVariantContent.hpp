@@ -9,6 +9,8 @@
 #include "JsonNull.hpp"
 #include "JsonVariantType.hpp"
 
+#include "../TypeTraits/Declval.hpp"
+
 namespace ArduinoJson {
 
 // Forward declarations
@@ -46,6 +48,9 @@ namespace Internals {
 
 // The enum JsonVariantType determines which member is in use.
 // Take care and only access the active union member data fields other than 'type'.
+
+struct JsonVariantUndefined {
+};
 
 union JsonVariantContent {
   // default variant state
@@ -184,7 +189,8 @@ union JsonVariantContent {
   StringPointer asStringPointer;
   StringBuffer asStringBuffer;
 
-  template <typename R, typename T>
+  template <typename T,
+    typename R = decltype(Declval<T>().Operator(Declval<Internals::JsonVariantUndefined>()))>
   R visit(T&& visitor) const;
 };
 

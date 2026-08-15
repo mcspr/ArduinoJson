@@ -5,7 +5,6 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 #include <string>
-#include "ArduinoJson/StringTraits/StringTraitsBase.hpp"
 
 void check(const JsonObject &obj, const std::string expected) {
   char json[256];
@@ -24,6 +23,33 @@ TEST_CASE("JsonObject::prettyPrintTo()") {
 
   SECTION("EmptyObject") {
     check(obj, "{}");
+  }
+
+  SECTION("Undefined") {
+    obj["key"] = JsonVariant();
+
+    check(obj,
+          "{\r\n"
+          "  \"key\": null\r\n"
+          "}");
+  }
+
+  SECTION("Null") {
+    obj["key"] = JsonVariant();
+
+    check(obj,
+          "{\r\n"
+          "  \"key\": null\r\n"
+          "}");
+  }
+
+  SECTION("NullPtr") {
+    obj["key"] = JsonVariant(static_cast<const char*>(nullptr));
+
+    check(obj,
+          "{\r\n"
+          "  \"key\": \"\"\r\n"
+          "}");
   }
 
   SECTION("OneMember") {

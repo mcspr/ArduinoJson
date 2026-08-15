@@ -22,6 +22,33 @@ TEST_CASE("JsonArray::prettyPrintTo()") {
     check(array, "[]");
   }
 
+  SECTION("Undefined") {
+    array.add(JsonVariant());
+
+    check(array,
+          "[\r\n"
+          "  null\r\n"
+          "]");
+  }
+
+  SECTION("Null") {
+    array.add(JsonNull{});
+
+    check(array,
+          "[\r\n"
+          "  null\r\n"
+          "]");
+  }
+
+  SECTION("NullPtr") {
+    array.add(JsonVariant(static_cast<const char*>(nullptr)));
+
+    check(array,
+          "[\r\n"
+          "  \"\"\r\n"
+          "]");
+  }
+
   SECTION("OneElement") {
     array.add(1);
 

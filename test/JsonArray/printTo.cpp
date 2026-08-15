@@ -22,6 +22,12 @@ TEST_CASE("JsonArray::printTo()") {
     check(array, "[]");
   }
 
+  SECTION("Undefined") {
+    REQUIRE(array.add(JsonVariant()));
+
+    check(array, "[null]");
+  }
+
   SECTION("NullPtr") {
     REQUIRE_FALSE(array.add(static_cast<const char *>(nullptr)));
 

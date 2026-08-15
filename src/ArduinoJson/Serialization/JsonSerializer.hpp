@@ -17,6 +17,8 @@ class JsonVariant;
 
 namespace Internals {
 
+struct JsonVariantUndefined;
+
 class JsonMutableArraySubscript;
 class JsonConstArraySubscript;
 
@@ -48,6 +50,7 @@ class JsonSerializer {
       _writer(writer)
     {}
 
+    void Operator(Internals::JsonVariantUndefined);
     void Operator(JsonNull);
     void Operator(bool);
     void Operator(const JsonObject*);

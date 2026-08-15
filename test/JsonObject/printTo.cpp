@@ -26,6 +26,11 @@ TEST_CASE("JsonObject::printTo()") {
     check(obj, "{}");
   }
 
+  SECTION("UndefinedValue") {
+    obj["key"] = JsonVariant();
+    check(obj, "{\"key\":null}");
+  }
+
   SECTION("TwoStrings") {
     obj["key1"] = "value1";
     obj.set("key2", "value2");
@@ -73,7 +78,8 @@ TEST_CASE("JsonObject::printTo()") {
   SECTION("RawJson") {
     obj["a"] = RawJson("[1,2]");
     obj.set("b", RawJson("[4,5]"));
-    check(obj, "{\"a\":[1,2],\"b\":[4,5]}");
+    obj.set(RawJson("c"), RawJson("12.345"));
+    check(obj, "{\"a\":[1,2],\"b\":[4,5],c:12.345}");
   }
 
   SECTION("Two doubles") {
