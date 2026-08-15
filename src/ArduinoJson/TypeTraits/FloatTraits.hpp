@@ -73,7 +73,7 @@ struct FloatTraits<T, 8> {
   static constexpr short bits = 64;
   static constexpr short mantissa_bits = 52;
 
-  using mantissa_type = int64_t;
+  using mantissa_type = uint64_t;
   static constexpr mantissa_type mantissa_max =
       (static_cast<mantissa_type>(1) << mantissa_bits) - 1;
 
@@ -83,7 +83,7 @@ struct FloatTraits<T, 8> {
 
   static constexpr size_t binaryPowersOfTen = 9;
 
-  static T positiveBinaryPowerOfTen(int index) {
+  static T positiveBinaryPowerOfTen(size_t index) {
     ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
       0x4024000000000000,  // 1e1
       0x4059000000000000,  // 1e2
@@ -99,7 +99,7 @@ struct FloatTraits<T, 8> {
     return forge(factors[index]);
   }
 
-  static T negativeBinaryPowerOfTen(int index) {
+  static T negativeBinaryPowerOfTen(size_t index) {
     ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
       0x3fb999999999999a,  // 1e-1
       0x3f847ae147ae147b,  // 1e-2
@@ -149,7 +149,7 @@ struct FloatTraits<T, 4> {
   static constexpr short bits = 32;
   static constexpr short mantissa_bits = 23;
 
-  using mantissa_type = int32_t;
+  using mantissa_type = uint32_t;
   static constexpr mantissa_type mantissa_max =
       (static_cast<mantissa_type>(1) << mantissa_bits) - 1;
 
@@ -159,7 +159,7 @@ struct FloatTraits<T, 4> {
 
   static constexpr size_t binaryPowersOfTen = 6;
 
-  static T positiveBinaryPowerOfTen(int index) {
+  static T positiveBinaryPowerOfTen(size_t index) {
     ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {
       0x41200000,  // 1e1f
       0x42c80000,  // 1e2f
@@ -172,7 +172,7 @@ struct FloatTraits<T, 4> {
     return forge(factors[index]);
   }
 
-  static T negativeBinaryPowerOfTen(int index) {
+  static T negativeBinaryPowerOfTen(size_t index) {
     ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {
       0x3dcccccd,  // 1e-1f
       0x3c23d70a,  // 1e-2f

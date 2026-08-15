@@ -158,23 +158,24 @@ struct JsonNumberParser {
     return out;
   }
 
-  template <typename T, typename TExponent>
-  static T makeFloat(T m, TExponent e) {
-    typedef FloatTraits<T> traits;
+  template <typename TFloat, typename TExponent>
+  static TFloat makeFloat(TFloat m, TExponent e) {
+    typedef FloatTraits<TFloat> traits;
 
-    if (e > 0) {
-      for (uint8_t index = 0; e != 0; index++) {
-        if (index >= traits::binaryPowersOfTen) return traits::nan();
-        if (e & 1) m *= traits::positiveBinaryPowerOfTen(index);
-        e >>= 1;
-      }
-    } else {
+    auto* const powersOfTen =
+      e > 0
+        ? &traits::positiveBinaryPowerOfTen
+        : &traits::negativeBinaryPowerOfTen;
+
+    if (e <= 0)
       e = TExponent(-e);
-      for (uint8_t index = 0; e != 0; index++) {
-        if (index >= traits::binaryPowersOfTen) return traits::nan();
-        if (e & 1) m *= traits::negativeBinaryPowerOfTen(index);
-        e >>= 1;
-      }
+
+    for (size_t index = 0; e != 0; index++) {
+      if (index >= traits::binaryPowersOfTen)
+        return traits::nan();
+      if (e & 1)
+        m *= powersOfTen(index);
+      e >>= 1;
     }
 
     return m;
@@ -187,7 +188,8 @@ struct JsonNumberParser {
     ParsedNumberResult out;
 
     if (floatWithinRange<T>(mantissa, exponent)) {
-      const auto value = makeFloat(T(mantissa), exponent);
+      const auto mantissa_within_range = static_cast<T>(mantissa);
+      const auto value = makeFloat(mantissa_within_range, exponent);
       out.value = (sign == '-') ? -value : value;
     }
 
@@ -195,9 +197,10 @@ struct JsonNumberParser {
   }
 
   static ParsedNumberResult parse(const char* s, size_t len) {
-    typedef FloatTraits<JsonFloat> traits;
-    typedef LargestType<typename traits::mantissa_type, JsonUnsignedInteger> mantissa_t;
-    typedef typename traits::exponent_type exponent_t;
+    using traits = FloatTraits<JsonFloat>;
+    using mantissa_type = LargestType<
+      typename traits::mantissa_type, JsonUnsignedInteger>;
+    using exponent_type = typename traits::exponent_type;
 
     ParsedNumberResult out;
     if (!s || !len)
@@ -254,10 +257,10 @@ struct JsonNumberParser {
       return out;
     }
 
-    mantissa_t mantissa = 0;
-    exponent_t exponent_offset = 0;
-    const mantissa_t maxUint = JsonUnsignedInteger(-1);
+    mantissa_type mantissa = 0;
+    exponent_type exponent_offset = 0;
 
+    const mantissa_type maxUint = JsonUnsignedInteger(-1);
     while (it != end) {
       c = Strings::Copy::Operator(it);
       if (!isdigit(c))
@@ -275,8 +278,8 @@ struct JsonNumberParser {
 
     if (it == end) {
       if (result_sign == '-') {
-        const mantissa_t sintMantissaMax = mantissa_t(1)
-                                           << (sizeof(JsonInteger) * 8 - 1);
+        const mantissa_type sintMantissaMax =
+          mantissa_type(1) << (sizeof(JsonInteger) * 8 - 1);
         if (mantissa <= sintMantissaMax) {
           out.value = Number(JsonInteger(~mantissa + 1));
         }

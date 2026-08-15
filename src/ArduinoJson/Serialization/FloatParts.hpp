@@ -89,11 +89,12 @@ struct FloatParts {
     typedef FloatTraits<TFloat> traits;
     exponent_type powersOf10 = 0;
 
-    int8_t index = traits::binaryPowersOfTen - 1;
-    int bit = 1 << index;
+    int8_t currentPowerOf10 = traits::binaryPowersOfTen - 1;
+    int bit = 1 << currentPowerOf10;
 
     if (value >= ARDUINOJSON_POSITIVE_EXPONENTIATION_THRESHOLD) {
-      for (; index >= 0; index--) {
+      for (; currentPowerOf10 >= 0; currentPowerOf10--) {
+        size_t index = static_cast<size_t>(currentPowerOf10);
         if (value >= traits::positiveBinaryPowerOfTen(index)) {
           value *= traits::negativeBinaryPowerOfTen(index);
           powersOf10 = int16_t(powersOf10 + bit);
@@ -103,7 +104,8 @@ struct FloatParts {
     }
 
     if (value > 0 && value <= ARDUINOJSON_NEGATIVE_EXPONENTIATION_THRESHOLD) {
-      for (; index >= 0; index--) {
+      for (; currentPowerOf10 >= 0; currentPowerOf10--) {
+        size_t index = static_cast<size_t>(currentPowerOf10);
         if (value < traits::negativeBinaryPowerOfTen(index) * 10) {
           value *= traits::positiveBinaryPowerOfTen(index);
           powersOf10 = int16_t(powersOf10 - bit);
