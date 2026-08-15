@@ -83,25 +83,6 @@ struct FloatTraits<T, 8> {
 
   static constexpr size_t binaryPowersOfTen = 9;
 
-  template <typename TExponent>
-  static T make_float(T m, TExponent e) {
-    if (e > 0) {
-      for (uint8_t index = 0; e != 0; index++) {
-        if (index >= binaryPowersOfTen) return nan();
-        if (e & 1) m *= positiveBinaryPowerOfTen(index);
-        e >>= 1;
-      }
-    } else {
-      e = TExponent(-e);
-      for (uint8_t index = 0; e != 0; index++) {
-        if (index >= binaryPowersOfTen) return nan();
-        if (e & 1) m *= negativeBinaryPowerOfTen(index);
-        e >>= 1;
-      }
-    }
-    return m;
-  }
-
   static T positiveBinaryPowerOfTen(int index) {
     ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint64_t) = {
       0x4024000000000000,  // 1e1
@@ -177,25 +158,6 @@ struct FloatTraits<T, 4> {
   static constexpr exponent_type exponent_max = 38;
 
   static constexpr size_t binaryPowersOfTen = 6;
-
-  template <typename TExponent>
-  static T make_float(T m, TExponent e) {
-    if (e > 0) {
-      for (uint8_t index = 0; e != 0; index++) {
-        if (index >= binaryPowersOfTen) return nan();
-        if (e & 1) m *= positiveBinaryPowerOfTen(index);
-        e >>= 1;
-      }
-    } else {
-      e = -e;
-      for (uint8_t index = 0; e != 0; index++) {
-        if (index >= binaryPowersOfTen) return nan();
-        if (e & 1) m *= negativeBinaryPowerOfTen(index);
-        e >>= 1;
-      }
-    }
-    return m;
-  }
 
   static T positiveBinaryPowerOfTen(int index) {
     ARDUINOJSON_FLOAT_TRAITS_FACTORS(uint32_t) = {

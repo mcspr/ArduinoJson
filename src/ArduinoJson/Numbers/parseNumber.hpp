@@ -158,15 +158,36 @@ struct JsonNumberParser {
     return out;
   }
 
+  template <typename T, typename TExponent>
+  static T makeFloat(T m, TExponent e) {
+    typedef FloatTraits<T> traits;
+
+    if (e > 0) {
+      for (uint8_t index = 0; e != 0; index++) {
+        if (index >= traits::binaryPowersOfTen) return traits::nan();
+        if (e & 1) m *= traits::positiveBinaryPowerOfTen(index);
+        e >>= 1;
+      }
+    } else {
+      e = TExponent(-e);
+      for (uint8_t index = 0; e != 0; index++) {
+        if (index >= traits::binaryPowersOfTen) return traits::nan();
+        if (e & 1) m *= traits::negativeBinaryPowerOfTen(index);
+        e >>= 1;
+      }
+    }
+
+    return m;
+  }
+
   template <typename T, typename TMantissa, typename TExponent>
   static ParsedNumberResult floatResultWithinRange(
         char sign, TMantissa mantissa, TExponent exponent)
   {
     ParsedNumberResult out;
 
-    typedef FloatTraits<T> traits;
     if (floatWithinRange<T>(mantissa, exponent)) {
-      const auto value = traits::make_float(T(mantissa), exponent);
+      const auto value = makeFloat(T(mantissa), exponent);
       out.value = (sign == '-') ? -value : value;
     }
 
