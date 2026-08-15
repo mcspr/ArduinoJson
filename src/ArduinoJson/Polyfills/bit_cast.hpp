@@ -16,7 +16,7 @@ namespace ArduinoJson {
 namespace Internals {
 
 template <typename To, typename From>
-To bit_cast(const From& raw_data) {
+inline To bit_cast(From raw_data) {
   static_assert(sizeof(To) == sizeof(From), "");
 
 // gcc 4.8 incomplete -std=c++11
