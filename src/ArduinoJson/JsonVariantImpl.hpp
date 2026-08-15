@@ -315,7 +315,7 @@ struct JsonVariantMaybeBoolean {
 struct JsonVariantMaybeInteger {
   template <typename... TArgs>
   static bool Operator(TArgs&&...) {
-    return defaultValue();
+    return false;
   }
 
   static bool Operator(JsonInteger) {
@@ -328,11 +328,6 @@ struct JsonVariantMaybeInteger {
 
   static bool Operator(JsonStringPointer str) {
     return str.data && !str.parsed && isInteger(str.data);
-  }
-
- private:
-  static bool defaultValue() {
-    return false;
   }
 };
 
@@ -365,7 +360,6 @@ struct JsonVariantSuccess {
     return true;
   }
 
-  template <typename... TArgs>
   static bool Operator(Internals::JsonVariantUndefined) {
     return false;
   }
@@ -392,8 +386,8 @@ struct JsonVariantSuccess {
 };
 
 struct JsonVariantMaybeString {
-  template <typename T>
-  static const char* Operator(T&&) {
+  template <typename... TArgs>
+  static const char* Operator(TArgs&&...) {
     return nullptr;
   }
 
