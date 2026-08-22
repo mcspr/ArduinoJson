@@ -2,12 +2,14 @@
 
 #pragma once
 
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 5
 #include <version>
+#endif
 
 #if defined(__cpp_lib_bit_cast)
 #include <bit>
 #else
-#include "../TypeTraits/IsTrivial.hpp"
+#include "../TypeTraits/IsTriviallyCopyable.hpp"
 #include "../TypeTraits/And.hpp"
 
 #include <cstring>
@@ -25,7 +27,7 @@ using ::std::bit_cast;
 template <typename To, typename From>
 inline To bit_cast(From raw_data) {
   static_assert(sizeof(To) == sizeof(From), "");
-  static_assert(And<IsTrivial<To>, IsTrivial<From>>::value, "");
+  static_assert(And<IsTriviallyCopyable<To>, IsTriviallyCopyable<From>>::value, "");
 
   To out;
   std::memcpy(&out, &raw_data, sizeof(To));
