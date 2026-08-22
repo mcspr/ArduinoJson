@@ -132,14 +132,14 @@ struct FloatTraits<T, 8> {
   }
 
   template <typename TOut, typename EnableIf<
-    TypeTraits::IsQuadWordSigned<TOut>::value, signed>::type* = nullptr>
-  static T highest_for() {  // int64_t
+    TypeTraits::IsQuadWordSigned<TOut>::value, int64_t>::type* = nullptr>
+  static T highest_for() {
     return forge(0x43dfffffffffffff);  //  9.2233720368547748e+18
   }
 
   template <typename TOut, typename EnableIf<
-    TypeTraits::IsQuadWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
-  static T highest_for() {  // uint64_t
+    TypeTraits::IsQuadWordUnsigned<TOut>::value, uint64_t>::type* = nullptr>
+  static T highest_for() {
     return forge(0x43efffffffffffff);  //  1.8446744073709549568e+19
   }
 };
@@ -198,26 +198,26 @@ struct FloatTraits<T, 4> {
   }
 
   template <typename TOut, typename EnableIf<
-    TypeTraits::IsDoubleWordSigned<TOut>::value, signed>::type* = nullptr>
+    TypeTraits::IsDoubleWordSigned<TOut>::value, int32_t>::type* = nullptr>
   static T highest_for() {
     return forge(0x4effffff);  // 2.14748352E9
   }
 
   template <typename TOut, typename EnableIf<
-    TypeTraits::IsDoubleWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
-  static T highest_for() {  // uint32_t
+    TypeTraits::IsDoubleWordUnsigned<TOut>::value, uint32_t>::type* = nullptr>
+  static T highest_for() {
     return forge(0x4f7fffff);  // 4.29496704E9
   }
 
   template <typename TOut, typename EnableIf<
-    TypeTraits::IsQuadWordSigned<TOut>::value, signed>::type* = nullptr>
-  static T highest_for() {  // int64_t
+    TypeTraits::IsQuadWordSigned<TOut>::value, int64_t>::type* = nullptr>
+  static T highest_for() {
     return forge(0x5effffff);  // 9.22337148709896192E18
   }
 
   template <typename TOut, typename EnableIf<
-    TypeTraits::IsQuadWordUnsigned<TOut>::value, unsigned>::type* = nullptr>
-  static T highest_for() {  // uint64_t
+    TypeTraits::IsQuadWordUnsigned<TOut>::value, uint64_t>::type* = nullptr>
+  static T highest_for() {
     return forge(0x5f7fffff);  // 1.844674297419792384E19
   }
 };
