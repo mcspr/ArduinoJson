@@ -30,9 +30,8 @@ class StaticStringBuilder {
 
   size_t print(const char *s) {
     char *begin = _ptr;
-    char *end = _end - 1;
-
-    if (_ptr < end) {
+    if (_ptr < _end) {
+      char *end = _end - 1;
       while ((_ptr < end) && *s) {
         *_ptr++ = *s++;
       }

@@ -7,7 +7,9 @@
 
 #include <catch.hpp>
 
+#include <array>
 #include <algorithm>
+#include <string>
 
 // while the static version consumes and returns as 'written' the same amount of bytes as the dynamic,
 // actual output is size + 1 b/c after every char or string write there is an additional '\0' written
@@ -38,18 +40,77 @@ void common_tests(StringBuilder& sb, const String& output) {
 }
 
 TEST_CASE("StaticStringBuilder") {
-  char output[20];
-  std::fill(&output[0], &output[sizeof(output) - 1], '*');
+  std::string tmp;
+
+  std::array<char, 20> output;
+  output.fill('*');
   output[0] = '\0';
 
-  StaticStringBuilder sb(output, sizeof(output));
+  StaticStringBuilder sb(output.data(), output.size());
+  common_tests(sb, static_cast<const char*>(output.data()));
 
-  common_tests(sb, static_cast<const char*>(output));
+  SECTION("BelowCapacity") {
+    std::string smaller_than_output = "ABCDE";
+    REQUIRE(output.size() - 1 > smaller_than_output.size());
+
+    REQUIRE(smaller_than_output.size() == sb.print(smaller_than_output.data()));
+    REQUIRE(smaller_than_output == std::string(output.data()));
+
+    auto it = output.data() + smaller_than_output.size();
+    REQUIRE(*(it++) == '\0');
+    REQUIRE(std::all_of(it, output.end(), [](char c) { return c == '*'; }));
+  }
+
+  SECTION("ExactCapacity") {
+    std::string strings[] = {
+      "ABCDEFGHIJ",
+      "12345",
+      "678",
+    };
+
+    size_t size{};
+    for (const auto& s : strings)
+      size += s.size();
+
+    REQUIRE(size == output.size() - 2);
+
+    auto it = output.data();
+    for (const auto& s : strings) {
+      REQUIRE(s.size() == sb.print(s.data()));
+
+      tmp += s;
+      REQUIRE(tmp == std::string(output.data()));
+
+      it += s.size();
+      REQUIRE(it != output.end());
+      REQUIRE(*it == '\0');
+      REQUIRE(std::all_of((it + 1), output.end(), [](char c) { return c == '*'; }));
+    }
+
+    std::string larger_than_remaining = "FEFEFE";
+    REQUIRE(1 == sb.print(larger_than_remaining.data()));
+
+    it += 1;
+    REQUIRE(*(it++) == '\0');
+    REQUIRE(it == output.end());
+
+    tmp.append(larger_than_remaining.data(), 1);
+    REQUIRE(tmp == std::string(output.data()));
+
+    REQUIRE(0 == sb.print("12345"));
+  }
 
   SECTION("OverCapacity") {
-    REQUIRE((sizeof(output) - 1) == sb.print("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
-    REQUIRE(0 == sb.print("ABC"));
-    REQUIRE(std::string("ABCDEFGHIJKLMNOPQRS") == output);
+    static constexpr size_t capacity = output.size() - 1;
+    std::string larger_than_output = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    REQUIRE(capacity < larger_than_output.size());
+    REQUIRE(capacity == sb.print(larger_than_output.data()));
+
+    std::string larger_than_remaining = "12345";
+    REQUIRE(0 == sb.print(larger_than_remaining.data()));
+
+    tmp.append(larger_than_output.data(), capacity);
+    REQUIRE(tmp == std::string(output.data()));
   }
 }
 
