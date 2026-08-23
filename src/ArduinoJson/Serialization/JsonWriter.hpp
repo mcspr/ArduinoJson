@@ -226,10 +226,9 @@ class JsonWriter {
   }
 
   void writeChar(char c) {
-    char specialChar = Encoding::escapeChar(c);
-    if (specialChar) {
-      writeRaw('\\');
-      writeRaw(specialChar);
+    const auto escaped = Encoding::escapeChar(c);
+    if (escaped.value[0] != '\0') {
+      writeRaw(&escaped.value[0]);
     } else {
       writeRaw(c);
     }
