@@ -42,6 +42,10 @@ TEST_CASE("JsonWriter::writeString()") {
     check("/", "\"/\"");  // but the JSON format allows \/
   }
 
+  SECTION("Null") {
+    check("\x0 12345", "\"\"");  // technically COULD happen, but we don't track input string size
+  }
+
   SECTION("StartofHeading") {
     check("\x1", "\"\\u0001\"");
   }
