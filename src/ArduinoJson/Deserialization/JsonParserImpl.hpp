@@ -35,8 +35,9 @@ struct Codeunit {
   }
 
   constexpr uint16_t value() const {
-    return static_cast<uint16_t>(static_cast<uint16_t>(lhs.value()) << 8) |
-           static_cast<uint16_t>(rhs.value());
+    return static_cast<uint16_t>(
+      static_cast<uint16_t>(static_cast<uint16_t>(lhs.value()) << 8) |
+      static_cast<uint16_t>(rhs.value()));
   }
 };
 

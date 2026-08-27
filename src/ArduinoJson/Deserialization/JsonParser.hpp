@@ -71,11 +71,11 @@ struct NestingLimit {
 
   constexpr NestingLimit take(const NestingLimit& nestingLimit) const {
     return NestingLimit(
-      _value < nestingLimit._value ? _value + 1 : InvalidLimit);
+      _value < nestingLimit._value ? static_cast<uint8_t>(_value + 1) : InvalidLimit);
   }
 
   constexpr NestingLimit release() const {
-    return NestingLimit(_value && _value != InvalidLimit ? _value - 1 : _value);
+    return NestingLimit(_value && _value != InvalidLimit ? static_cast<uint8_t>(_value - 1) : _value);
   }
 
   constexpr explicit operator bool() const {
