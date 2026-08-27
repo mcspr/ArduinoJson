@@ -408,7 +408,7 @@ inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
     if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
 
     // 3 - Execute user callback and possibly stop
-    if (keyValueCallback(std::forward<T>(callback), key.as<const char*>(), value)) goto SUCCESS_STOP;
+    if (keyValueCallback(std::forward<T>(callback), key, value)) goto SUCCESS_STOP;
 
     // 4 - Process more keys/values?
     if (eat('}')) goto SUCCESS_NON_EMPTY_OBJECT;

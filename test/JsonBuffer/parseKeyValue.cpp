@@ -15,7 +15,7 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -32,7 +32,7 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -58,9 +58,9 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](const char* key, JsonVariant val) {
-        CAPTURE(key);
-        CAPTURE(val);
+      [&](JsonVariant key, JsonVariant val) {
+        CAPTURE(key.as<const char*>());
+        CAPTURE(val.as<const char*>());
         REQUIRE_THAT(key, Equals(keys[n]));
         REQUIRE_THAT(val, Equals(vals[n]));
         ++n;
@@ -89,9 +89,9 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](JsonParserStopToken stop, const char* key, JsonVariant val) {
-        CAPTURE(key);
-        CAPTURE(val);
+      [&](JsonParserStopToken stop, JsonVariant key, JsonVariant val) {
+        CAPTURE(key.as<const char*>());
+        CAPTURE(val.as<const char*>());
         REQUIRE_THAT(key, Equals(keys[n]));
         REQUIRE_THAT(val, Equals(vals[n]));
         if (n == 1)
@@ -112,7 +112,7 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     auto result = jsonBuffer.parseKeyValue(
       tmp1,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -123,7 +123,7 @@ TEST_CASE("JsonBuffer kv objects") {
     char tmp2[] = "{key1: val1, key2: val2}";
     result = jsonBuffer.parseKeyValue(
       tmp2,
-      [&](JsonParserStopToken stop, const char*, JsonVariant) {
+      [&](JsonParserStopToken stop, JsonVariant, JsonVariant) {
         stop();
         n++;
       });
@@ -135,7 +135,7 @@ TEST_CASE("JsonBuffer kv objects") {
     const char tmp3[] = "{small: obj, small: val}";
     result = jsonBuffer.parseKeyValue(
       tmp3,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -146,7 +146,7 @@ TEST_CASE("JsonBuffer kv objects") {
     const char tmp4[] = "{thiskeygetsallocated: obj, small: thisvaluegetsallocated}";
     result = jsonBuffer.parseKeyValue(
       tmp4,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -162,7 +162,7 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -178,7 +178,7 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 
@@ -194,7 +194,7 @@ TEST_CASE("JsonBuffer kv objects") {
     size_t n = 0;
     const auto result = jsonBuffer.parseKeyValue(
       jsonString,
-      [&](const char*, JsonVariant) {
+      [&](JsonVariant, JsonVariant) {
         n++;
       });
 

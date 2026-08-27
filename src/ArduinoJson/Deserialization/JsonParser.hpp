@@ -41,7 +41,7 @@ struct StopTokenCallback : FalseType {
 template <typename T>
 struct StopTokenCallback<T, VoidType<decltype(
   Declval<T>()(Declval<JsonParserStopToken>(),
-               Declval<const char*>(),
+               Declval<JsonVariant>(),
                Declval<JsonVariant>()))>>
 
   : TrueType {
@@ -53,7 +53,7 @@ struct BasicCallback : FalseType {
 
 template <typename T>
 struct BasicCallback<T, VoidType<decltype(
-  Declval<T>()(Declval<const char*>(),
+  Declval<T>()(Declval<JsonVariant>(),
                Declval<JsonVariant>()))>>
 
   : TrueType {
@@ -229,14 +229,14 @@ class JsonKeyValueParser final :
 
  private:
   template <typename T, typename EnableIf<JsonParserImpl::StopTokenCallback<T>::value>::type* = nullptr>
-  inline bool keyValueCallback(T&& callback, const char* key, JsonVariant val) {
+  inline bool keyValueCallback(T&& callback, JsonVariant key, JsonVariant val) {
     auto stop = makeStopToken();
     callback(stop, key, val);
     return stop.is_stopped();
   }
 
   template <typename T, typename EnableIf<JsonParserImpl::BasicCallback<T>::value>::type* = nullptr>
-  inline bool keyValueCallback(T&& callback, const char* key, JsonVariant val) const {
+  inline bool keyValueCallback(T&& callback, JsonVariant key, JsonVariant val) const {
     callback(key, val);
     return false;
   }
