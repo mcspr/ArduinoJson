@@ -6,6 +6,7 @@
 
 namespace ArduinoJson {
 namespace Internals {
+
 template <typename TInput>
 void skipSpacesAndComments(TInput& input) {
   for (;;) {

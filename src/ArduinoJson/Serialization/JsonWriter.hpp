@@ -5,7 +5,7 @@
 #pragma once
 
 #include "../Strings/Strings.hpp"
-#include "../Data/Encoding.hpp"
+#include "../Data/Character.hpp"
 #include "../Data/JsonLiterals.hpp"
 #include "../Data/JsonInteger.hpp"
 #include "../Data/JsonFloat.hpp"
@@ -226,7 +226,7 @@ class JsonWriter {
   }
 
   void writeChar(char c) {
-    const auto escaped = Encoding::escapeChar(c);
+    const auto escaped = Character::Backslash::escapeChar(c);
     if (escaped.value[0] != '\0') {
       writeRaw(&escaped.value[0]);
     } else {

@@ -5,8 +5,33 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+static std::string makeNestedObject(size_t nesting) {
+  static const std::string head = "{key:";
+
+  std::string str;
+  str.reserve(((nesting - 1) * head.length()) + nesting);
+
+  for (size_t n = 0; n < nesting - 1; ++n) {
+    str += head;
+  }
+  str += '{';
+  str.append(nesting, '}');
+
+  return str;
+}
+
+static std::string makeNestedArray(size_t nesting) {
+  std::string str;
+  str.reserve(nesting * 2);
+
+  str.append(nesting, '[');
+  str.append(nesting, ']');
+
+  return str;
+}
+
 TEST_CASE("JsonParser nestingLimit") {
-  DynamicJsonBuffer jb;
+  DynamicJsonBuffer jb(JSON_OBJECT_SIZE(256) + JSON_ARRAY_SIZE(256));
 
   SECTION("parseArray()") {
     SECTION("limit = 0") {
@@ -26,6 +51,16 @@ TEST_CASE("JsonParser nestingLimit") {
       REQUIRE_FALSE(jb.parseArray("[1, [[]]]", 2).success());
       REQUIRE_FALSE(jb.parseArray("[[[]], 2]", 2).success());
     }
+
+    SECTION("limit = 254") {
+      REQUIRE(jb.parseArray(makeNestedArray(254), 254).success());
+      REQUIRE_FALSE(jb.parseArray(makeNestedArray(255), 254).success());
+    }
+
+    SECTION("limit = 255") {
+      REQUIRE(jb.parseArray(makeNestedArray(254), 255).success());
+      REQUIRE_FALSE(jb.parseArray(makeNestedArray(255), 255).success());
+    }
   }
 
   SECTION("parseObject()") {
@@ -41,6 +76,16 @@ TEST_CASE("JsonParser nestingLimit") {
     SECTION("limit = 2") {
       REQUIRE(jb.parseObject("{\"key\":{\"nested1\":42,\"nested2\":null}}", 2).success());
       REQUIRE_FALSE(jb.parseObject("{\"key\":{\"key\":{\"key\":42}}}", 2).success());
+    }
+
+    SECTION("limit = 254") {
+      REQUIRE(jb.parseObject(makeNestedObject(254), 254).success());
+      REQUIRE_FALSE(jb.parseObject(makeNestedObject(255), 254).success());
+    }
+
+    SECTION("limit = 255") {
+      REQUIRE(jb.parseObject(makeNestedObject(254), 255).success());
+      REQUIRE_FALSE(jb.parseObject(makeNestedObject(255), 255).success());
     }
   }
 

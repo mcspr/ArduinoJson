@@ -4,28 +4,42 @@
 
 #pragma once
 
+//#include "../Configuration.hpp"
+
 #include "Comments.hpp"
 #include "JsonParser.hpp"
 
 #include "../JsonArray.hpp"
 #include "../JsonObject.hpp"
 
+#include "../Data/Character.hpp"
+#include "../Data/Unicode.hpp"
+
 #include "StringBufferedWriter.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
+namespace JsonParserImpl {
 
-static constexpr bool isBetween(char c, char min, char max) {
-  return min <= c && c <= max;
-}
+struct Codeunit {
+  Character::Deserialization::Nibbles lhs;
+  Character::Deserialization::Nibbles rhs;
 
-static constexpr bool canBeInNonQuotedString(char c) {
-  return isBetween(c, '0', '9') || isBetween(c, '_', 'z') ||
-         isBetween(c, 'A', 'Z') || c == '+' || c == '-' || c == '.';
-}
+  constexpr explicit Codeunit(const char (&nibbles)[4]) :
+    lhs(Character::Deserialization::fromNibbles(nibbles[0], nibbles[1])),
+    rhs(Character::Deserialization::fromNibbles(nibbles[2], nibbles[3]))
+  {}
 
-static constexpr bool isQuote(char c) {
-  return c == '\'' || c == '\"';
+  constexpr bool ok() const {  // currently no-op as parser checks this before construction
+    return lhs.ok() && rhs.ok();
+  }
+
+  constexpr uint16_t value() const {
+    return static_cast<uint16_t>(static_cast<uint16_t>(lhs.value()) << 8) |
+           static_cast<uint16_t>(rhs.value());
+  }
+};
+
 }
 
 template <typename TReader, typename TWriter>
@@ -54,13 +68,15 @@ inline bool JsonParser<TReader, TWriter>::parseAnythingTo(
       return parseObjectTo(destination);
   }
 
-  return parseStringTo(destination);
+  return parseStringTo(destination,
+      StringContext::stringLiteral(_nesting.value()));
 }
 
 template <typename TReader, typename TWriter>
 inline JsonArray &JsonParser<TReader, TWriter>::parseArray() {
-  if (_nestingLimit == 0) return JsonArray::invalid();
-  _nestingLimit--;
+  auto nesting = makeNestingToken();
+  if (!nesting)
+    return JsonArray::invalid();
 
   // Create an empty array
   JsonArray &array = _buffer->createArray();
@@ -83,13 +99,13 @@ inline JsonArray &JsonParser<TReader, TWriter>::parseArray() {
 
 SUCCESS_EMPTY_ARRAY:
 SUCCES_NON_EMPTY_ARRAY:
-  _nestingLimit++;
   return array;
 
 ERROR_INVALID_VALUE:
 ERROR_MISSING_BRACKET:
 ERROR_MISSING_COMMA:
 ERROR_NO_MEMORY:
+  nesting.invalidate();
   return JsonArray::invalid();
 }
 
@@ -105,8 +121,9 @@ inline bool JsonParser<TReader, TWriter>::parseArrayTo(
 
 template <typename TReader, typename TWriter>
 inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
-  if (_nestingLimit == 0) return JsonObject::invalid();
-  _nestingLimit--;
+  auto nesting = makeNestingToken();
+  if (!nesting)
+    return JsonObject::invalid();
 
   // Create an empty object
   JsonObject &object = _buffer->createObject();
@@ -119,7 +136,7 @@ inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
   for (;;) {
     // 1 - Parse key
     JsonVariant key;
-    if (!parseStringTo(&key, true)) goto ERROR_INVALID_KEY;
+    if (!parseObjectKeyTo(&key)) goto ERROR_INVALID_KEY;
     if (!eat(':')) goto ERROR_MISSING_COLON;
 
     // 2 - Parse value
@@ -145,7 +162,6 @@ inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
 
 SUCCESS_EMPTY_OBJECT:
 SUCCESS_NON_EMPTY_OBJECT:
-  _nestingLimit++;
   return object;
 
 ERROR_INVALID_KEY:
@@ -154,6 +170,7 @@ ERROR_MISSING_BRACE:
 ERROR_MISSING_COLON:
 ERROR_MISSING_COMMA:
 ERROR_NO_MEMORY:
+  nesting.invalidate();
   return JsonObject::invalid();
 }
 
@@ -226,15 +243,20 @@ inline void StringBufferedWriter<TWriter>::String::_appendParent(
   str.append(c);
 }
 
-// JsonString *may* store data inline before falling 
-// Otherwise, points to TJsonBuffer allocated storage
+// JsonString *may* store data inline instead of the TJsonBuffer
+// (i.e. returned pointer may be ephemeral and does not always point to TJsonBuffer allocated storage)
 template <typename TReader, typename TWriter>
 inline JsonString
-JsonParser<TReader, TWriter>::parseString() {
+JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
   skipSpacesAndComments(_reader);
   char c = _reader.current();
 
   auto str = _writer.startString();
+
+  // similar to 7.x, decode & re-encode utf16 codepoints from escaped byte sequences
+  // note that both codepoints and normal chars go through the utf8 validator
+  Unicode::Utf16::Codepoint codepoint;
+  Unicode::Utf8::State state;
 
   JsonString out;
 
@@ -250,19 +272,60 @@ JsonParser<TReader, TWriter>::parseString() {
       if (c == stopChar)
         break;
 
-      if (c != '\\') // appends values as-is unless escaped
+      if (c != '\\') {  // appends characters as-is unless escaped
+        if (!state.append(c))
+          return out;  // invalid character state
+
         str.append(c);
-      else {
+      } else {
         c = _reader.current();
         if (c == '\0')
           return out;  // incomplete input
 
-        c = Encoding::unescapeChar(c);
-        if (c == '\0')
-          return out;  // invalid escape
+        if (c == 'u') {
+          _reader.move();
 
-        _reader.move();
-        str.append(c);
+          char tmp[4];
+          for (size_t n = 0; n < sizeof(tmp); ++n) {
+            tmp[n] = _reader.current();
+            if (tmp[n] == '\0')
+              return out;  // incomplete input
+
+            if (!Character::Deserialization::isNibble(tmp[n]))
+              return out;  // invalid hexadecimal input
+
+            _reader.move();
+          }
+
+          auto codeunit = JsonParserImpl::Codeunit(tmp);
+          if (!codeunit.ok())
+            return out;  // invalid input
+
+          if (!codeunit.value())
+            return out;  // embedded null
+
+          if (codepoint.append(codeunit.value())) {
+            auto bytes = Unicode::Utf8::encode(codepoint.value());
+            for (auto b : bytes.value) {
+              c = static_cast<char>(b);
+              if (!c)
+                continue;  // leading zeroes are ok here
+
+              if (!state.append(c))
+                return out;  // invalid character state
+
+              str.append(c);
+            }
+          }
+
+        } else {
+          c = Character::Backslash::unescapeChar(c);
+          if (c == '\0')
+            return out;  // invalid escape
+
+          _reader.move();
+          str.append(c);
+        }
       }
     }
   } else if (canBeInNonQuotedString(c)) {  // no quotes
@@ -270,22 +333,39 @@ JsonParser<TReader, TWriter>::parseString() {
       _reader.move();
       str.append(c);
       c = _reader.current();
-    } while (canBeInNonQuotedString(c));
+    } while (canBeInNonQuotedString(c));  // note that only ascii range is allowed
+
+    if (stopChars) {  // and actual stopping point depends on where the string is
+      char end = '\0';
+      do {
+        end = *(stopChars++);
+        if (end == c)
+          goto RETURN_JSON_STRING;
+      } while (end != '\0');
+
+      if (end == '\0') {
+        return out;  // invalid
+      }
+    }
   } else {
     return out;  // invalid
   }
 
-  using AsJsonString = JsonParserImpl::AsJsonString<writer_returns_json_string>;
-  out = AsJsonString::Operator(str);
+RETURN_JSON_STRING:
+  if (state) {
+    using AsJsonString = JsonParserImpl::AsJsonString<writer_returns_json_string>;
+    out = AsJsonString::Operator(str);
+  }
 
   return out;
 }
 
 template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::parseStringTo(
-    JsonVariant *destination, bool forceString) {
-  const auto hasQuotes = forceString || isQuote(_reader.current());
-  const auto parsed = parseString();
+    JsonVariant *destination, StringContext context) {
+
+  const auto hasQuotes = context.forceString || isQuote(_reader.current());
+  const auto parsed = parseString(context.stopChars);
   if (parsed.success()) {
     *destination = JsonVariant(parsed, hasQuotes);
     return true;
@@ -295,10 +375,22 @@ inline bool JsonParser<TReader, TWriter>::parseStringTo(
 }
 
 template <typename TReader, typename TWriter>
+inline bool JsonParser<TReader, TWriter>::parseStringTo(JsonVariant *destination) {
+  return parseStringTo(destination, StringContext());
+}
+
+template <typename TReader, typename TWriter>
+inline bool JsonParser<TReader, TWriter>::parseObjectKeyTo(
+    JsonVariant *destination) {
+  return parseStringTo(destination, StringContext::objectKey());
+}
+
+template <typename TReader, typename TWriter>
 template <typename T>
 inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
-  if (this->_nestingLimit == 0) return false;
-  this->_nestingLimit--;
+  auto nesting = makeNestingToken();
+  if (!nesting)
+    return false;
 
   // Check opening brace
   if (!eat('{')) goto ERROR_MISSING_BRACE;
@@ -308,7 +400,7 @@ inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
   for (;;) {
     // 1 - Parse key
     JsonVariant key;
-    if (!parseStringTo(&key, true)) goto ERROR_INVALID_KEY;
+    if (!parseObjectKeyTo(&key)) goto ERROR_INVALID_KEY;
     if (!eat(':')) goto ERROR_MISSING_COLON;
 
     // 2 - Parse value
@@ -326,7 +418,6 @@ inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
 SUCCESS_STOP:
 SUCCESS_EMPTY_OBJECT:
 SUCCESS_NON_EMPTY_OBJECT:
-  this->_nestingLimit++;
   return true;
 
 ERROR_INVALID_KEY:
@@ -334,6 +425,7 @@ ERROR_INVALID_VALUE:
 ERROR_MISSING_BRACE:
 ERROR_MISSING_COLON:
 ERROR_MISSING_COMMA:
+  nesting.invalidate();
   return false;
 }
 

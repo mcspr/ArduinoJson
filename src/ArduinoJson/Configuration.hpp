@@ -86,6 +86,10 @@
 
 #endif  // ARDUINOJSON_EMBEDDED_MODE
 
+#if ARDUINOJSON_DEFAULT_NESTING_LIMIT > 255
+#error ARDUINOJSON_DEFAULT_NESTING_LIMIT larger than the type maximum
+#endif
+
 #ifdef ARDUINO
 
 // Enable support for Arduino String
@@ -99,6 +103,16 @@
 #endif
 
 #else  // ARDUINO
+
+// Convert unicode escape sequences (\u0123) to UTF-8
+#ifndef ARDUINOJSON_DECODE_UNICODE
+#define ARDUINOJSON_DECODE_UNICODE 1
+#endif
+
+// Reject byte sequences (both escaped and not escaped) unless they are a valid UTF-8 string
+#ifndef ARDUINOJSON_VALIDATE_UTF8
+#define ARDUINOJSON_VALIDATE_UTF8 1
+#endif
 
 // Disable support for Arduino String
 #ifndef ARDUINOJSON_ENABLE_ARDUINO_STRING

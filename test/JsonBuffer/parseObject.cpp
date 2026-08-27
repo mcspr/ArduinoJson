@@ -162,7 +162,7 @@ TEST_CASE("JsonBuffer::parseObject()") {
       REQUIRE(obj["key2"] == -7E89);
     }
 
-    SECTION("Booleans") {
+    SECTION("Boolean") {
       JsonObject& obj = jb.parseObject("{\"key1\":true,\"key2\":false}");
       REQUIRE(obj.success());
       REQUIRE(obj.size() == 2);

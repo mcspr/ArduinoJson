@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../Polyfills/attributes.hpp"
+
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/IsPointer.hpp"
 #include "../TypeTraits/IsInstantiationOf.hpp"
@@ -57,7 +59,95 @@ struct BasicCallback<T, VoidType<decltype(
   : TrueType {
 };
 
-}
+struct NestingLimit {
+  constexpr NestingLimit() = default;
+  explicit constexpr NestingLimit(uint8_t limit) :
+    _value(limit)
+  {}
+
+  constexpr uint8_t value() const {
+    return _value;
+  }
+
+  constexpr NestingLimit take(const NestingLimit& nestingLimit) const {
+    return NestingLimit(
+      _value < nestingLimit._value ? _value + 1 : InvalidLimit);
+  }
+
+  constexpr NestingLimit release() const {
+    return NestingLimit(_value && _value != InvalidLimit ? _value - 1 : _value);
+  }
+
+  constexpr explicit operator bool() const {
+    return _value != InvalidLimit;
+  }
+
+  constexpr bool operator<(const NestingLimit& other) const noexcept {
+    return _value < other._value;
+  }
+
+  constexpr bool operator<=(const NestingLimit& other) const noexcept {
+    return _value <= other._value;
+  }
+
+ private:
+  static constexpr uint8_t InvalidLimit = static_cast<uint8_t>(-1);
+  uint8_t _value{ InvalidLimit };
+};
+
+struct NestingToken {
+  explicit NestingToken(JsonParserImpl::NestingLimit& nesting, JsonParserImpl::NestingLimit& limit) :
+    _nesting(nesting),
+    _nestingLimit(limit),
+    _token(_nesting.take(_nestingLimit))
+  {
+    if (_token)
+      _nesting = _token;
+  }
+
+  ~NestingToken() {
+    if (_token)
+      _nesting = _token.release();
+  }
+
+  void invalidate() {
+    _token = _nestingLimit;
+  }
+
+  uint8_t limit() const {
+    return _token.value();
+  }
+
+  explicit operator bool() const {
+    return static_cast<bool>(_token);
+  }
+
+ private:
+   NestingLimit& _nesting;
+   NestingLimit& _nestingLimit;
+   NestingLimit _token;
+};
+
+struct StringContext {
+  const char* stopChars = nullptr;
+  bool forceString = false;
+
+  constexpr StringContext() = default;
+  constexpr StringContext(const char* stopChars_, bool forceString_) :
+    stopChars(stopChars_),
+    forceString(forceString_)
+  {}
+
+  static constexpr StringContext objectKey() {
+    return StringContext(":}\t\n\r ", true);  // next object characters or whitespace and also disallow comments w/o whitespace
+  }
+
+  static constexpr StringContext stringLiteral(uint8_t limit) {
+    return StringContext(limit == 0 ? "" : nullptr, false);  // skip stopChars checks when parsing arrays / objects, and only allow '\0' for plain strings
+  }
+};
+
+}  // namespace JsonParserImpl
 
 // Parse JSON string to create JsonArrays and JsonObjects
 // This internal class is not indended to be used directly.
@@ -68,12 +158,13 @@ class JsonParser {
   using reader_type = TReader;
   using writer_type = TWriter;
 
-  JsonParser(JsonBuffer *buffer, TReader reader, TWriter writer,
-             uint8_t nestingLimit)
-      : _buffer(buffer),
-        _reader(reader),
-        _writer(writer),
-        _nestingLimit(nestingLimit) {}
+  JsonParser(JsonBuffer *buffer, TReader reader, TWriter writer, uint8_t nestingLimit) :
+    _buffer(buffer),
+    _reader(reader),
+    _writer(writer),
+    _nesting(0),
+    _nestingLimit(nestingLimit)
+  {}
 
   JsonParser(const JsonParser &) = delete;
   JsonParser &operator=(const JsonParser &) = delete;
@@ -92,21 +183,37 @@ class JsonParser {
     return eat(_reader, charToSkip);
   }
 
-  JsonString parseString();
-  bool parseAnythingTo(JsonVariant *destination);
-
-  inline bool parseArrayTo(JsonVariant *destination);
-  inline bool parseObjectTo(JsonVariant *destination);
-  inline bool parseStringTo(JsonVariant *destination, bool = false);
-
   using writer_string_type = decltype(Declval<TWriter>().startString());
   using writer_returns_json_string =
     typename IsInstantiationOf<StringBufferedWriter, writer_type>::type;
 
+  JsonString parseString(const char* stopChars);
+  bool parseAnythingTo(JsonVariant *destination);
+
+  bool parseArrayTo(JsonVariant *destination);
+  bool parseObjectTo(JsonVariant *destination);
+
+  using StringContext = JsonParserImpl::StringContext;
+
+  bool parseStringTo(JsonVariant *destination, StringContext);
+  bool parseStringTo(JsonVariant *destination);
+
+  bool parseObjectKeyTo(JsonVariant *destination);
+
+  using NestingToken = JsonParserImpl::NestingToken;
+
+  NestingToken makeNestingToken() {
+    return NestingToken(_nesting, _nestingLimit);
+  }
+
   JsonBuffer *_buffer;
   TReader _reader;
   TWriter _writer;
-  uint8_t _nestingLimit;
+
+  using NestingLimit = JsonParserImpl::NestingLimit;
+
+  NestingLimit _nesting;
+  NestingLimit _nestingLimit;
 };
 
 template <typename TReader, typename TWriter>
@@ -135,12 +242,15 @@ class JsonKeyValueParser final :
   }
 
   using JsonParser<TReader, TWriter>::eat;
+  using JsonParser<TReader, TWriter>::parseAnythingTo;
   using JsonParser<TReader, TWriter>::parseString;
   using JsonParser<TReader, TWriter>::parseStringTo;
-  using JsonParser<TReader, TWriter>::parseAnythingTo;
+  using JsonParser<TReader, TWriter>::parseObjectKeyTo;
 
-  using JsonParser<TReader, TWriter>::parseObject;
+  using JsonParser<TReader, TWriter>::makeNestingToken;
+
   using JsonParser<TReader, TWriter>::parseArray;
+  using JsonParser<TReader, TWriter>::parseObject;
   using JsonParser<TReader, TWriter>::parseVariant;
 };
 
