@@ -134,7 +134,7 @@ TEST_CASE("JsonBuffer::parse()") {
     REQUIRE(variant.as<double>() == Approx(-1.23e+4));
   }
 
-  auto testStringCase = [&](const std::string& testCase, char quote = '\0') {
+  auto testStringCase = [&](const std::string& testCase, char quote) {
       CAPTURE(escape(testCase));
 
       JsonVariant variant = jb.parse(testCase);
@@ -208,14 +208,14 @@ TEST_CASE("JsonBuffer::parse()") {
     };
 
     for (const auto& testCase : testCases) {
-      testStringCase(testCase);
+      testStringCase(testCase, '\0');
     }
   }
 
   SECTION("Invalid JSON") {
     std::vector<std::string> testCases;
 
-    auto shouldFail = [&](IsType type = IsType::String) {
+    auto shouldFail = [&](IsType type) {
       size_t n = 1;
       for (const auto& testCase : testCases) {
         CAPTURE(n);
@@ -265,7 +265,7 @@ TEST_CASE("JsonBuffer::parse()") {
         "\"1234 \x00 5678\"",
       };
 
-      shouldFail();
+      shouldFail(IsType::String);
     }
 
     // ref. https://github.com/simdutf/is_utf8/
@@ -336,7 +336,7 @@ TEST_CASE("JsonBuffer::parse()") {
         "\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70",
       };
 
-      shouldFail();
+      shouldFail(IsType::String);
     }
 
     SECTION("non-HEX codeunit nibble") {
@@ -357,7 +357,7 @@ TEST_CASE("JsonBuffer::parse()") {
         }
       }
 
-      shouldFail();
+      shouldFail(IsType::String);
     }
 
     SECTION("Incomplete string") {
@@ -374,7 +374,7 @@ TEST_CASE("JsonBuffer::parse()") {
         "\"\\u456",
       };
 
-      shouldFail();
+      shouldFail(IsType::String);
     }
 
     // more in parseArray.cpp
