@@ -96,9 +96,9 @@ struct NestingLimit {
 };
 
 struct NestingToken {
-  explicit NestingToken(JsonParserImpl::NestingLimit& nesting, JsonParserImpl::NestingLimit& limit) :
+  explicit NestingToken(JsonParserImpl::NestingLimit& nesting, JsonParserImpl::NestingLimit& nestingLimit) :
     _nesting(nesting),
-    _nestingLimit(limit),
+    _nestingLimit(nestingLimit),
     _token(_nesting.take(_nestingLimit))
   {
     if (_token)
