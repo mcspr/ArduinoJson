@@ -36,7 +36,9 @@ static constexpr bool isNibble(char c) {
 // assume that character is in the valid nibble range, since we only care about the lower 4 bits
 // expected to be used in the parser accompanied by isNibble
 static constexpr uint8_t fromNibble(char c) {
-  return static_cast<uint8_t>((static_cast<uint8_t>(c) & 0xf) + ((static_cast<uint8_t>(c) >> 6) * 9));
+  return static_cast<uint8_t>(
+    static_cast<uint8_t>(static_cast<uint8_t>(c) & 0xf) +
+    static_cast<uint8_t>((static_cast<uint8_t>(c) >> 6) * 9));
 }
 
 struct Nibbles {
