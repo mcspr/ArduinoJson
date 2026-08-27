@@ -142,8 +142,8 @@ struct StringContext {
     return StringContext(":}\t\n\r ", true);  // next object characters or whitespace and also disallow comments w/o whitespace
   }
 
-  static constexpr StringContext stringLiteral(uint8_t limit) {
-    return StringContext(limit == 0 ? "" : nullptr, false);  // skip stopChars checks when parsing arrays / objects, and only allow '\0' for plain strings
+  static constexpr StringContext stringLiteral(uint8_t nesting) {
+    return StringContext(nesting == 0 ? "" : nullptr, false);  // skip stopChars checks when parsing arrays / objects, and only allow '\0' for plain strings
   }
 };
 
