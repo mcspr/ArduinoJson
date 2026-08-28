@@ -18,8 +18,8 @@ target_compile_definitions(ArduinoJson
 
 install(
 	FILES
-		"${CMAKE_CURRENT_SOURCE_DIR}ArduinoJson.h"
-		"${CMAKE_CURRENT_SOURCE_DIR}ArduinoJson.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/ArduinoJson.h"
+		"${CMAKE_CURRENT_SOURCE_DIR}/ArduinoJson.hpp"
 	DESTINATION
 		${CMAKE_INSTALL_INCLUDEDIR}
 )
