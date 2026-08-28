@@ -1,0 +1,117 @@
+set(ASAN_OPTIONS handle_abort=1)
+
+option(COVERAGE "Enable tests coverage support")
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+	add_compile_options(
+		-pedantic
+		-Wall
+		-Wcast-align
+		-Wcast-qual
+		-Wconversion
+		-Wctor-dtor-privacy
+		-Wdisabled-optimization
+		-Werror
+		-Wextra
+		-Wformat=2
+		-Winit-self
+		-Wmissing-include-dirs
+		-Wold-style-cast
+		-Woverloaded-virtual
+		-Wparentheses
+		-Wredundant-decls
+		-Wreturn-type
+		-Wshadow
+		-Wsign-conversion
+		-Wsign-promo
+		-Wstrict-aliasing
+		-Wundef
+	)
+
+	# error: '__COUNTER__' is a C2y extension [-Werror,-Wc2y-extensions]
+	# ref. https://github.com/catchorg/Catch2/issues/3076
+	# ref. https://github.com/llvm/llvm-project/issues/189645
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+	   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 22)
+		add_compile_options(
+			-Wno-c2y-extensions
+		)
+	endif ()
+
+	if(${COVERAGE})
+		add_compile_options(
+			-fprofile-arcs
+			-ftest-coverage
+		)
+	endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+	if(((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+		CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.0) OR
+	   (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+	    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)) AND
+	   NOT COVERAGE)
+		add_compile_options(-g -Og)
+	else()
+		add_compile_options(-g -O0)
+	endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+	if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+	   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+		add_compile_options(
+			-fsanitize=address,undefined
+			-fno-sanitize-recover=all
+		)
+		add_link_options(
+			-fsanitize=address,undefined
+			-fno-sanitize-recover=all
+		)
+	endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	add_compile_options(
+		-Wstrict-null-sentinel
+		-Wvla
+	)
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.5)
+		add_compile_options(-Wlogical-op) # the flag exists in 4.4 but is buggy
+	endif()
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.6)
+		add_compile_options(-Wnoexcept)
+	endif()
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7 AND
+	   CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+		# avoid false positive with GCC 4.7
+		add_compile_options(-Wno-maybe-uninitialized)
+	endif()
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.0)
+		# avoid false positive with < GCC 5.0
+		# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62232
+		add_compile_options(-Wnon-virtual-dtor)
+	endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	add_compile_options(
+		-Wc++11-compat
+		-Wdeprecated-register
+		-Wnon-virtual-dtor
+	)
+endif()
+
+if(MSVC)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+	add_compile_options(
+		/W4 # Set warning level
+		/WX # Treats all compiler warnings as errors.
+		/Zc:__cplusplus # Enable updated __cplusplus macro
+	)
+endif()

@@ -7,7 +7,7 @@ JSON_CORPUS_DIR=$FUZZING_DIR/my_corpus
 JSON_SEED_CORPUS_DIR=$FUZZING_DIR/seed_corpus
 
 CXX="clang++-$CLANG"
-CXXFLAGS="-g -fprofile-instr-generate -fcoverage-mapping -fsanitize=address,fuzzer"
+CXXFLAGS="-O1 -g -fprofile-instr-generate -fcoverage-mapping -fsanitize=address,fuzzer"
 
 $CXX $CXXFLAGS -o json_fuzzer -I$INCLUDE_DIR $FUZZING_DIR/fuzzer.cpp
 

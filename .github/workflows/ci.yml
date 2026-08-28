@@ -70,7 +70,7 @@ jobs:
         timeout-minutes: 10
 
       - name: Test
-        run: ctest --output-on-failure -C Debug --test-dir build
+        run: ctest --output-on-failure -C Debug --test-dir build/test/
         env:
           UBSAN_OPTIONS: print_stacktrace=1
         timeout-minutes: 2
@@ -91,7 +91,14 @@ jobs:
         run: cmake --build build
 
       - name: Test
-        run: ctest --output-on-failure -C Debug --test-dir build
+        run: ctest --output-on-failure -C Debug --test-dir build/test/
+        env:
+          UBSAN_OPTIONS: print_stacktrace=1
+
+      - name: Fuzzing
+        run: ctest --output-on-failure -C Debug --test-dir build/fuzzing/
+        env:
+          UBSAN_OPTIONS: print_stacktrace=1
 
   arduino:
     name: Build Arduino examples
