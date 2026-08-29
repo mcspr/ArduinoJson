@@ -145,8 +145,7 @@ TEST_CASE("JsonBuffer::parse()") {
       if (quote != '\0')
         tmp += quote;
 
-      tmp += variant.as<std::string>();
-
+      tmp += variant.as<std::string>();  // deserialized value
       if (quote != '\0')
         tmp += quote;
 
@@ -160,7 +159,7 @@ TEST_CASE("JsonBuffer::parse()") {
       "\"abcde12345\"",
       "\"\x71\"",
       "\"\x75\x4c\"",
-      "\"\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70\"",
+      "\"\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x20\x70\"",
     };
 
     for (const auto& testCase : testCases) {
@@ -182,7 +181,7 @@ TEST_CASE("JsonBuffer::parse()") {
       "'abcde12345'",
       "'\x71'",
       "'\x75\x4c'",
-      "'\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70'",
+      "'\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x20\x70'",
     };
 
     for (const auto& testCase : testCases) {
@@ -268,6 +267,22 @@ TEST_CASE("JsonBuffer::parse()") {
       shouldFail(IsType::String);
     }
 
+    // control character should be escaped via \\u00xx
+    SECTION("Control character") {
+      testCases.reserve((3 + 1) * 2 * 0x20);
+
+      char tmp1[] = "\".\"";
+      char tmp2[] = "'.'";
+      for (int i = 0; i < 0x20; ++i) {
+        tmp1[1] = static_cast<char>(i);
+        testCases.push_back(std::string(tmp1));
+        tmp2[1] = static_cast<char>(i);
+        testCases.push_back(std::string(tmp2));
+      }
+
+      shouldFail(IsType::String);
+    }
+
     // ref. https://github.com/simdutf/is_utf8/
     // ref. https://github.com/crossbario/autobahn-testsuite
     // todo: ensure most bad_sequence stuff is ported here?
@@ -333,6 +348,7 @@ TEST_CASE("JsonBuffer::parse()") {
         "'\xf4\x90\x80\x80'",
         "'\xf4\\u9080\x80'",
         "'\\uf490\\u8080'",
+        "'\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70'",
         "\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70",
       };
 

@@ -23,6 +23,10 @@ static constexpr bool isQuote(char c) {
   return c == '\'' || c == '\"';
 }
 
+static constexpr bool canBeInQuotedString(char c) {
+  return (static_cast<uint8_t>(c) > static_cast<uint8_t>(0x1f));  // control character should always be encoded as unicode
+}
+
 namespace Character {
 namespace Deserialization {
 

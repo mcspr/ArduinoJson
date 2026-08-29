@@ -273,6 +273,9 @@ JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
       if (c == stopChar)
         break;
 
+      if (!canBeInQuotedString(c))
+        return out;  // invalid character range
+
       if (c != '\\') {  // appends characters as-is unless escaped
         if (!state.append(c))
           return out;  // invalid character state
