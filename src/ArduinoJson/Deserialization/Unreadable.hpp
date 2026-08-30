@@ -4,8 +4,34 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace ArduinoJson {
 namespace Internals {
+
+template <typename TInput>
+bool skipBom(TInput& input) {
+  static constexpr uint8_t Bom[] = {0xef, 0xbb, 0xbf};
+  if (Bom[0] == static_cast<uint8_t>(input.current())) {
+    input.move();
+
+    uint8_t tmp[2];
+    tmp[0] = static_cast<uint8_t>(input.current());
+    tmp[1] = static_cast<uint8_t>(input.next());
+
+    const auto out =
+      Bom[1] == tmp[0] &&
+      Bom[2] == tmp[1];
+    if (out) {
+      input.move();
+      input.move();
+    }
+
+    return out;
+  }
+
+  return true;
+}
 
 template <typename TInput>
 void skipSpacesAndComments(TInput& input) {
@@ -58,5 +84,16 @@ void skipSpacesAndComments(TInput& input) {
     }
   }
 }
+
+template <typename TInput>
+bool skipUnreadable(TInput& input) {
+  if (skipBom(input)) {
+    skipSpacesAndComments(input);
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace Internals
 }  // namespace ArduinoJson

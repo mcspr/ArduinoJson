@@ -341,6 +341,7 @@ TEST_CASE("JsonBuffer::parse()") {
         "'\xe5'",
         "'\\uc3a5'",
         "'\xef\xbf'",
+        "'\xef\xbf\xbf'",
         "'\\uefbf'",
         "'\xf6\xc3\xb1'",
         "'\xf6\\uc3b1'",
@@ -348,6 +349,8 @@ TEST_CASE("JsonBuffer::parse()") {
         "'\xf4\x90\x80\x80'",
         "'\xf4\\u9080\x80'",
         "'\\uf490\\u8080'",
+        "'\xef\xbb\xbf\x48\65\x6c\x6c\x6f'",
+        "\xef\xbb\xfa'\x62\x63\x64'",
         "'\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70'",
         "\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x13\x70",
       };
@@ -425,5 +428,79 @@ TEST_CASE("JsonBuffer::parse()") {
 
       shouldFail(IsType::Object);
     }
+  }
+}
+
+TEST_CASE("JsonBuffer::parse() w/ BOM") {
+  DynamicJsonBuffer jb;
+
+  SECTION("Just BOM") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf");
+    REQUIRE_FALSE(variant.success());
+  }
+
+  SECTION("EmptyObject") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "{}");
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<JsonObject>());
+  }
+
+  SECTION("EmptyArray") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "[]");
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<JsonArray>());
+  }
+
+  SECTION("Null") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "null");
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<JsonNull>());
+  }
+
+  SECTION("False") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "false");
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<bool>());
+    REQUIRE(variant.as<bool>() == false);
+    REQUIRE(variant == false);
+  }
+
+  SECTION("True") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "true");
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<bool>());
+    REQUIRE(variant.as<bool>() == true);
+    REQUIRE(variant == true);
+  }
+
+  SECTION("Integer") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "-42");
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<int>());
+    REQUIRE_FALSE(variant.is<bool>());
+    REQUIRE(variant == -42);
+  }
+
+  SECTION("Double") {
+    JsonVariant variant = jb.parse("\xef\xbb\xbf" "-1.23e+4");
+    REQUIRE(variant.success());
+    REQUIRE_FALSE(variant.is<int>());
+    REQUIRE(variant.is<double>());
+    REQUIRE(variant.as<double>() == Approx(-1.23e+4));
+  }
+
+  SECTION("Double quoted string") {
+    std::string testCase = "\xef\xbb\xbf" "\"12345\"";
+    JsonVariant variant = jb.parse(testCase);
+    REQUIRE(variant.success());
+    REQUIRE(variant == std::string("12345"));
+  }
+
+
+  SECTION("Single quoted string") {
+    std::string testCase = "\xef\xbb\xbf" "'12345'";
+    JsonVariant variant = jb.parse(testCase);
+    REQUIRE(variant.success());
+    REQUIRE(variant == std::string("12345"));
   }
 }

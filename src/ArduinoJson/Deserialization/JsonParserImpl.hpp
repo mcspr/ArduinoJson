@@ -6,7 +6,7 @@
 
 //#include "../Configuration.hpp"
 
-#include "Comments.hpp"
+#include "Unreadable.hpp"
 #include "JsonParser.hpp"
 
 #include "../JsonArray.hpp"
@@ -47,7 +47,9 @@ template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::eat(
     TReader &reader, char charToSkip) {
 
-  skipSpacesAndComments(reader);
+  if (!skipUnreadable(reader))
+    return false;
+
   const auto current = reader.current();
   if (current > 0 && current == charToSkip) {
     reader.move();
@@ -60,7 +62,9 @@ template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::parseAnythingTo(
     JsonVariant *destination) {
 
-  skipSpacesAndComments(_reader);
+  if (!skipUnreadable(_reader))
+    return false;
+
   switch (_reader.current()) {
     case '[':
       return parseArrayTo(destination);
@@ -249,7 +253,10 @@ inline void StringBufferedWriter<TWriter>::String::_appendParent(
 template <typename TReader, typename TWriter>
 inline JsonString
 JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
-  skipSpacesAndComments(_reader);
+  JsonString out;
+  if (!skipUnreadable(_reader))
+    return out;  // cannot read
+
   char c = _reader.current();
 
   auto str = _writer.startString();
@@ -258,8 +265,6 @@ JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
   // note that both codepoints and normal chars go through the utf8 validator
   Unicode::Utf16::Codepoint codepoint;
   Unicode::Utf8::State state;
-
-  JsonString out;
 
   if (isQuote(c)) {  // quotes
     _reader.move();
