@@ -18,8 +18,9 @@ class JsonBufferBase : public JsonBuffer {
   // JsonArray&, JsonObject& or const char* (as RawJson); make sure to verify it through ::is<T>() or ::success() before using
   template <typename TData,
     typename TParseString = JsonParserImpl::ParseStringImpl,
-    template <typename, typename, typename> class TJsonParser = Internals::JsonParser>
-  JsonVariant parse(TData&& json, DeserializationOptions deserializationOptions = DeserializationOptions()) {
+    template <typename, typename, typename> class TJsonParser = Internals::JsonParser,
+    typename TDeserializationOptions = DefaultDeserializationOptions>
+  JsonVariant parse(TData&& json, DeserializationOptions deserializationOptions = makeDefaultDeserializationOptions(TDeserializationOptions())) {
     return Internals::makeParser<TJsonParser, TParseString>(
       impl(), std::forward<TData>(json), deserializationOptions).parseVariant();
   }
@@ -28,8 +29,9 @@ class JsonBufferBase : public JsonBuffer {
   // Returns JsonArray::invalid() on parsing errors or buffer allocation failures.
   template <typename TData,
     typename TParseString = JsonParserImpl::ParseStringImpl,
-    template <typename, typename, typename> class TJsonParser = Internals::JsonParser>
-  JsonArray& parseArray(TData&& json, DeserializationOptions deserializationOptions = DeserializationOptions()) {
+    template <typename, typename, typename> class TJsonParser = Internals::JsonParser,
+    typename TDeserializationOptions = DefaultDeserializationOptions>
+  JsonArray& parseArray(TData&& json, DeserializationOptions deserializationOptions = makeDefaultDeserializationOptions(TDeserializationOptions())) {
     return Internals::makeParser<TJsonParser, TParseString>(
       impl(), std::forward<TData>(json), deserializationOptions).parseArray();
   }
@@ -38,8 +40,9 @@ class JsonBufferBase : public JsonBuffer {
   // Returns JsonObject::invalid() on parsing errors or buffer allocation failures.
   template <typename TData,
     typename TParseString = JsonParserImpl::ParseStringImpl,
-    template <typename, typename, typename> class TJsonParser = Internals::JsonParser>
-  JsonObject& parseObject(TData&& json, DeserializationOptions deserializationOptions = DeserializationOptions()) {
+    template <typename, typename, typename> class TJsonParser = Internals::JsonParser,
+    typename TDeserializationOptions = DefaultDeserializationOptions>
+  JsonObject& parseObject(TData&& json, DeserializationOptions deserializationOptions = makeDefaultDeserializationOptions(TDeserializationOptions())) {
     return Internals::makeParser<TJsonParser, TParseString>(
       impl(), std::forward<TData>(json), deserializationOptions).parseObject();
   }
@@ -49,10 +52,11 @@ class JsonBufferBase : public JsonBuffer {
   // Returns false on parsing errors and intermediate buffer allocation failures.
   template <typename TData, typename TCallback,
     typename TParseString = JsonParserImpl::ParseStringImpl,
-    template <typename, typename, typename> class TJsonParser = Internals::JsonKeyValueParser>
+    template <typename, typename, typename> class TJsonParser = Internals::JsonKeyValueParser,
+    typename TDeserializationOptions = DefaultDeserializationOptions>
   bool parseKeyValue(TData&& json, TCallback&& callback) {
     return Internals::makeParser<TJsonParser, TParseString>(
-      impl(), std::forward<TData>(json), JsonParserImpl::KeyValueDeserializationOptions())
+      impl(), std::forward<TData>(json), DeserializationOptions(1, TDeserializationOptions::enableComments(), TDeserializationOptions::skipBom()))
         .parseKeyValue(std::forward<TCallback>(callback));
   }
 

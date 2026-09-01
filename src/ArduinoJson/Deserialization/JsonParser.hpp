@@ -42,16 +42,6 @@ class JsonParser;
 
 namespace JsonParserImpl {
 
-struct KeyValueDeserializationOptions : DeserializationOptions {
-  constexpr KeyValueDeserializationOptions() noexcept :
-    DeserializationOptions(
-      1,
-      ARDUINOJSON_ENABLE_COMMENTS == 1,
-      ARDUINOJSON_ENABLE_UTF8_BOM == 1
-    )
-  {}
-};
-
 template <typename T, typename = void>
 struct StopTokenCallback : FalseType {
 };
