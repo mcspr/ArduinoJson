@@ -104,6 +104,18 @@
 
 #else  // ARDUINO
 
+// Disable support for Arduino String
+#ifndef ARDUINOJSON_ENABLE_ARDUINO_STRING
+#define ARDUINOJSON_ENABLE_ARDUINO_STRING 0
+#endif
+
+// Disable support for Arduino Stream
+#ifndef ARDUINOJSON_ENABLE_ARDUINO_STREAM
+#define ARDUINOJSON_ENABLE_ARDUINO_STREAM 0
+#endif
+
+#endif  // ARDUINO
+
 // Convert unicode escape sequences (\u0123) to UTF-8
 #ifndef ARDUINOJSON_DECODE_UNICODE
 #define ARDUINOJSON_DECODE_UNICODE 1
@@ -123,18 +135,6 @@
 #ifndef ARDUINOJSON_ENABLE_COMMENTS
 #define ARDUINOJSON_ENABLE_COMMENTS 0
 #endif
-
-// Disable support for Arduino String
-#ifndef ARDUINOJSON_ENABLE_ARDUINO_STRING
-#define ARDUINOJSON_ENABLE_ARDUINO_STRING 0
-#endif
-
-// Disable support for Arduino Stream
-#ifndef ARDUINOJSON_ENABLE_ARDUINO_STREAM
-#define ARDUINOJSON_ENABLE_ARDUINO_STREAM 0
-#endif
-
-#endif  // ARDUINO
 
 #ifndef ARDUINOJSON_ENABLE_PROGMEM
 #ifdef PROGMEM
