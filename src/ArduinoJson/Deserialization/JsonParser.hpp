@@ -248,9 +248,7 @@ using ParseStringImpl = ParseString<
 // Parse JSON string to create JsonArrays and JsonObjects
 // This internal class is not indended to be used directly.
 // Instead, use JsonBuffer.parseArray() or .parseObject()
-template <typename TReader, typename TWriter,
-  typename TParseString = JsonParserImpl::ParseStringImpl>
-
+template <typename TReader, typename TWriter, typename TParseString>
 class JsonParser {
  public:
   using reader_type = TReader;
@@ -365,9 +363,13 @@ class JsonKeyValueParser final :
   using Base::parseVariant;
 };
 
+template <template <typename, typename, typename> class T,
+    typename TReader, typename TWriter>
+using TJsonParserImpl = T<TReader, TWriter, JsonParserImpl::ParseStringImpl>;
+
 // internals set up 'writer' a bit differently, depending on the type of input
 // generic reader, always uses TJsonBuffer as backing storage when escaped characters are encountered
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer,
   typename TJson,
   typename Enable = void>
@@ -376,7 +378,7 @@ struct JsonParserBuilder {
 
   typedef ReaderImpl<TJsonNoCref> TReader;
   typedef StringBufferedWriter<TJsonBuffer> TWriter;
-  typedef TJsonParser<TReader, TWriter> TParser;
+  typedef TJsonParserImpl<TJsonParser, TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TJson &&json,
                             DeserializationOptions deserializationOptions) {
@@ -389,7 +391,7 @@ struct JsonParserBuilder {
 
 // reuse input buffer instead of duplicating data in the TJsonBuffer. note that this causes input to be thrashed
 // only enabled when string view data pointer is not marked as const
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer,
   typename TChar, size_t Size>
 struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<TChar, Size>> {
@@ -400,7 +402,7 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<TChar, Size>> {
   typedef typename StringTraits<const TChar *>::Reader TReader;
   typedef StringWriter<TChar> TWriter;
 
-  typedef TJsonParser<TReader, TWriter> TParser;
+  typedef TJsonParserImpl<TJsonParser, TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TSpan json,
                             DeserializationOptions deserializationOptions) {
@@ -412,7 +414,7 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<TChar, Size>> {
 };
 
 // points to existing data when no escaped characters encountered
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer,
   typename TChar, size_t Size>
 struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<const TChar, Size>> {
@@ -421,7 +423,7 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<const TChar, Size>> 
 
   typedef typename StringTraits<TChar *>::Reader TReader;
   typedef StringBufferedWriter<TJsonBuffer> TWriter;
-  typedef TJsonParser<TReader, TWriter> TParser;
+  typedef TJsonParserImpl<TJsonParser, TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TSpan json,
                             DeserializationOptions deserializationOptions) {
@@ -432,7 +434,7 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<const TChar, Size>> 
   }
 };
 
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TJson>
 inline typename JsonParserBuilder<TJsonParser, TJsonBuffer, TJson>::TParser
 makeParser(TJsonBuffer *buffer, TJson &&json, DeserializationOptions deserializationOptions) {
@@ -440,12 +442,12 @@ makeParser(TJsonBuffer *buffer, TJson &&json, DeserializationOptions deserializa
     buffer, std::forward<TJson>(json), deserializationOptions);
 }
 
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar, size_t Size>
 using JsonSpanParserBuilder =
   JsonParserBuilder<TJsonParser, TJsonBuffer, Internals::JsonSpan<TChar, Size>>;
 
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar, size_t Size>
 inline typename JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::TParser
 makeParser(TJsonBuffer *buffer, TChar (&json)[Size], DeserializationOptions deserializationOptions) {
@@ -453,7 +455,7 @@ makeParser(TJsonBuffer *buffer, TChar (&json)[Size], DeserializationOptions dese
     buffer, Internals::JsonSpan<TChar, Size>(json), deserializationOptions);
 }
 
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar, size_t Size>
 inline typename JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::TParser
 makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, DeserializationOptions deserializationOptions) {
@@ -461,12 +463,12 @@ makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, Deserializatio
     buffer, json, deserializationOptions);
 }
 
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar>
 using JsonDynamicSpanParserBuilder =
   JsonParserBuilder<TJsonParser, TJsonBuffer, JsonDynamicSpan<TChar>>;
 
-template <template <typename, typename> class TJsonParser,
+template <template <typename, typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar>
 inline typename JsonDynamicSpanParserBuilder<TJsonParser, TJsonBuffer, TChar>::TParser
 makeParser(TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, DeserializationOptions deserializationOptions) {
