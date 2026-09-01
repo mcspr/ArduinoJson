@@ -62,9 +62,8 @@ using DeserializationOptions =
   DeserializationOptionsImpl<DefaultDeserializationOptions>;
 
 template <typename TOptions>
-constexpr DeserializationOptions makeDefaultDeserializationOptions(TOptions options) {
-  return DeserializationOptions(
-    options.nestingLimit(), options.enableComments(), options.skipBom());
+constexpr DeserializationOptionsImpl<TOptions> makeDefaultDeserializationOptions(TOptions) {
+  return DeserializationOptionsImpl<TOptions>();
 }
 
 }
