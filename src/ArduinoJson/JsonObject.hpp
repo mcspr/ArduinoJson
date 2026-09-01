@@ -239,7 +239,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   template <typename>
   friend class Internals::JsonConstObjectSubscript;
 
-  template <typename, typename>
+  template <typename, typename, typename>
   friend class Internals::JsonParser;
 };
 

@@ -36,6 +36,10 @@
 
 namespace ArduinoJson {
 namespace Internals {
+
+template <typename, typename, typename>
+class JsonParser;
+
 namespace JsonParserImpl {
 
 struct KeyValueDeserializationOptions : DeserializationOptions {
@@ -226,12 +230,27 @@ struct SkipUnreadable {
   skip_type _skipUnreadable;
 };
 
+// abi helper for unicode configuration options, binding TState & TCodepoint to the parser type
+// so the compiler generates different method signatures for different configuration options
+template <typename TState, typename TCodepoint>
+struct ParseString {
+  using state_type = TState;
+  using codepoint_type = TCodepoint;
+};
+
+// nb. aliases are not advertised in the binary, just the class / struct above
+using ParseStringImpl = ParseString<
+    Unicode::Utf8::State,
+    Unicode::Utf16::Codepoint>;
+
 }  // namespace JsonParserImpl
 
 // Parse JSON string to create JsonArrays and JsonObjects
 // This internal class is not indended to be used directly.
 // Instead, use JsonBuffer.parseArray() or .parseObject()
-template <typename TReader, typename TWriter>
+template <typename TReader, typename TWriter,
+  typename TParseString = JsonParserImpl::ParseStringImpl>
+
 class JsonParser {
  public:
   using reader_type = TReader;
@@ -302,12 +321,14 @@ class JsonParser {
   SkipUnreadable _skipUnreadable;
 };
 
-template <typename TReader, typename TWriter>
+template <typename TReader, typename TWriter,
+  typename TParseString = JsonParserImpl::ParseStringImpl>
+
 class JsonKeyValueParser final :
-  public JsonParser<TReader, TWriter>,
+  public JsonParser<TReader, TWriter, TParseString>,
   protected JsonParserStoppable {
 
-  using Base = JsonParser<TReader, TWriter>;
+  using Base = JsonParser<TReader, TWriter, TParseString>;
 
  public:
   using Base::JsonParser;

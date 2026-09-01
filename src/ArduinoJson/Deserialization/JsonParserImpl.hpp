@@ -40,14 +40,14 @@ struct Codeunit {
 
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::skipUnreadable()
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::skipUnreadable()
 {
   return _skipUnreadable.skipUnreadable(_reader);
 }
 
-template <typename TReader, typename TWriter>
-inline char JsonParser<TReader, TWriter>::eat(char charToSkip) {
+template <typename TReader, typename TWriter, typename TParseString>
+inline char JsonParser<TReader, TWriter, TParseString>::eat(char charToSkip) {
   if (!skipUnreadable())
     return '\0';
 
@@ -59,8 +59,8 @@ inline char JsonParser<TReader, TWriter>::eat(char charToSkip) {
   return current;
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::parseAnythingTo(
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::parseAnythingTo(
     JsonVariant *destination) {
 
   if (!skipUnreadable())
@@ -78,8 +78,8 @@ inline bool JsonParser<TReader, TWriter>::parseAnythingTo(
       StringContext::stringLiteral(_nesting.value()));
 }
 
-template <typename TReader, typename TWriter>
-inline JsonArray& JsonParser<TReader, TWriter>::parseArray() {
+template <typename TReader, typename TWriter, typename TParseString>
+inline JsonArray& JsonParser<TReader, TWriter, TParseString>::parseArray() {
   auto nesting = makeNestingToken();
   if (!nesting)
     return JsonArray::invalid();
@@ -133,8 +133,8 @@ ERROR_NO_MEMORY:
   return JsonArray::invalid();
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::parseArrayTo(
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::parseArrayTo(
     JsonVariant *destination) {
   JsonArray &array = parseArray();
   if (!array.success()) return false;
@@ -143,8 +143,8 @@ inline bool JsonParser<TReader, TWriter>::parseArrayTo(
   return true;
 }
 
-template <typename TReader, typename TWriter>
-inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
+template <typename TReader, typename TWriter, typename TParseString>
+inline JsonObject &JsonParser<TReader, TWriter, TParseString>::parseObject() {
   auto nesting = makeNestingToken();
   if (!nesting)
     return JsonObject::invalid();
@@ -218,15 +218,15 @@ ERROR_NO_MEMORY:
   return JsonObject::invalid();
 }
 
-template <typename TReader, typename TWriter>
-inline JsonVariant JsonParser<TReader, TWriter>::parseVariant() {
+template <typename TReader, typename TWriter, typename TParseString>
+inline JsonVariant JsonParser<TReader, TWriter, TParseString>::parseVariant() {
   JsonVariant result;
   parseAnythingTo(&result);
   return result;
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::parseObjectTo(
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::parseObjectTo(
     JsonVariant *destination) {
   JsonObject &object = parseObject();
   if (!object.success()) return false;
@@ -289,9 +289,10 @@ inline void StringBufferedWriter<TWriter>::String::_appendParent(
 
 // JsonString *may* store data inline instead of the TJsonBuffer
 // (i.e. returned pointer may be ephemeral and does not always point to TJsonBuffer allocated storage)
-template <typename TReader, typename TWriter>
+template <typename TReader, typename TWriter, typename TParseString>
 inline JsonString
-JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
+JsonParser<TReader, TWriter, TParseString>::parseString(const char* stopChars) {
+
   JsonString out;
   if (!skipUnreadable())
     return out;  // cannot read
@@ -301,9 +302,9 @@ JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
   auto str = _writer.startString();
 
   // similar to 7.x, decode & re-encode utf16 codepoints from escaped byte sequences
-  // note that both codepoints and normal chars go through the utf8 validator
-  Unicode::Utf16::Codepoint codepoint;
-  Unicode::Utf8::State state;
+  // note that both codepoints and normal chars go through the utf8 state (unless disabled through configuration)
+  typename TParseString::codepoint_type codepoint;
+  typename TParseString::state_type state;
 
   if (isQuote(c)) {  // quotes
     _reader.move();
@@ -408,8 +409,8 @@ RETURN_JSON_STRING:
   return out;
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::parseStringTo(
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::parseStringTo(
     JsonVariant *destination, StringContext context) {
 
   const auto hasQuotes = context.forceString || isQuote(_reader.current());
@@ -422,20 +423,20 @@ inline bool JsonParser<TReader, TWriter>::parseStringTo(
   return false;
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::parseStringTo(JsonVariant *destination) {
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::parseStringTo(JsonVariant *destination) {
   return parseStringTo(destination, StringContext());
 }
 
-template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::parseObjectKeyTo(
+template <typename TReader, typename TWriter, typename TParseString>
+inline bool JsonParser<TReader, TWriter, TParseString>::parseObjectKeyTo(
     JsonVariant *destination) {
   return parseStringTo(destination, StringContext::objectKey());
 }
 
-template <typename TReader, typename TWriter>
+template <typename TReader, typename TWriter, typename TParseString>
 template <typename T>
-inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
+inline bool JsonKeyValueParser<TReader, TWriter, TParseString>::parseKeyValue(T&& callback) {
   auto nesting = makeNestingToken();
   if (!nesting)
     return false;
