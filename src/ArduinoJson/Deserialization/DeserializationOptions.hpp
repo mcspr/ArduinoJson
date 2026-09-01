@@ -34,28 +34,32 @@ using DefaultDeserializationOptions =
     BooleanConstant<ARDUINOJSON_ENABLE_COMMENTS == 1>,
     BooleanConstant<ARDUINOJSON_ENABLE_UTF8_BOM == 1>>;
 
-struct DeserializationOptions {
-  constexpr DeserializationOptions(uint8_t nestingLimit_, bool enableComments_, bool skipBom_) noexcept :
+template <typename TOptions>
+struct DeserializationOptionsImpl {
+  constexpr DeserializationOptionsImpl(uint8_t nestingLimit_, bool enableComments_, bool skipBom_) noexcept :
     nestingLimit(nestingLimit_),
     enableComments(enableComments_),
     skipBom(skipBom_)
   {}
 
-  constexpr DeserializationOptions(uint8_t nestingLimit_, bool enableComments_) noexcept :
+  constexpr DeserializationOptionsImpl(uint8_t nestingLimit_, bool enableComments_) noexcept :
     nestingLimit(nestingLimit_),
     enableComments(enableComments_)
   {}
 
-  constexpr DeserializationOptions(uint8_t nestingLimit_) noexcept :
+  constexpr DeserializationOptionsImpl(uint8_t nestingLimit_) noexcept :
     nestingLimit(nestingLimit_)
   {}
 
-  constexpr DeserializationOptions() = default;
+  constexpr DeserializationOptionsImpl() = default;
 
-  uint8_t nestingLimit{ ARDUINOJSON_DEFAULT_NESTING_LIMIT };
-  bool enableComments{ ARDUINOJSON_ENABLE_COMMENTS == 1};
-  bool skipBom{ ARDUINOJSON_ENABLE_UTF8_BOM == 1};
+  uint8_t nestingLimit{ TOptions::nestingLimit() };
+  bool enableComments{ TOptions::enableComments() };
+  bool skipBom{ TOptions::skipBom() };
 };
+
+using DeserializationOptions =
+  DeserializationOptionsImpl<DefaultDeserializationOptions>;
 
 template <typename TOptions>
 constexpr DeserializationOptions makeDefaultDeserializationOptions(TOptions options) {

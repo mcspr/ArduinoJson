@@ -54,9 +54,9 @@ class JsonBufferBase : public JsonBuffer {
     typename TParseString = JsonParserImpl::ParseStringImpl,
     template <typename, typename, typename> class TJsonParser = Internals::JsonKeyValueParser,
     typename TDeserializationOptions = DefaultDeserializationOptions>
-  bool parseKeyValue(TData&& json, TCallback&& callback) {
+  bool parseKeyValue(TData&& json, TCallback&& callback, DeserializationOptions deserializationOptions = makeDefaultDeserializationOptions(TDeserializationOptions())) {
     return Internals::makeParser<TJsonParser, TParseString>(
-      impl(), std::forward<TData>(json), DeserializationOptions(1, TDeserializationOptions::enableComments(), TDeserializationOptions::skipBom()))
+      impl(), std::forward<TData>(json), DeserializationOptions(1, deserializationOptions.enableComments, deserializationOptions.skipBom))
         .parseKeyValue(std::forward<TCallback>(callback));
   }
 
