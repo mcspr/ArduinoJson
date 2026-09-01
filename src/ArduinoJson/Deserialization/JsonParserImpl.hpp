@@ -4,9 +4,6 @@
 
 #pragma once
 
-//#include "../Configuration.hpp"
-
-#include "Unreadable.hpp"
 #include "JsonParser.hpp"
 
 #include "../JsonArray.hpp"
@@ -44,25 +41,29 @@ struct Codeunit {
 }
 
 template <typename TReader, typename TWriter>
-inline bool JsonParser<TReader, TWriter>::eat(
-    TReader &reader, char charToSkip) {
+inline bool JsonParser<TReader, TWriter>::skipUnreadable()
+{
+  return _skipUnreadable.skipUnreadable(_reader);
+}
 
-  if (!skipUnreadable(reader))
-    return false;
+template <typename TReader, typename TWriter>
+inline char JsonParser<TReader, TWriter>::eat(char charToSkip) {
+  if (!skipUnreadable())
+    return '\0';
 
-  const auto current = reader.current();
+  const auto current = _reader.current();
   if (current > 0 && current == charToSkip) {
-    reader.move();
-    return true;
+    _reader.move();
   }
-  return false;
+
+  return current;
 }
 
 template <typename TReader, typename TWriter>
 inline bool JsonParser<TReader, TWriter>::parseAnythingTo(
     JsonVariant *destination) {
 
-  if (!skipUnreadable(_reader))
+  if (!skipUnreadable())
     return false;
 
   switch (_reader.current()) {
@@ -78,7 +79,7 @@ inline bool JsonParser<TReader, TWriter>::parseAnythingTo(
 }
 
 template <typename TReader, typename TWriter>
-inline JsonArray &JsonParser<TReader, TWriter>::parseArray() {
+inline JsonArray& JsonParser<TReader, TWriter>::parseArray() {
   auto nesting = makeNestingToken();
   if (!nesting)
     return JsonArray::invalid();
@@ -87,23 +88,41 @@ inline JsonArray &JsonParser<TReader, TWriter>::parseArray() {
   JsonArray &array = _buffer->createArray();
 
   // Check opening braket
-  if (!eat('[')) goto ERROR_MISSING_BRACKET;
-  if (eat(']')) goto SUCCESS_EMPTY_ARRAY;
+  if (!eatExact('['))
+    goto ERROR_MISSING_BRACKET;
+
+  switch (eat(']')) {
+  case '\0':
+    goto ERROR_MISSING_BRACKET;
+
+  case ']':
+    goto SUCCESS_EMPTY_ARRAY;
+  }
 
   // Read each value
   for (;;) {
     // 1 - Parse value
     JsonVariant value;
-    if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
-    if (!array.add(value)) goto ERROR_NO_MEMORY;
+    if (!parseAnythingTo(&value))
+      goto ERROR_INVALID_VALUE;
+    if (!array.add(value))
+      goto ERROR_NO_MEMORY;
 
     // 2 - More values?
-    if (eat(']')) goto SUCCES_NON_EMPTY_ARRAY;
-    if (!eat(',')) goto ERROR_MISSING_COMMA;
+    switch (eat(']')) {
+    case '\0':
+      goto ERROR_MISSING_BRACKET;
+
+    case ']':
+      goto SUCCESS_NON_EMPTY_ARRAY;
+    }
+
+    if (!eatExact(','))
+      goto ERROR_MISSING_COMMA;
   }
 
 SUCCESS_EMPTY_ARRAY:
-SUCCES_NON_EMPTY_ARRAY:
+SUCCESS_NON_EMPTY_ARRAY:
   return array;
 
 ERROR_INVALID_VALUE:
@@ -134,19 +153,30 @@ inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
   JsonObject &object = _buffer->createObject();
 
   // Check opening brace
-  if (!eat('{')) goto ERROR_MISSING_BRACE;
-  if (eat('}')) goto SUCCESS_EMPTY_OBJECT;
+  if (!eatExact('{'))
+    goto ERROR_MISSING_BRACE;
+
+  switch (eat('}')) {
+    case '\0':
+      goto ERROR_MISSING_BRACE;
+
+    case '}':
+      goto SUCCESS_EMPTY_OBJECT;
+  }
 
   // Read each key value pair
   for (;;) {
     // 1 - Parse key
     JsonVariant key;
-    if (!parseObjectKeyTo(&key)) goto ERROR_INVALID_KEY;
-    if (!eat(':')) goto ERROR_MISSING_COLON;
+    if (!parseObjectKeyTo(&key))
+      goto ERROR_INVALID_KEY;
+    if (!eatExact(':'))
+      goto ERROR_MISSING_COLON;
 
     // 2 - Parse value
     JsonVariant value;
-    if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
+    if (!parseAnythingTo(&value))
+      goto ERROR_INVALID_VALUE;
 
     // 3 - Manually search object for variant key match
     auto it = object.find_impl(
@@ -155,14 +185,23 @@ inline JsonObject &JsonParser<TReader, TWriter>::parseObject() {
       it->value = std::move(value);
     } else {  // brand new object nodes list entry
       it = object.add();
-      if (it == object.end()) goto ERROR_NO_MEMORY;
+      if (it == object.end())
+        goto ERROR_NO_MEMORY;
       it->key = std::move(key);
       it->value = std::move(value);
     }
 
     // 3 - More keys/values?
-    if (eat('}')) goto SUCCESS_NON_EMPTY_OBJECT;
-    if (!eat(',')) goto ERROR_MISSING_COMMA;
+    switch (eat('}')) {
+      case '\0':
+        goto ERROR_MISSING_BRACE;
+
+      case '}':
+        goto SUCCESS_NON_EMPTY_OBJECT;
+    }
+
+    if (!eatExact(','))
+      goto ERROR_MISSING_COMMA;
   }
 
 SUCCESS_EMPTY_OBJECT:
@@ -254,7 +293,7 @@ template <typename TReader, typename TWriter>
 inline JsonString
 JsonParser<TReader, TWriter>::parseString(const char* stopChars) {
   JsonString out;
-  if (!skipUnreadable(_reader))
+  if (!skipUnreadable())
     return out;  // cannot read
 
   char c = _reader.current();
@@ -402,26 +441,46 @@ inline bool JsonKeyValueParser<TReader, TWriter>::parseKeyValue(T&& callback) {
     return false;
 
   // Check opening brace
-  if (!eat('{')) goto ERROR_MISSING_BRACE;
-  if (eat('}')) goto SUCCESS_EMPTY_OBJECT;
+  if (!eatExact('{'))
+    goto ERROR_MISSING_BRACE;
+
+  switch (eat('}')) {
+  case '\0':
+    goto ERROR_MISSING_BRACE;
+
+  case '}':
+    goto SUCCESS_EMPTY_OBJECT;
+  }
 
   // Read each key value pair
   for (;;) {
     // 1 - Parse key
     JsonVariant key;
-    if (!parseObjectKeyTo(&key)) goto ERROR_INVALID_KEY;
-    if (!eat(':')) goto ERROR_MISSING_COLON;
+    if (!parseObjectKeyTo(&key))
+      goto ERROR_INVALID_KEY;
+    if (!eat(':'))
+      goto ERROR_MISSING_COLON;
 
     // 2 - Parse value
     JsonVariant value;
-    if (!parseAnythingTo(&value)) goto ERROR_INVALID_VALUE;
+    if (!parseAnythingTo(&value))
+      goto ERROR_INVALID_VALUE;
 
     // 3 - Execute user callback and possibly stop
-    if (keyValueCallback(std::forward<T>(callback), key, value)) goto SUCCESS_STOP;
+    if (keyValueCallback(std::forward<T>(callback), key, value))
+      goto SUCCESS_STOP;
 
     // 4 - Process more keys/values?
-    if (eat('}')) goto SUCCESS_NON_EMPTY_OBJECT;
-    if (!eat(',')) goto ERROR_MISSING_COMMA;
+    switch (eat('}')) {
+      case '\0':
+        goto ERROR_MISSING_BRACE;
+
+      case '}':
+        goto SUCCESS_NON_EMPTY_OBJECT;
+    }
+
+    if (!eatExact(','))
+      goto ERROR_MISSING_COMMA;
   }
 
 SUCCESS_STOP:

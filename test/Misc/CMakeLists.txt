@@ -6,6 +6,7 @@ add_executable(MiscTests
 	empty.cpp
 	FloatParts.cpp
 	std_stream.cpp
+	std_stream_comments.cpp
 	std_string.cpp
 	std_string_flash_string_operators.cpp
 	StringBuilder.cpp

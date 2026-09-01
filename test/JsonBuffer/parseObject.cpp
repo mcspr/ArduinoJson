@@ -211,4 +211,22 @@ TEST_CASE("JsonBuffer::parseObject()") {
       REQUIRE_FALSE(obj.success());
     }
   }
+
+  SECTION("Trailing comments") {
+    SECTION("CCommentAfterClosingBrace") {
+      JsonObject& obj = jb.parseObject("{\"hello\": \"world\"  }/*COMMENT*/");
+
+      REQUIRE(obj.success());
+      REQUIRE(1 == obj.size());
+      REQUIRE(obj["hello"] == "world");
+    }
+
+    SECTION("CppCommentAfterClosingBrace") {
+      JsonObject& obj = jb.parseObject("{\"hello\":\"world\"}//COMMENT\n");
+
+      REQUIRE(obj.success());
+      REQUIRE(1 == obj.size());
+      REQUIRE(obj["hello"] == "world");
+    }
+  }
 }

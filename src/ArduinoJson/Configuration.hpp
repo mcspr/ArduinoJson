@@ -114,6 +114,16 @@
 #define ARDUINOJSON_VALIDATE_UTF8 1
 #endif
 
+// Skip possible UTF-8 BOM at the input start (EF BB BF)
+#ifndef ARDUINOJSON_ENABLE_UTF8_BOM
+#define ARDUINOJSON_ENABLE_UTF8_BOM 1
+#endif
+
+// Ignore comments in input
+#ifndef ARDUINOJSON_ENABLE_COMMENTS
+#define ARDUINOJSON_ENABLE_COMMENTS 0
+#endif
+
 // Disable support for Arduino String
 #ifndef ARDUINOJSON_ENABLE_ARDUINO_STRING
 #define ARDUINOJSON_ENABLE_ARDUINO_STRING 0

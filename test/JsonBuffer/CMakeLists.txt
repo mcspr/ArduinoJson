@@ -6,8 +6,12 @@ add_executable(JsonBufferTests
 	nested.cpp
 	nestingLimit.cpp
 	parse.cpp
+	parseComments.cpp
+	parseCommentsEnabled.cpp
 	parseArray.cpp
+	parseArrayComments.cpp
 	parseObject.cpp
+	parseObjectComments.cpp
 	parseKeyValue.cpp
 )
 

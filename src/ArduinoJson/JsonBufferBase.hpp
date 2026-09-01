@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include "TypeTraits/Constant.hpp"
+
 #include "Deserialization/JsonParser.hpp"
+#include "Deserialization/DeserializationOptions.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -18,9 +21,9 @@ class JsonBufferBase : public JsonBuffer {
   // Returns a reference to the new JsonArray or JsonArray::invalid() if the
   // allocation fails.
   template <typename TData>
-  JsonArray &parseArray(TData&& json, uint8_t nestingLimit = ARDUINOJSON_DEFAULT_NESTING_LIMIT) {
+  JsonArray &parseArray(TData&& json, DeserializationOptions deserializationOptions = DeserializationOptions()) {
     return Internals::makeParser<Internals::JsonParser>(
-      that(), std::forward<TData>(json), nestingLimit).parseArray();
+      that(), std::forward<TData>(json), deserializationOptions).parseArray();
   }
 
   // Allocates and populate a JsonObject from a JSON string.
@@ -28,17 +31,17 @@ class JsonBufferBase : public JsonBuffer {
   // Returns a reference to the new JsonObject or JsonObject::invalid() if the
   // allocation fails.
   template <typename TData>
-  JsonObject &parseObject(TData&& json, uint8_t nestingLimit = ARDUINOJSON_DEFAULT_NESTING_LIMIT) {
+  JsonObject &parseObject(TData&& json, DeserializationOptions deserializationOptions = DeserializationOptions()) {
     return Internals::makeParser<Internals::JsonParser>(
-      that(), std::forward<TData>(json), nestingLimit).parseObject();
+      that(), std::forward<TData>(json), deserializationOptions).parseObject();
   }
 
   // Generalized version of parseArray() and parseObject(), also works for
   // integral types.
   template <typename TData>
-  JsonVariant parse(TData&& json, uint8_t nestingLimit = ARDUINOJSON_DEFAULT_NESTING_LIMIT) {
+  JsonVariant parse(TData&& json, DeserializationOptions deserializationOptions = DeserializationOptions()) {
     return Internals::makeParser<Internals::JsonParser>(
-      that(), std::forward<TData>(json), nestingLimit).parseVariant();
+      that(), std::forward<TData>(json), deserializationOptions).parseVariant();
   }
 
   // Simplified version of parseObject(..., nestingLimit=1) w/o implicit object allocation
@@ -46,7 +49,7 @@ class JsonBufferBase : public JsonBuffer {
   template <typename TData, typename TCallback>
   JsonVariant parseKeyValue(TData&& json, TCallback&& callback) {
     return Internals::makeParser<Internals::JsonKeyValueParser>(
-      that(), std::forward<TData>(json), 1).parseKeyValue(std::forward<TCallback>(callback));
+      that(), std::forward<TData>(json), JsonParserImpl::KeyValueDeserializationOptions()).parseKeyValue(std::forward<TCallback>(callback));
   }
 
  protected:

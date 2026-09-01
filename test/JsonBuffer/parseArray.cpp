@@ -189,31 +189,32 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE_FALSE(arr.success());
   }
 
+  SECTION("DeeplyNestedFailure") {
+    const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
+    REQUIRE_FALSE(jb.parseArray(input, 18).success());
+  }
+
+  SECTION("DeeplyNestedSuccess") {
+    const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
+    REQUIRE(jb.parseArray(input, 19).success());
+  }
+
   SECTION("CCommentBeforeOpeningBracket") {
     JsonArray& arr = jb.parseArray("/*COMMENT*/  [\"hello\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(1 == arr.size());
-    REQUIRE(arr[0] == "hello");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CCommentAfterOpeningBracket") {
     JsonArray& arr = jb.parseArray("[/*COMMENT*/ \"hello\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(1 == arr.size());
-    REQUIRE(arr[0] == "hello");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CCommentBeforeClosingBracket") {
     JsonArray& arr = jb.parseArray("[\"hello\"/*COMMENT*/]");
-
-    REQUIRE(arr.success());
-    REQUIRE(1 == arr.size());
-    REQUIRE(arr[0] == "hello");
+    REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CCommentAfterClosingBracket") {
+  SECTION("CCommentAfterClosingBracket") {  // parser stopped after end of JSON
     JsonArray& arr = jb.parseArray("[\"hello\"]/*COMMENT*/");
 
     REQUIRE(arr.success());
@@ -223,47 +224,30 @@ TEST_CASE("JsonBuffer::parseArray()") {
 
   SECTION("CCommentBeforeComma") {
     JsonArray& arr = jb.parseArray("[\"hello\"/*COMMENT*/,\"world\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(2 == arr.size());
-    REQUIRE(arr[0] == "hello");
-    REQUIRE(arr[1] == "world");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CCommentAfterComma") {
     JsonArray& arr = jb.parseArray("[\"hello\",/*COMMENT*/ \"world\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(2 == arr.size());
-    REQUIRE(arr[0] == "hello");
-    REQUIRE(arr[1] == "world");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CppCommentBeforeOpeningBracket") {
     JsonArray& arr = jb.parseArray("//COMMENT\n\t[\"hello\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(1 == arr.size());
-    REQUIRE(arr[0] == "hello");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CppCommentAfterOpeningBracket") {
     JsonArray& arr = jb.parseArray("[//COMMENT\n\"hello\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(1 == arr.size());
-    REQUIRE(arr[0] == "hello");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CppCommentBeforeClosingBracket") {
     JsonArray& arr = jb.parseArray("[\"hello\"//COMMENT\r\n]");
-
-    REQUIRE(arr.success());
-    REQUIRE(1 == arr.size());
-    REQUIRE(arr[0] == "hello");
+    REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CppCommentAfterClosingBracket") {
+  SECTION("CppCommentAfterClosingBracket") {  // parser stopped after end of JSON
     JsonArray& arr = jb.parseArray("[\"hello\"]//COMMENT\n");
 
     REQUIRE(arr.success());
@@ -273,20 +257,12 @@ TEST_CASE("JsonBuffer::parseArray()") {
 
   SECTION("CppCommentBeforeComma") {
     JsonArray& arr = jb.parseArray("[\"hello\"//COMMENT\n,\"world\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(2 == arr.size());
-    REQUIRE(arr[0] == "hello");
-    REQUIRE(arr[1] == "world");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("CppCommentAfterComma") {
     JsonArray& arr = jb.parseArray("[\"hello\",//COMMENT\n\"world\"]");
-
-    REQUIRE(arr.success());
-    REQUIRE(2 == arr.size());
-    REQUIRE(arr[0] == "hello");
-    REQUIRE(arr[1] == "world");
+    REQUIRE_FALSE(arr.success());
   }
 
   SECTION("InvalidCppComment") {
@@ -312,11 +288,5 @@ TEST_CASE("JsonBuffer::parseArray()") {
   SECTION("AfterClosingStar") {
     JsonArray& arr = jb.parseArray("[/*COMMENT*");
     REQUIRE_FALSE(arr.success());
-  }
-
-  SECTION("DeeplyNested") {
-    const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
-    REQUIRE_FALSE(jb.parseArray(input, 18).success());
-    REQUIRE(jb.parseArray(input, 19).success());
   }
 }

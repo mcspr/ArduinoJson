@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../Polyfills/attributes.hpp"
+#include "../Configuration.hpp"
 
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/IsPointer.hpp"
@@ -17,6 +18,7 @@
 #include "../TypeTraits/Declval.hpp"
 
 #include "../Data/JsonVariantContent.hpp"
+#include "../Data/Unicode.hpp"
 
 #include "../JsonVariant.hpp"
 #include "../JsonBuffer.hpp"
@@ -26,13 +28,25 @@
 #include "../StringTraits/StringTraits.hpp"
 #include "../Readers/Readers.hpp"
 
+#include "DeserializationOptions.hpp"
 #include "JsonParserStopToken.hpp"
-#include "StringWriter.hpp"
 #include "StringBufferedWriter.hpp"
+#include "StringWriter.hpp"
+#include "Unreadable.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
 namespace JsonParserImpl {
+
+struct KeyValueDeserializationOptions : DeserializationOptions {
+  constexpr KeyValueDeserializationOptions() noexcept :
+    DeserializationOptions(
+      1,
+      ARDUINOJSON_ENABLE_COMMENTS == 1,
+      ARDUINOJSON_ENABLE_UTF8_BOM == 1
+    )
+  {}
+};
 
 template <typename T, typename = void>
 struct StopTokenCallback : FalseType {
@@ -69,9 +83,13 @@ struct NestingLimit {
     return _value;
   }
 
-  constexpr NestingLimit take(const NestingLimit& nestingLimit) const {
+  constexpr NestingLimit take(uint8_t value_) const {
     return NestingLimit(
-      _value < nestingLimit._value ? static_cast<uint8_t>(_value + 1) : InvalidLimit);
+      _value < value_ ? static_cast<uint8_t>(_value + 1) : InvalidLimit);
+  }
+
+  constexpr NestingLimit take(const NestingLimit& other) const {
+    return take(other._value);
   }
 
   constexpr NestingLimit release() const {
@@ -96,7 +114,7 @@ struct NestingLimit {
 };
 
 struct NestingToken {
-  explicit NestingToken(JsonParserImpl::NestingLimit& nesting, JsonParserImpl::NestingLimit& nestingLimit) :
+  explicit NestingToken(JsonParserImpl::NestingLimit& nesting, uint8_t nestingLimit) :
     _nesting(nesting),
     _nestingLimit(nestingLimit),
     _token(_nesting.take(_nestingLimit))
@@ -111,7 +129,7 @@ struct NestingToken {
   }
 
   void invalidate() {
-    _token = _nestingLimit;
+    _token = NestingLimit(_nestingLimit);
   }
 
   uint8_t limit() const {
@@ -124,7 +142,8 @@ struct NestingToken {
 
  private:
    NestingLimit& _nesting;
-   NestingLimit& _nestingLimit;
+   uint8_t _nestingLimit;
+
    NestingLimit _token;
 };
 
@@ -147,6 +166,66 @@ struct StringContext {
   }
 };
 
+// per spec: skip spaces between braces / brackets and strings aka values
+// sort-of in spec: BOM, which is generally frowned upon, but it is adviced to simply ignore it
+// (note that invalid BOM *WOULD* trigger a parsing error)
+// not in spec: comments in C/C++ style that appear before or after JSON tokens
+// (nb. unused funcs generally get optimized away, unless determined by runtime)
+template <typename TInput>
+struct SkipUnreadable {
+  SkipUnreadable() = delete;
+
+  SkipUnreadable(const SkipUnreadable&) = default;
+  SkipUnreadable& operator=(const SkipUnreadable&) = default;
+
+  SkipUnreadable(SkipUnreadable&&) = default;
+  SkipUnreadable& operator=(SkipUnreadable&&) = default;
+
+  constexpr explicit SkipUnreadable(DeserializationOptions options) :
+    _skipUnreadable(
+      options.skipBom && options.enableComments ?
+        &SkipUnreadable::_skipBomSpacesAndComments :
+      options.skipBom ?
+        &SkipUnreadable::_skipBomSpaces :
+      options.enableComments ?
+        &SkipUnreadable::_skipSpacesAndComments :
+        &SkipUnreadable::_skipSpaces)
+  {}
+
+  bool _skipBomSpacesAndComments(TInput &input) {
+   if (!skipBomSpacesAndComments(input))
+     return false;
+
+   _skipUnreadable = &SkipUnreadable::_skipSpacesAndComments;
+   return true;
+  }
+
+  bool _skipSpacesAndComments(TInput &input) {
+    return skipSpacesAndComments(input);
+  }
+
+  bool _skipBomSpaces(TInput &input) {
+    if (!skipBomSpaces(input))
+      return false;
+
+    _skipUnreadable = &SkipUnreadable::_skipSpaces;
+    return true;
+  }
+
+  bool _skipSpaces(TInput &input) {
+    skipSpaces(input);
+    return true;
+  }
+
+  bool skipUnreadable(TInput& input) {
+    return (this->*_skipUnreadable)(input);
+  }
+
+ private:
+  using skip_type = bool(SkipUnreadable::*)(TInput&);
+  skip_type _skipUnreadable;
+};
+
 }  // namespace JsonParserImpl
 
 // Parse JSON string to create JsonArrays and JsonObjects
@@ -158,12 +237,13 @@ class JsonParser {
   using reader_type = TReader;
   using writer_type = TWriter;
 
-  JsonParser(JsonBuffer *buffer, TReader reader, TWriter writer, uint8_t nestingLimit) :
+  JsonParser(JsonBuffer *buffer, TReader reader, TWriter writer, DeserializationOptions options) :
     _buffer(buffer),
     _reader(reader),
     _writer(writer),
     _nesting(0),
-    _nestingLimit(nestingLimit)
+    _nestingLimit(options.nestingLimit),
+    _skipUnreadable(options)
   {}
 
   JsonParser(const JsonParser &) = delete;
@@ -178,10 +258,12 @@ class JsonParser {
   JsonVariant parseVariant();
 
  protected:
-  static bool eat(TReader &, char charToSkip);
-  ARDUINOJSON_FORCE_INLINE bool eat(char charToSkip) {
-    return eat(_reader, charToSkip);
+  char eat(char charToSkip);
+  inline bool eatExact(char charToSkip) {
+    return eat(charToSkip) == charToSkip;
   }
+
+  bool skipUnreadable();
 
   using writer_string_type = decltype(Declval<TWriter>().startString());
   using writer_returns_json_string =
@@ -203,7 +285,7 @@ class JsonParser {
   using NestingToken = JsonParserImpl::NestingToken;
 
   NestingToken makeNestingToken() {
-    return NestingToken(_nesting, _nestingLimit);
+    return NestingToken(_nesting, _nestingLimit.value());
   }
 
   JsonBuffer *_buffer;
@@ -214,6 +296,10 @@ class JsonParser {
 
   NestingLimit _nesting;
   NestingLimit _nestingLimit;
+
+  using SkipUnreadable = JsonParserImpl::SkipUnreadable<TReader>;
+
+  SkipUnreadable _skipUnreadable;
 };
 
 template <typename TReader, typename TWriter>
@@ -221,8 +307,10 @@ class JsonKeyValueParser final :
   public JsonParser<TReader, TWriter>,
   protected JsonParserStoppable {
 
+  using Base = JsonParser<TReader, TWriter>;
+
  public:
-  using JsonParser<TReader, TWriter>::JsonParser;
+  using Base::JsonParser;
 
   template <typename T>
   bool parseKeyValue(T&&);
@@ -241,17 +329,19 @@ class JsonKeyValueParser final :
     return false;
   }
 
-  using JsonParser<TReader, TWriter>::eat;
-  using JsonParser<TReader, TWriter>::parseAnythingTo;
-  using JsonParser<TReader, TWriter>::parseString;
-  using JsonParser<TReader, TWriter>::parseStringTo;
-  using JsonParser<TReader, TWriter>::parseObjectKeyTo;
+  using Base::eat;
+  using Base::eatExact;
 
-  using JsonParser<TReader, TWriter>::makeNestingToken;
+  using Base::parseAnythingTo;
+  using Base::parseString;
+  using Base::parseStringTo;
+  using Base::parseObjectKeyTo;
 
-  using JsonParser<TReader, TWriter>::parseArray;
-  using JsonParser<TReader, TWriter>::parseObject;
-  using JsonParser<TReader, TWriter>::parseVariant;
+  using Base::makeNestingToken;
+
+  using Base::parseArray;
+  using Base::parseObject;
+  using Base::parseVariant;
 };
 
 // internals set up 'writer' a bit differently, depending on the type of input
@@ -268,11 +358,11 @@ struct JsonParserBuilder {
   typedef TJsonParser<TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TJson &&json,
-                            uint8_t nestingLimit) {
+                            DeserializationOptions deserializationOptions) {
     static_assert(!IsPointer<TJsonNoCref>::value &&
                   !IsChar<typename RemovePointer<TJson>::type>::value,
                   "Avoid using T* w/ unknown size");
-    return TParser(buffer, TReader(json), TWriter(*buffer), nestingLimit);
+    return TParser(buffer, TReader(json), TWriter(*buffer), deserializationOptions);
   }
 };
 
@@ -292,11 +382,11 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<TChar, Size>> {
   typedef TJsonParser<TReader, TWriter> TParser;
 
   static TParser makeParser(TJsonBuffer *buffer, TSpan json,
-                            uint8_t nestingLimit) {
+                            DeserializationOptions deserializationOptions) {
     return TParser(buffer,
       TReader(json.data(), json.size()),
       TWriter(json.data(), json.size()),
-      nestingLimit);
+      deserializationOptions);
   }
 };
 
@@ -312,20 +402,21 @@ struct JsonParserBuilder<TJsonParser, TJsonBuffer, JsonSpan<const TChar, Size>> 
   typedef StringBufferedWriter<TJsonBuffer> TWriter;
   typedef TJsonParser<TReader, TWriter> TParser;
 
-  static TParser makeParser(TJsonBuffer *buffer, TSpan json, uint8_t nestingLimit) {
+  static TParser makeParser(TJsonBuffer *buffer, TSpan json,
+                            DeserializationOptions deserializationOptions) {
     return TParser(buffer,
       TReader(json.data(), json.size()),
       TWriter(*buffer),
-      nestingLimit);
+      deserializationOptions);
   }
 };
 
 template <template <typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TJson>
 inline typename JsonParserBuilder<TJsonParser, TJsonBuffer, TJson>::TParser
-makeParser(TJsonBuffer *buffer, TJson &&json, uint8_t nestingLimit) {
+makeParser(TJsonBuffer *buffer, TJson &&json, DeserializationOptions deserializationOptions) {
   return JsonParserBuilder<TJsonParser, TJsonBuffer, TJson>::makeParser(
-    buffer, std::forward<TJson>(json), nestingLimit);
+    buffer, std::forward<TJson>(json), deserializationOptions);
 }
 
 template <template <typename, typename> class TJsonParser,
@@ -336,17 +427,17 @@ using JsonSpanParserBuilder =
 template <template <typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar, size_t Size>
 inline typename JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::TParser
-makeParser(TJsonBuffer *buffer, TChar (&json)[Size], uint8_t nestingLimit) {
+makeParser(TJsonBuffer *buffer, TChar (&json)[Size], DeserializationOptions deserializationOptions) {
   return JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::makeParser(
-    buffer, Internals::JsonSpan<TChar, Size>(json), nestingLimit);
+    buffer, Internals::JsonSpan<TChar, Size>(json), deserializationOptions);
 }
 
 template <template <typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar, size_t Size>
 inline typename JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::TParser
-makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, uint8_t nestingLimit) {
+makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, DeserializationOptions deserializationOptions) {
   return JsonSpanParserBuilder<TJsonParser, TJsonBuffer, TChar, Size>::makeParser(
-    buffer, json, nestingLimit);
+    buffer, json, deserializationOptions);
 }
 
 template <template <typename, typename> class TJsonParser,
@@ -357,9 +448,9 @@ using JsonDynamicSpanParserBuilder =
 template <template <typename, typename> class TJsonParser,
   typename TJsonBuffer, typename TChar>
 inline typename JsonDynamicSpanParserBuilder<TJsonParser, TJsonBuffer, TChar>::TParser
-makeParser(TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, uint8_t nestingLimit) {
+makeParser(TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, DeserializationOptions deserializationOptions) {
   return JsonDynamicSpanParserBuilder<TJsonParser, TJsonBuffer, TChar>::makeParser(
-    buffer, json, nestingLimit);
+    buffer, json, deserializationOptions);
 }
 
 }  // namespace Internals
