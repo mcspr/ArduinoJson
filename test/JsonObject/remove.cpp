@@ -13,8 +13,7 @@ TEST_CASE("JsonObject::remove()") {
     JsonObject& obj = jb.createObject();
     obj["hello"] = 1;
 
-    obj.remove("hello");
-
+    REQUIRE(obj.remove("hello") == obj.end());
     REQUIRE(0 == obj.size());
   }
 
@@ -22,20 +21,30 @@ TEST_CASE("JsonObject::remove()") {
     JsonObject& obj = jb.createObject();
     obj["hello"] = 1;
 
-    obj.remove("world");
-
+    REQUIRE(obj.remove("world") == obj.end());
     REQUIRE(1 == obj.size());
   }
 
   SECTION("RemoveByIterator") {
-    JsonObject& obj = jb.parseObject("{\"a\":0,\"b\":1,\"c\":2}");
+    JsonObject& obj = jb.parseObject("{\"a\":0,\"b\":1,\"c\":2,\"d\":3}");
+    REQUIRE(4 == obj.size());
 
-    for (JsonObject::iterator it = obj.begin(); it != obj.end(); ++it) {
-      if (it->value == 1) obj.remove(it);
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+      if (it->value == 1) {
+        it = obj.remove(it);
+        it = obj.remove(it);
+      }
     }
 
-    std::string result;
-    obj.printTo(result);
-    REQUIRE("{\"a\":0,\"c\":2}" == result);
+    REQUIRE(2 == obj.size());
+
+    REQUIRE_FALSE(obj["b"].success());
+    REQUIRE_FALSE(obj["c"].success());
+
+    REQUIRE(obj["a"].success());
+    REQUIRE(obj["a"] == 0);
+
+    REQUIRE(obj["d"].success());
+    REQUIRE(obj["d"] == 3);
   }
 }

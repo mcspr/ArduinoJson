@@ -68,6 +68,7 @@ class List {
   iterator begin() {
     return iterator(_firstNode);
   }
+
   iterator end() {
     return iterator(nullptr);
   }
@@ -75,23 +76,31 @@ class List {
   const_iterator begin() const noexcept {
     return const_iterator(_firstNode);
   }
+
   const_iterator end() const noexcept {
     return const_iterator(nullptr);
   }
 
-  void remove(const_iterator it) {
+  iterator remove(const_iterator it) {
     node_type *nodeToRemove = it._node;
-    if (!nodeToRemove) return;
+
+    if (!nodeToRemove)
+      return end();
+
+    node_type *nextNode = nodeToRemove->next;
     if (nodeToRemove == _firstNode) {
-      _firstNode = nodeToRemove->next;
+      _firstNode = nextNode;
     } else {
       for (node_type *node = _firstNode; node; node = node->next)
-        if (node->next == nodeToRemove) node->next = nodeToRemove->next;
+        if (node->next == nodeToRemove)
+          node->next = nodeToRemove->next;
     }
+
+    return iterator(nextNode);
   }
 
-  void remove(iterator it) {
-    remove(const_iterator(it));
+  iterator remove(iterator it) {
+    return remove(const_iterator(it));
   }
 
  protected:

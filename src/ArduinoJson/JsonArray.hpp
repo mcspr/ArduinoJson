@@ -186,8 +186,8 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   }
 
   //
-  // void remove(const_iterator)
-  // void remove(iterator)
+  // iterator remove(const_iterator)
+  // iterator remove(iterator)
   using Internals::List<JsonVariant>::remove;
 
   // Returns a reference an invalid JsonArray.

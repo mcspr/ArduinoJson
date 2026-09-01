@@ -186,13 +186,13 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
 
   // Removes the specified key and the associated value.
   template <typename TKey>
-  void ARDUINOJSON_FORCE_INLINE remove(TKey&& key) {
-    remove(find_impl(Internals::MakeStringRef(std::forward<TKey>(key))));
+  iterator ARDUINOJSON_FORCE_INLINE remove(TKey&& key) {
+    return remove(find_impl(Internals::MakeStringRef(std::forward<TKey>(key))));
   }
 
   //
-  // void remove(const_iterator)
-  // void remove(iterator)
+  // iterator remove(const_iterator)
+  // iterator remove(iterator)
   using Internals::List<JsonPair>::remove;
 
   // Returns a reference an invalid JsonObject.
