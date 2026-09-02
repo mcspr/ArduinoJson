@@ -153,7 +153,7 @@ struct StringContext {
   {}
 
   static constexpr StringContext objectKey() {
-    return StringContext(":}\t\n\r ", true);  // next object characters or whitespace and also disallow comments w/o whitespace
+    return StringContext(":\t\n\r ", true);  // next object characters or whitespace and also disallow comments w/o whitespace
   }
 
   static constexpr StringContext stringLiteral(uint8_t nesting) {
