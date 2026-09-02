@@ -43,6 +43,8 @@ private:
 template <typename T, size_t Extent = JsonSpanDynamicExtent>
 struct JsonSpan {
   static_assert(Internals::IsChar<T>::value, "");
+  using data_type = T;
+  using size_type = size_t;
 
   constexpr explicit JsonSpan(std::nullptr_t) :
     _data(nullptr)
@@ -52,25 +54,25 @@ struct JsonSpan {
     JsonSpan(nullptr)
   {}
 
-  constexpr explicit JsonSpan(T* span_data) :
+  constexpr explicit JsonSpan(data_type* span_data) :
     _data(span_data)
   {}
 
-  constexpr explicit JsonSpan(std::nullptr_t, size_t) :
+  constexpr explicit JsonSpan(std::nullptr_t, size_type) :
     _data(nullptr),
     _extent(0)
   {}
 
-  constexpr explicit JsonSpan(T* span_data, size_t extent_size) :
+  constexpr explicit JsonSpan(data_type* span_data, size_type extent_size) :
     _data(span_data),
     _extent(extent_size)
   {}
 
-  constexpr T* data() const {
+  constexpr data_type* data() const {
     return _data;
   }
 
-  T* data() {
+  data_type* data() {
     return _data;
   }
 
@@ -82,46 +84,46 @@ struct JsonSpan {
     return is_null() || _extent.size == 0;
   }
 
-  constexpr size_t size() const {
+  constexpr size_type size() const {
     return _extent.size();
   }
 
-  constexpr T* begin() const {
+  constexpr data_type* begin() const {
     return _data;
   }
 
-  constexpr T* end() const {
+  constexpr data_type* end() const {
     return _data + size();
   }
 
-  constexpr T& operator[](size_t index) const {
+  constexpr data_type& operator[](size_type index) const {
     return _data[index];
   }
 
-  constexpr T& front() const {
+  constexpr data_type& front() const {
     return _data[0];
   }
 
-  constexpr T& back() const {
+  constexpr data_type& back() const {
     return _data[size() ? size() - 1 : 0];
   }
 
-  constexpr JsonSpan<T> slice(size_t index, size_t extent_size) const {
+  constexpr JsonSpan<data_type> slice(size_type index, size_type extent_size) const {
     return JsonSpan(
       _data + Min(index, this->size()),
       Min(extent_size, this->size() - index));
   }
 
-  constexpr JsonSpan<T> slice(size_t index) const {
+  constexpr JsonSpan<data_type> slice(size_type index) const {
     return slice(index, size() - index);
   }
 
-  JsonSpan<T>& advance(size_t index) {
+  JsonSpan<data_type>& advance(size_t index) {
     return *this = slice(index);
   }
 
 private:
-  T* _data;
+  data_type* _data;
   ExtentImpl<Extent> _extent;
 };
 

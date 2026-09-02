@@ -7,6 +7,7 @@
 #include "../Polyfills/attributes.hpp"
 #include "../Configuration.hpp"
 
+#include "../TypeTraits/AddConst.hpp"
 #include "../TypeTraits/IsConst.hpp"
 #include "../TypeTraits/IsPointer.hpp"
 #include "../TypeTraits/IsInstantiationOf.hpp"
@@ -351,115 +352,117 @@ class JsonKeyValueParser final :
   using Base::parseVariant;
 };
 
-// internals set up 'writer' a bit differently, depending on the type of input
-// generic reader, always uses TJsonBuffer as backing storage when escaped characters are encountered
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString,
-  typename TJsonBuffer,
-  typename TJson,
-  typename Enable = void>
-struct JsonParserBuilder {
-  typedef typename RemoveConstReference<TJson>::type TJsonNoCref;
+// generic reader, deduced by the reader traits and used by default if nothing else matches
+template <typename TJson, typename = void>
+struct JsonParserReader {
+  using json_type = TJson;
+  using reader_type =
+    ReaderImpl<typename RemoveConstReference<json_type>::type>;
 
-  typedef ReaderImpl<TJsonNoCref> TReader;
-  typedef StringBufferedWriter<TJsonBuffer> TWriter;
-  typedef TJsonParser<TReader, TWriter, TParseString> TParser;
-
-  static TParser makeParser(TJsonBuffer *buffer, TJson &&json,
-                            DeserializationOptions deserializationOptions) {
-    static_assert(!IsPointer<TJsonNoCref>::value &&
-                  !IsChar<typename RemovePointer<TJson>::type>::value,
+  static reader_type make(json_type&& json) {
+    static_assert(!IsPointer<typename RemoveConstReference<json_type>::type>::value &&
+                  !IsChar<typename RemovePointer<json_type>::type>::value,
                   "Avoid using T* w/ unknown size");
-    return TParser(buffer, TReader(json), TWriter(*buffer), deserializationOptions);
+    return reader_type(json);
+  }
+};
+
+// arbitrary character data spans w/ a fixed size are preferred
+template <typename TChar, size_t Size>
+struct JsonParserReader<JsonSpan<TChar, Size>> {
+  using json_type = JsonSpan<TChar, Size>;
+  using reader_type =
+    typename StringTraits<typename Internals::AddConst<TChar>::type *>::Reader;
+
+  static reader_type make(json_type json) {
+    return reader_type(json.data(), json.size());
+  }
+};
+
+// internals set up 'writer' a bit differently, depending on the type of input
+// by default, duplicates read data in the provided TJsonBuffer
+template <typename TJsonBuffer, typename TJson, typename = void>
+struct JsonParserWriter {
+  using json_type = TJson;
+  using writer_type = StringBufferedWriter<TJsonBuffer>;
+
+  static writer_type make(TJsonBuffer* buffer, json_type&&) {
+    return writer_type(*buffer);
   }
 };
 
 // reuse input buffer instead of duplicating data in the TJsonBuffer. note that this causes input to be thrashed
-// only enabled when string view data pointer is not marked as const
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString,
-  typename TJsonBuffer,
-  typename TChar, size_t Size>
-struct JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonSpan<TChar, Size>> {
+// only enabled when data span is not marked as const
+template <typename TJsonBuffer, typename TChar, size_t Size>
+struct JsonParserWriter<TJsonBuffer, JsonSpan<TChar, Size>> {
+  using json_type = JsonSpan<TChar, Size>;
+  using writer_type = StringWriter<TChar>;
 
-  static_assert(!Internals::IsConst<TChar>::value, "");
-  typedef Internals::JsonSpan<TChar, Size> TSpan;
-
-  typedef typename StringTraits<const TChar *>::Reader TReader;
-  typedef StringWriter<TChar> TWriter;
-
-  typedef TJsonParser<TReader, TWriter, TParseString> TParser;
-
-  static TParser makeParser(TJsonBuffer *buffer, TSpan json,
-                            DeserializationOptions deserializationOptions) {
-    return TParser(buffer,
-      TReader(json.data(), json.size()),
-      TWriter(json.data(), json.size()),
-      deserializationOptions);
+  static StringWriter<TChar> make(TJsonBuffer*, json_type json) {
+    return StringWriter<TChar>(json.data(), json.size());
   }
 };
 
 // points to existing data when no escaped characters encountered
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString,
-  typename TJsonBuffer,
-  typename TChar, size_t Size>
-struct JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonSpan<const TChar, Size>> {
+template <typename TJsonBuffer, typename TChar, size_t Size>
+struct JsonParserWriter<TJsonBuffer, JsonSpan<const TChar, Size>> {
+  using json_type = JsonSpan<const TChar, Size>;
+  using writer_type = StringBufferedWriter<TJsonBuffer>;
 
-  typedef Internals::JsonSpan<const TChar, Size> TSpan;
-
-  typedef typename StringTraits<TChar *>::Reader TReader;
-  typedef StringBufferedWriter<TJsonBuffer> TWriter;
-  typedef TJsonParser<TReader, TWriter, TParseString> TParser;
-
-  static TParser makeParser(TJsonBuffer *buffer, TSpan json,
-                            DeserializationOptions deserializationOptions) {
-    return TParser(buffer,
-      TReader(json.data(), json.size()),
-      TWriter(*buffer),
-      deserializationOptions);
+  static writer_type make(TJsonBuffer* buffer, json_type&&) {
+    return writer_type(*buffer);
   }
 };
 
 template <template <typename, typename, typename> class TJsonParser,
   typename TParseString, typename TJsonBuffer, typename TJson>
-inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, TJson>::TParser
-makeParser(TJsonBuffer *buffer, TJson &&json, DeserializationOptions deserializationOptions) {
+struct JsonParserBuilder {
+  using parser_reader_type = JsonParserReader<TJson>;
+  using parser_writer_type = JsonParserWriter<TJsonBuffer, TJson>;
+  using parser_type = TJsonParser<
+    typename parser_reader_type::reader_type,
+    typename parser_writer_type::writer_type,
+    TParseString>;
+
+  static parser_type makeParser(TJsonBuffer* buffer,
+      TJson&& json, DeserializationOptions deserializationOptions)
+  {
+    return parser_type(buffer,
+      parser_reader_type::make(std::forward<TJson>(json)),
+      parser_writer_type::make(buffer, std::forward<TJson>(json)),
+      deserializationOptions);
+  }
+};
+
+template <template <typename, typename, typename> class TJsonParser, typename TParseString,
+    typename TJsonBuffer, typename TJson>
+inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, TJson>::parser_type
+makeParser(TJsonBuffer* buffer, TJson&& json, DeserializationOptions deserializationOptions) {
   return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, TJson>::makeParser(
     buffer, std::forward<TJson>(json), deserializationOptions);
 }
 
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString, typename TJsonBuffer, typename TChar, size_t Size>
-using JsonSpanParserBuilder =
-  JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>;
-
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString, typename TJsonBuffer, typename TChar, size_t Size>
-inline typename JsonSpanParserBuilder<TJsonParser, TParseString, TJsonBuffer, TChar, Size>::TParser
+template <template <typename, typename, typename> class TJsonParser, typename TParseString,
+    typename TJsonBuffer, typename TChar, size_t Size>
+inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::parser_type
 makeParser(TJsonBuffer *buffer, TChar (&json)[Size], DeserializationOptions deserializationOptions) {
-  return JsonSpanParserBuilder<TJsonParser, TParseString, TJsonBuffer, TChar, Size>::makeParser(
+  return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::makeParser(
     buffer, Internals::JsonSpan<TChar, Size>(json), deserializationOptions);
 }
 
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString, typename TJsonBuffer, typename TChar, size_t Size>
-inline typename JsonSpanParserBuilder<TJsonParser, TParseString, TJsonBuffer, TChar, Size>::TParser
+template <template <typename, typename, typename> class TJsonParser, typename TParseString,
+    typename TJsonBuffer, typename TChar, size_t Size>
+inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::parser_type
 makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, DeserializationOptions deserializationOptions) {
-  return JsonSpanParserBuilder<TJsonParser, TParseString, TJsonBuffer, TChar, Size>::makeParser(
+  return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::makeParser(
     buffer, json, deserializationOptions);
 }
 
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString, typename TJsonBuffer, typename TChar>
-using JsonDynamicSpanParserBuilder =
-  JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonDynamicSpan<TChar>>;
-
-template <template <typename, typename, typename> class TJsonParser,
-  typename TParseString, typename TJsonBuffer, typename TChar>
-inline typename JsonDynamicSpanParserBuilder<TJsonParser, TParseString, TJsonBuffer, TChar>::TParser
+template <template <typename, typename, typename> class TJsonParser, typename TParseString,
+    typename TJsonBuffer, typename TChar>
+inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonDynamicSpan<TChar>>::parser_type
 makeParser(TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, DeserializationOptions deserializationOptions) {
-  return JsonDynamicSpanParserBuilder<TJsonParser, TParseString, TJsonBuffer, TChar>::makeParser(
+  return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonDynamicSpan<TChar>>::makeParser(
     buffer, json, deserializationOptions);
 }
 
