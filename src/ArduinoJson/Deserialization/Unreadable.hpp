@@ -82,8 +82,8 @@ enum class SkipCommentsResult {
   Incomplete,
 };
 
-// skip everything matching C/C++ comment blocks and / or lines
-// definition is outside of the spec, but *WOULD* trigger an error in parsing on invalid comment syntax
+// skip everything matching single-line and multi-line comment blocks and / or lines (ref. https://jsonc.org/)
+// definition is outside of the basic json spec, but *WOULD* trigger an error in parsing on invalid comment syntax
 // returns `::FoundSomething` when input contained a comment, `::Nothing` otherwise
 // in case of block comments, returns `::Incomplete` when unable to determine end of the comment block (aka syntax error)
 template <typename TInput>
@@ -102,7 +102,7 @@ SkipCommentsResult skipComments(TInput &input) {
           default:
             goto RETURN_OUT;
 
-          case '*':  // C-style multi-line block comment
+          case '*':  // multi-line block comment
             input.move();
             for (;;) {  // consume '/*' and everything following, until the '*/' is encountered
               switch (input.current()) {
@@ -125,7 +125,7 @@ SkipCommentsResult skipComments(TInput &input) {
 
             break;
 
-           case '/':  // C++-style single line comment
+           case '/':  // single-line comment
              input.move();
              for (;;) {  // consume '//' and everything following on the same line or until the end of the input
                switch (input.current()) {

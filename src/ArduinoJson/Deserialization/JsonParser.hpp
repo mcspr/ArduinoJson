@@ -160,7 +160,7 @@ struct StringContext {
 // per spec: skip spaces between braces / brackets and strings aka values
 // sort-of in spec: BOM, which is generally frowned upon, but it is advised to simply ignore it
 // (note that invalid BOM *WOULD* trigger a parsing error)
-// not in spec: comments in C/C++ style that appear before or after JSON tokens
+// not in spec: single-line and multi-line comments that appear before or after JSON tokens
 // (nb. unused funcs generally get optimized away, but this heavily depends on whether the compiler actually switches into constexpr context)
 template <typename TInput>
 struct SkipUnreadable {

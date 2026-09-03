@@ -8,37 +8,37 @@
 TEST_CASE("JsonBuffer::parseArray()") {
   DynamicJsonBuffer jb;
 
-  SECTION("EmptyArray") {
+  SECTION("Empty array") {
     JsonArray& arr = jb.parseArray("[]");
 
     REQUIRE(arr.success());
     REQUIRE(0 == arr.size());
   }
 
-  SECTION("MissingOpeningBracket") {
+  SECTION("Missing opening bracket") {
     JsonArray& arr = jb.parseArray("]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("ArrayWithNoEnd") {
+  SECTION("Array with no end") {
     JsonArray& arr = jb.parseArray("[");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("EmptyArrayWithLeadingSpaces") {
+  SECTION("Empty array with leading spaces") {
     JsonArray& arr = jb.parseArray("  []");
 
     REQUIRE(arr.success());
     REQUIRE(0 == arr.size());
   }
 
-  SECTION("Garbage") {
+  SECTION("non-printable ASCII garbage") {
     JsonArray& arr = jb.parseArray("%*$£¤");
 
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("OneInteger") {
+  SECTION("One integer") {
     JsonArray& arr = jb.parseArray("[42]");
 
     REQUIRE(arr.success());
@@ -46,7 +46,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == 42);
   }
 
-  SECTION("OneIntegerWithSpacesBefore") {
+  SECTION("One integer with spaces before") {
     JsonArray& arr = jb.parseArray("[ \t\r\n42]");
 
     REQUIRE(arr.success());
@@ -54,7 +54,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == 42);
   }
 
-  SECTION("OneIntegerWithSpaceAfter") {
+  SECTION("One integer with space after") {
     JsonArray& arr = jb.parseArray("[42 \t\r\n]");
 
     REQUIRE(arr.success());
@@ -62,17 +62,17 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == 42);
   }
 
-  SECTION("OneIntegerWithCommaAfter") {
+  SECTION("One integer with comma after") {
     JsonArray& arr = jb.parseArray("[42,]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("OneIntegerWithCommaBefore") {
+  SECTION("One integer with comma before") {
     JsonArray& arr = jb.parseArray("[,42]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("TwoIntegers") {
+  SECTION("Two integers") {
     JsonArray& arr = jb.parseArray("[42,84]");
 
     REQUIRE(arr.success());
@@ -81,7 +81,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == 84);
   }
 
-  SECTION("TwoDoubles") {
+  SECTION("Two doubles") {
     JsonArray& arr = jb.parseArray("[4.2,1e2]");
 
     REQUIRE(arr.success());
@@ -90,7 +90,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == 1e2);
   }
 
-  SECTION("UnsignedLong") {
+  SECTION("Unsigned long") {
     JsonArray& arr = jb.parseArray("[4294967295]");
 
     REQUIRE(arr.success());
@@ -98,7 +98,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == 4294967295UL);
   }
 
-  SECTION("TwoBooleans") {
+  SECTION("Two booleans") {
     JsonArray& arr = jb.parseArray("[true,false]");
 
     REQUIRE(arr.success());
@@ -107,7 +107,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == false);
   }
 
-  SECTION("TwoNulls") {
+  SECTION("Two nulls") {
     JsonArray& arr = jb.parseArray("[null,null]");
 
     REQUIRE(arr.success());
@@ -118,7 +118,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1].as<char*>() == std::string("null"));
   }
 
-  SECTION("TwoStringsDoubleQuotes") {
+  SECTION("Two strings double quotes") {
     JsonArray& arr = jb.parseArray("[ \"hello\" , \"world\" ]");
 
     REQUIRE(arr.success());
@@ -127,7 +127,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("TwoStringsSingleQuotes") {
+  SECTION("Two strings single quotes") {
     JsonArray& arr = jb.parseArray("[ 'hello' , 'world' ]");
 
     REQUIRE(arr.success());
@@ -136,7 +136,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("TwoStringsNoQuotes") {
+  SECTION("Two strings no quotes") {
     JsonArray& arr = jb.parseArray("[ hello , world ]");
 
     REQUIRE(arr.success());
@@ -145,7 +145,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("EmptyStringsDoubleQuotes") {
+  SECTION("Empty strings double quotes") {
     JsonArray& arr = jb.parseArray("[\"\",\"\"]");
 
     REQUIRE(arr.success());
@@ -154,7 +154,7 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == "");
   }
 
-  SECTION("EmptyStringSingleQuotes") {
+  SECTION("Empty string single quotes") {
     JsonArray& arr = jb.parseArray("[\'\',\'\']");
 
     REQUIRE(arr.success());
@@ -163,25 +163,25 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[1] == "");
   }
 
-  SECTION("EmptyStringNoQuotes") {
+  SECTION("Empty string no quotes") {
     JsonArray& arr = jb.parseArray("[,]");
 
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("ClosingDoubleQuoteMissing") {
+  SECTION("Closing double quote missing") {
     JsonArray& arr = jb.parseArray("[\"]");
 
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("ClosingSignleQuoteMissing") {
+  SECTION("Closing signle quote missing") {
     JsonArray& arr = jb.parseArray("[\']");
 
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("StringWithEscapedChars") {
+  SECTION("String with escaped chars") {
     JsonArray& arr = jb.parseArray("[\"1\\\"2\\\\3\\/4\\b5\\f6\\n7\\r8\\t9\"]");
 
     REQUIRE(arr.success());
@@ -189,47 +189,47 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == "1\"2\\3/4\b5\f6\n7\r8\t9");
   }
 
-  SECTION("StringWithNullByte") {
+  SECTION("String with null byte") {
     JsonArray& arr = jb.parseArray("['\0','\1', '\2']", 1);
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("StringWithControlCharacter") {
+  SECTION("String with control character") {
     JsonArray& arr = jb.parseArray("['\1', '\2', '\3']", 1);
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("StringWithUnterminatedEscapeSequence") {
+  SECTION("String with unterminated escape Sequence") {
     JsonArray& arr = jb.parseArray("\"\\\0\"", 4);
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("DeeplyNestedFailure") {
+  SECTION("Deeply nested failure") {
     const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
     REQUIRE_FALSE(jb.parseArray(input, 18).success());
   }
 
-  SECTION("DeeplyNestedSuccess") {
+  SECTION("Deeply nested success") {
     const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
     REQUIRE(jb.parseArray(input, 19).success());
   }
 
-  SECTION("CCommentBeforeOpeningBracket") {
+  SECTION("Multi-line comment before opening bracket") {
     JsonArray& arr = jb.parseArray("/*COMMENT*/  [\"hello\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CCommentAfterOpeningBracket") {
+  SECTION("Multi-line comment after opening bracket") {
     JsonArray& arr = jb.parseArray("[/*COMMENT*/ \"hello\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CCommentBeforeClosingBracket") {
+  SECTION("Multi-line comment before closing bracket") {
     JsonArray& arr = jb.parseArray("[\"hello\"/*COMMENT*/]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CCommentAfterClosingBracket") {  // parser stopped after end of JSON
+  SECTION("Multi-line comment after closing bracket") {  // parser stopped before encountering the comment
     JsonArray& arr = jb.parseArray("[\"hello\"]/*COMMENT*/");
 
     REQUIRE(arr.success());
@@ -237,32 +237,32 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CCommentBeforeComma") {
+  SECTION("Multi-line comment before comma") {
     JsonArray& arr = jb.parseArray("[\"hello\"/*COMMENT*/,\"world\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CCommentAfterComma") {
+  SECTION("Multi-line comment after comma") {
     JsonArray& arr = jb.parseArray("[\"hello\",/*COMMENT*/ \"world\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CppCommentBeforeOpeningBracket") {
+  SECTION("Single-line comment before opening bracket") {
     JsonArray& arr = jb.parseArray("//COMMENT\n\t[\"hello\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CppCommentAfterOpeningBracket") {
+  SECTION("Single-line comment after opening bracket") {
     JsonArray& arr = jb.parseArray("[//COMMENT\n\"hello\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CppCommentBeforeClosingBracket") {
+  SECTION("Single-line comment before closing bracket") {
     JsonArray& arr = jb.parseArray("[\"hello\"//COMMENT\r\n]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CppCommentAfterClosingBracket") {  // parser stopped after end of JSON
+  SECTION("Single-line comment after closing bracket") {  // parser stopped before encountering the comment
     JsonArray& arr = jb.parseArray("[\"hello\"]//COMMENT\n");
 
     REQUIRE(arr.success());
@@ -270,37 +270,37 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CppCommentBeforeComma") {
+  SECTION("Single-line comment before comma") {
     JsonArray& arr = jb.parseArray("[\"hello\"//COMMENT\n,\"world\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("CppCommentAfterComma") {
+  SECTION("Single-line comment after comma") {
     JsonArray& arr = jb.parseArray("[\"hello\",//COMMENT\n\"world\"]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("InvalidCppComment") {
+  SECTION("Invalid single-line comment") {
     JsonArray& arr = jb.parseArray("[/COMMENT\n]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("InvalidComment") {
+  SECTION("Invalid multi-line comment") {
     JsonArray& arr = jb.parseArray("[/*/\n]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("UnfinishedCComment") {
+  SECTION("Unfinished multi-line comment") {
     JsonArray& arr = jb.parseArray("[/*COMMENT]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("EndsInCppComment") {
+  SECTION("Ends with single-line comment") {
     JsonArray& arr = jb.parseArray("[//COMMENT");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("AfterClosingStar") {
+  SECTION("Unfinished array ends with unfinished multi-line comment") {
     JsonArray& arr = jb.parseArray("[/*COMMENT*");
     REQUIRE_FALSE(arr.success());
   }

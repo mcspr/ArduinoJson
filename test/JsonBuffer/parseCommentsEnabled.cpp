@@ -60,7 +60,7 @@ TEST_CASE("Encountering comments when comments are enabled") {
 {
     // This is a single-line comment
     "name": "John Doe",
-    "age": 30 // This is another single line comment
+    "age": 30 // This is another single-line comment
 }
     )";
 

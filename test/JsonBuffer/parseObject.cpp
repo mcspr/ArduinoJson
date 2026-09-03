@@ -233,7 +233,7 @@ TEST_CASE("JsonBuffer::parseObject()") {
   }
 
   SECTION("Trailing comments") {
-    SECTION("CCommentAfterClosingBrace") {
+    SECTION("Multi-line comment after closing brace") {  // parser stopped before encountering the comment
       JsonObject& obj = jb.parseObject("{\"hello\": \"world\"  }/*COMMENT*/");
 
       REQUIRE(obj.success());
@@ -241,7 +241,7 @@ TEST_CASE("JsonBuffer::parseObject()") {
       REQUIRE(obj["hello"] == "world");
     }
 
-    SECTION("CppCommentAfterClosingBrace") {
+    SECTION("Single-line comment after closing brace") {  // parser stopped before encountering the comment
       JsonObject& obj = jb.parseObject("{\"hello\":\"world\"}//COMMENT\n");
 
       REQUIRE(obj.success());

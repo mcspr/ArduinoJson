@@ -9,7 +9,7 @@
 TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
   DynamicJsonBuffer jb;
 
-  SECTION("CCommentBeforeOpeningBrace") {
+  SECTION("Multi-line comment before opening brace") {
     JsonObject& obj = jb.parseObject("/*COMMENT*/  {\"hello\":\"world\"}");
 
     REQUIRE(obj.success());
@@ -17,7 +17,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CCommentAfterOpeningBrace") {
+  SECTION("Multi-line comment after opening brace") {
     JsonObject& obj = jb.parseObject("{/*COMMENT*/ \"hello\": \"world\"}");
 
     REQUIRE(obj.success());
@@ -25,7 +25,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CCommentBeforeClosingBrace") {
+  SECTION("Multi-line comment before closing brace") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\" /*COMMENT*/}");
 
     REQUIRE(obj.success());
@@ -36,7 +36,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CCommentAfterClosingBrace") {
+  SECTION("Multi-line comment after closing brace") {  // parser stopped before encountering the comment
     JsonObject& obj = jb.parseObject("{\"hello\": \"world\"  }/*COMMENT*/");
 
     REQUIRE(obj.success());
@@ -44,7 +44,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CCommentBeforeComma") {
+  SECTION("Multi-line comment before comma") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\"/*COMMENT*/,\"world\":\"hello\"}");
 
     REQUIRE(obj.success());
@@ -53,7 +53,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["world"] == "hello");
   }
 
-  SECTION("CCommentAfterComma") {
+  SECTION("Multi-line comment after comma") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\",/*COMMENT*/ \"world\":\"hello\"}");
 
     REQUIRE(obj.success());
@@ -62,7 +62,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["world"] == "hello");
   }
 
-  SECTION("CppCommentBeforeOpeningBrace") {
+  SECTION("Single-line comment before opening brace") {
     JsonObject& obj = jb.parseObject("//COMMENT\n\t{\"hello\":\"world\"}");
 
     REQUIRE(obj.success());
@@ -70,7 +70,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CppCommentAfterOpeningBrace") {
+  SECTION("Single-line comment after opening brace") {
     JsonObject& obj = jb.parseObject("{//COMMENT\n\"hello\":\"world\"}");
 
     REQUIRE(obj.success());
@@ -78,7 +78,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CppCommentBeforeClosingBrace") {
+  SECTION("Single-line comment before closing brace") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\" //COMMENT\r\n}");
 
     REQUIRE(obj.success());
@@ -86,7 +86,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CppCommentAfterClosingBrace") {
+  SECTION("Single-line comment after closing brace") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\"}//COMMENT\n");
 
     REQUIRE(obj.success());
@@ -94,7 +94,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["hello"] == "world");
   }
 
-  SECTION("CppCommentBeforeComma") {
+  SECTION("Single-line comment before comma") {
     JsonObject& obj = jb.parseObject("{\"hello\": \"world\" //COMMENT\n,\"world\": \"hello\"}");
 
     REQUIRE(obj.success());
@@ -103,7 +103,7 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["world"] == "hello");
   }
 
-  SECTION("CppCommentAfterComma") {
+  SECTION("Single-line comment after comma") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\",//COMMENT\n\"world\":\"hello\"}");
 
     REQUIRE(obj.success());
@@ -112,27 +112,27 @@ TEST_CASE("JsonBuffer::parseObject() w/ Comments") {
     REQUIRE(obj["world"] == "hello");
   }
 
-  SECTION("InvalidCppComment") {
+  SECTION("Invalid single-line comment") {
     JsonObject& obj = jb.parseObject("{\"hello\":\"world\"/COMMENT\n}");
     REQUIRE_FALSE(obj.success());
   }
 
-  SECTION("InvalidComment") {
+  SECTION("Invalid multi-line comment") {
     JsonObject& obj = jb.parseObject("{/*/\n}");
     REQUIRE_FALSE(obj.success());
   }
 
-  SECTION("UnfinishedCComment") {
+  SECTION("Unfinished multi-line comment") {
     JsonObject& obj = jb.parseObject("{/*COMMENT}");
     REQUIRE_FALSE(obj.success());
   }
 
-  SECTION("EndsInCppComment") {
+  SECTION("Ends in single-line comment") {
     JsonObject& obj = jb.parseObject("{//COMMENT");
     REQUIRE_FALSE(obj.success());
   }
 
-  SECTION("AfterClosingStar") {
+  SECTION("After closing star") {
     JsonObject& obj = jb.parseObject("{/*COMMENT*");
     REQUIRE_FALSE(obj.success());
   }

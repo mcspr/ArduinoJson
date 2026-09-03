@@ -9,7 +9,7 @@
 TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
   DynamicJsonBuffer jb;
 
-  SECTION("CCommentBeforeOpeningBracket") {
+  SECTION("Multi-line comment before opening bracket") {
     JsonArray& arr = jb.parseArray("/*COMMENT*/  [\"hello\"]");
 
     REQUIRE(arr.success());
@@ -17,7 +17,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CCommentAfterOpeningBracket") {
+  SECTION("Multi-line comment after opening bracket") {
     JsonArray& arr = jb.parseArray("[/*COMMENT*/ \"hello\"]");
 
     REQUIRE(arr.success());
@@ -25,7 +25,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CCommentBeforeClosingBracket") {
+  SECTION("Multi-line comment before closing bracket") {
     JsonArray& arr = jb.parseArray("[\"hello\"/*COMMENT*/]");
 
     REQUIRE(arr.success());
@@ -33,7 +33,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CCommentAfterClosingBracket") {
+  SECTION("Multi-line comment after closing bracket") {  // parser stopped before encountering the comment
     JsonArray& arr = jb.parseArray("[\"hello\"]/*COMMENT*/");
 
     REQUIRE(arr.success());
@@ -41,7 +41,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CCommentBeforeComma") {
+  SECTION("Multi-line comment before comma") {
     JsonArray& arr = jb.parseArray("[\"hello\"/*COMMENT*/,\"world\"]");
 
     REQUIRE(arr.success());
@@ -50,7 +50,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("CCommentAfterComma") {
+  SECTION("Multi-line comment after comma") {
     JsonArray& arr = jb.parseArray("[\"hello\",/*COMMENT*/ \"world\"]");
 
     REQUIRE(arr.success());
@@ -59,7 +59,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("CppCommentBeforeOpeningBracket") {
+  SECTION("Single-line comment before opening bracket") {
     JsonArray& arr = jb.parseArray("//COMMENT\n\t[\"hello\"]");
 
     REQUIRE(arr.success());
@@ -67,7 +67,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CppCommentAfterOpeningBracket") {
+  SECTION("Single-line comment after opening bracket") {
     JsonArray& arr = jb.parseArray("[//COMMENT\n\"hello\"]");
 
     REQUIRE(arr.success());
@@ -75,7 +75,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CppCommentBeforeClosingBracket") {
+  SECTION("Single-line comment before closing bracket") {
     JsonArray& arr = jb.parseArray("[\"hello\"//COMMENT\r\n]");
 
     REQUIRE(arr.success());
@@ -83,7 +83,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CppCommentAfterClosingBracket") {
+  SECTION("Single-line comment after closing bracket") {  // parser stopped before encountering the comment
     JsonArray& arr = jb.parseArray("[\"hello\"]//COMMENT\n");
 
     REQUIRE(arr.success());
@@ -91,7 +91,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[0] == "hello");
   }
 
-  SECTION("CppCommentBeforeComma") {
+  SECTION("Single-line comment before comma") {
     JsonArray& arr = jb.parseArray("[\"hello\"//COMMENT\n,\"world\"]");
 
     REQUIRE(arr.success());
@@ -100,7 +100,7 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("CppCommentAfterComma") {
+  SECTION("Single-line comment after comma") {
     JsonArray& arr = jb.parseArray("[\"hello\",//COMMENT\n\"world\"]");
 
     REQUIRE(arr.success());
@@ -109,37 +109,37 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
     REQUIRE(arr[1] == "world");
   }
 
-  SECTION("InvalidCppComment") {
+  SECTION("Invalid single-line comment") {
     JsonArray& arr = jb.parseArray("[/COMMENT\n]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("InvalidComment") {
+  SECTION("Invalid multi-line comment") {
     JsonArray& arr = jb.parseArray("[/*/\n]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("UnfinishedCComment") {
+  SECTION("Unfinished multi-line comment") {
     JsonArray& arr = jb.parseArray("[/*COMMENT]");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("EndsInCppComment") {
+  SECTION("Ends with single-line comment") {
     JsonArray& arr = jb.parseArray("[//COMMENT");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("AfterClosingStar") {
+  SECTION("Unfinished array ends with unfinished multi-line comment") {
     JsonArray& arr = jb.parseArray("[/*COMMENT*");
     REQUIRE_FALSE(arr.success());
   }
 
-  SECTION("DeeplyNestedSuccess") {
-    const char input[] = "[[[[/* some */[[[[/***comments\n*/[[[[[[[[[[[\"Not too deep\"]]/*within*/]]]]]]]]]]]]]]]]]// trailing";
+  SECTION("Deeply nested success") {
+    const char input[] = "[// allowing\n[[[/* some */[[[[/***comments\n*/[[[[[[[[[[[\"Not too deep\"]]/*within*/]]]]]]]]]// this array\r\n]]]]]]]]// trailing";
     REQUIRE(jb.parseArray(input, 19).success());
   }
 
-  SECTION("DeeplyNestedFailure") {
+  SECTION("Deeply nested failure") {
     const char input[] = "[[[[[[[[[[[[[[[[[[/* whatever */[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
     REQUIRE_FALSE(jb.parseArray(input, 18).success());
   }
