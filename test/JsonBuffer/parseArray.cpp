@@ -62,6 +62,16 @@ TEST_CASE("JsonBuffer::parseArray()") {
     REQUIRE(arr[0] == 42);
   }
 
+  SECTION("OneIntegerWithCommaAfter") {
+    JsonArray& arr = jb.parseArray("[42,]");
+    REQUIRE_FALSE(arr.success());
+  }
+
+  SECTION("OneIntegerWithCommaBefore") {
+    JsonArray& arr = jb.parseArray("[,42]");
+    REQUIRE_FALSE(arr.success());
+  }
+
   SECTION("TwoIntegers") {
     JsonArray& arr = jb.parseArray("[42,84]");
 
@@ -181,6 +191,11 @@ TEST_CASE("JsonBuffer::parseArray()") {
 
   SECTION("StringWithNullByte") {
     JsonArray& arr = jb.parseArray("['\0','\1', '\2']", 1);
+    REQUIRE_FALSE(arr.success());
+  }
+
+  SECTION("StringWithControlCharacter") {
+    JsonArray& arr = jb.parseArray("['\1', '\2', '\3']", 1);
     REQUIRE_FALSE(arr.success());
   }
 
