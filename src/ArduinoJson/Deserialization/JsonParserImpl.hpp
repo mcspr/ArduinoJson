@@ -43,7 +43,7 @@ struct Codeunit {
 template <typename TReader, typename TWriter, typename TParseString>
 inline bool JsonParser<TReader, TWriter, TParseString>::skipUnreadable()
 {
-  return _skipUnreadable.skipUnreadable(_reader);
+  return _skipUnreadable(_reader);
 }
 
 template <typename TReader, typename TWriter, typename TParseString>

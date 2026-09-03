@@ -189,7 +189,7 @@ struct SkipUnreadable {
         &SkipUnreadable::_skipSpaces)
   {}
 
-  bool skipUnreadable(TInput& input) {
+  bool operator()(TInput& input) {
     return (this->*_skipUnreadable)(input);
   }
 
