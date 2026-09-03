@@ -6,10 +6,14 @@
 #include <catch.hpp>
 
 #include <string>
+#include <type_traits>
 
 static void eraseString(std::string &str) {
   str.assign(str.length(), '*');
 }
+
+using ArduinoJson::Internals::JsonParserInput;
+using ArduinoJson::Internals::JsonParserReader;
 
 #ifndef ARDUINOJSON_STD_STRING_TEST_CASE
 #define ARDUINOJSON_STD_STRING_TEST_CASE "std::string"
@@ -244,5 +248,39 @@ TEST_CASE(ARDUINOJSON_STD_STRING_TEST_CASE) {
     size_t sizeAfter = jb.size();
 
     REQUIRE(sizeBefore == sizeAfter);
+  }
+
+  SECTION("Detail_JsonParserLvalueReaderSurvivesMove") {
+    static constexpr char input[] = "[\"hello world\"]";
+    std::string json(input);
+
+    using json_type = JsonParserInput<
+      std::add_lvalue_reference<decltype(json)>::type>::type;
+    using reader_type = JsonParserReader<json_type>;
+
+    auto reader1 = reader_type::make(json_type(json));
+    REQUIRE(reader1.get() == input);
+
+    auto reader2 = std::move(reader1);
+    REQUIRE(reader1.get() == input);
+    REQUIRE(reader2.get() == input);
+  }
+
+  SECTION("Detail_JsonParserRvalueReaderSurvivesMove") {
+    using ArduinoJson::Internals::JsonParserInput;
+    using ArduinoJson::Internals::JsonParserReader;
+
+    static constexpr char input[] = "[\"world hello\"]";
+    std::string json(input);
+    using json_type = JsonParserInput<
+      std::add_rvalue_reference<decltype(json)>::type>::type;
+    using reader_type = JsonParserReader<json_type>;
+
+    auto reader1 = reader_type::make(json_type(std::move(json)));
+    REQUIRE(reader1.get() == input);
+
+    auto reader2 = std::move(reader1);
+    REQUIRE(0 == reader1.get().length());  // moved out std::string can still be reused
+    REQUIRE(reader2.get() == input);
   }
 }
