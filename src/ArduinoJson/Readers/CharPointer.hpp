@@ -23,24 +23,24 @@ struct ReaderBase {
   const char* _end;
 
  public:
-  ReaderBase(const void* ptr, size_t size) :
+  ReaderBase(const void* ptr, size_t size) noexcept :
     _ptr(ptr ? reinterpret_cast<const char*>(ptr) : ""),
     _end(ptr ? (_ptr + size) : "")
   {}
 
-  void move() {
+  void move() noexcept {
     if (_ptr < _end)
       ++_ptr;
   }
 
-  char current() const {
+  char current() const noexcept {
     if (_ptr < _end)
       return TImpl::Copy::Operator(_ptr);
 
     return '\0';
   }
 
-  char next() const {
+  char next() const noexcept {
     if ((_ptr + 1) < _end)
       return TImpl::Copy::Operator(_ptr + 1);
 
@@ -56,8 +56,10 @@ struct Reader : ReaderBase<Reader> {
 }
 
 template <typename TChar>
-struct ReaderImplBase<TChar*, typename EnableIf<IsChar<TChar>::value>::type>
-  : CharPointer::Reader {
+struct ReaderImplBase<TChar*,
+    typename EnableIf<IsChar<TChar>::value>::type> {
+
+  using type = CharPointer::Reader;
 };
 
 }

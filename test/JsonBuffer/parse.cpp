@@ -19,6 +19,8 @@ CATCH_REGISTER_ENUM(IsType, IsType::Array, IsType::Object, IsType::String)
 
 #include "escape.ipp"
 
+using ArduinoJson::MakeStringView;
+
 TEST_CASE("JsonBuffer::parse()") {
   DynamicJsonBuffer jb;
 
@@ -91,47 +93,75 @@ TEST_CASE("JsonBuffer::parse()") {
   };
 
   SECTION("Double quoted string") {
-    std::string testCases[] = {
-      "\"hello world\"",
-      "\"a\"",
-      "\"abcde12345\"",
-      "\"\x71\"",
-      "\"\x75\x4c\"",
-      "\"\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x20\x70\"",
-    };
+    SECTION("Plain string") {
+      std::string testCases[] = {
+        "\"hello world\"",
+        "\"a\"",
+        "\"abcde12345\"",
+        "\"\x71\"",
+        "\"\x75\x4c\"",
+        "\"\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x20\x70\"",
+      };
 
-    for (const auto& testCase : testCases) {
-      testStringCase(testCase, '"');
+      for (const auto& testCase : testCases) {
+        testStringCase(testCase, '"');
+      }
     }
-  }
 
-  SECTION("Escape double quote in double quoted string") {
-    JsonVariant variant = jb.parse("\"ab\\\"cd\"");
-    REQUIRE(variant.success());
-    REQUIRE(variant.is<const char*>());
-    REQUIRE(variant.as<std::string>() == "ab\"cd");
+    SECTION("Escaped quote") {
+      JsonVariant variant = jb.parse("\"ab\\\"cd\"");
+      REQUIRE(variant.success());
+      REQUIRE(variant.is<const char*>());
+      REQUIRE(variant.as<std::string>() == "ab\"cd");
+    }
+
+    SECTION("Explicit view") {
+      JsonVariant variant = jb.parse(MakeStringView("\"12345\""));
+      REQUIRE(variant.success());
+      REQUIRE(variant.is<const char*>());
+      REQUIRE(variant == "12345");
+    }
+
+    SECTION("Partial parse failure") {
+      JsonVariant variant = jb.parse(MakeStringView("\"12345\"", 1));
+      REQUIRE_FALSE(variant.success());
+    }
   }
 
   SECTION("Single quoted string") {
-    std::string testCases[] = {
-      "'hello world'",
-      "'a'",
-      "'abcde12345'",
-      "'\x71'",
-      "'\x75\x4c'",
-      "'\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x20\x70'",
-    };
+    SECTION("Plain string") {
+      std::string testCases[] = {
+        "'hello world'",
+        "'a'",
+        "'abcde12345'",
+        "'\x71'",
+        "'\x75\x4c'",
+        "'\x7f\x4c\x23\x3c\x3a\x6f\x5d\x44\x20\x70'",
+      };
 
-    for (const auto& testCase : testCases) {
-      testStringCase(testCase, '\'');
+      for (const auto& testCase : testCases) {
+        testStringCase(testCase, '\'');
+      }
     }
-  }
 
-  SECTION("Escape single quote in single quoted string") {
-    JsonVariant variant = jb.parse("'ab\\\'cd'");
-    REQUIRE(variant.success());
-    REQUIRE(variant.is<const char*>());
-    REQUIRE(variant.as<std::string>() == "ab\'cd");
+    SECTION("Escaped quote") {
+      JsonVariant variant = jb.parse("'ab\\\'cd'");
+      REQUIRE(variant.success());
+      REQUIRE(variant.is<const char*>());
+      REQUIRE(variant.as<std::string>() == "ab\'cd");
+    }
+
+    SECTION("Explicit view") {
+      JsonVariant variant = jb.parse(MakeStringView("'12345'"));
+      REQUIRE(variant.success());
+      REQUIRE(variant.is<const char*>());
+      REQUIRE(variant == "12345");
+    }
+
+    SECTION("Partial parse failure") {
+      JsonVariant variant = jb.parse(MakeStringView("'12345'", 1));
+      REQUIRE_FALSE(variant.success());
+    }
   }
 
   SECTION("Unquoted string") {
@@ -147,6 +177,13 @@ TEST_CASE("JsonBuffer::parse()") {
     for (const auto& testCase : testCases) {
       testStringCase(testCase, '\0');
     }
+  }
+
+  SECTION("Partial view of unquoted string") {
+    JsonVariant variant = jb.parse(MakeStringView("1234567890", 5));
+    REQUIRE(variant.success());
+    REQUIRE(variant.is<const char*>());
+    REQUIRE(variant == "12345");
   }
 
   SECTION("Invalid JSON") {

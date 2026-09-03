@@ -22,6 +22,12 @@ struct StringBufferedWriter {
     _jsonBuffer(jsonBuffer)
   {}
 
+  StringBufferedWriter(const StringBufferedWriter&) = delete;
+  StringBufferedWriter(StringBufferedWriter&&) = default;
+
+  StringBufferedWriter& operator=(const StringBufferedWriter&) = delete;
+  StringBufferedWriter& operator=(StringBufferedWriter&&) = delete;
+
   struct String {
     explicit String(TJsonBuffer& parent) :
       _buffer(makeBuffer()),

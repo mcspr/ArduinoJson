@@ -8,6 +8,8 @@
 
 #if ARDUINOJSON_ENABLE_ARDUINO_STREAM
 
+#include "Base.hpp"
+
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsBaseOf.hpp"
 
@@ -62,9 +64,9 @@ struct Reader {
 
 template <typename T>
 struct ReaderImplBase<T,
-  typename EnableIf<IsBaseOf<Stream, T>::value>::type> : Arduino::Reader {
+  typename EnableIf<IsBaseOf<Stream, T>::value>::type> {
 
-  using Arduino::Reader::Reader;
+  using type = Arduino::Reader;
 };
 
 }  // namespace Readers

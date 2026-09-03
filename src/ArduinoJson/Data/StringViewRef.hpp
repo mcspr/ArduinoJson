@@ -12,6 +12,10 @@
 #include "../TypeTraits/RemovePointer.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
 
+#if ARDUINOJSON_ENABLE_PROGMEM
+#include "../TypeTraits/IsSame.hpp"
+#endif
+
 #include "StringRef.hpp"
 #include "StringView.hpp"
 

@@ -7,10 +7,6 @@
 #include "Base.hpp"
 #include "CharPointer.hpp"
 
-#if ARDUINOJSON_ENABLE_ARDUINO_STRING
-#include <WString.h>
-#endif
-
 #if ARDUINOJSON_ENABLE_STD_STRING
 #include <string>
 #endif
@@ -22,39 +18,35 @@ namespace StdString {
 
 template <typename T>
 struct Reader : Readers::CharPointer::Reader {
-  explicit Reader(T& str) :
-    CharPointer::Reader(str.c_str(), str.length())
+  explicit Reader(T& str) noexcept :
+    CharPointer::Reader(str.c_str(), str.length()),
+    _str(str)
   {}
 
-  explicit Reader(const T& str) :
-    CharPointer::Reader(str.c_str(), str.length())
+  explicit Reader(const T& str) noexcept :
+    CharPointer::Reader(str.c_str(), str.length()),
+    _str(str)
   {}
+
+  Reader(const Reader&) = delete;
+  Reader(Reader&& other) noexcept :
+    CharPointer::Reader(other._str.c_str(), other._str.length()),
+    _str(other._str)
+  {}
+
+  Reader& operator=(const Reader&) = delete;
+  Reader& operator=(Reader&&) = delete;
+
+ private:
+  const T& _str;
 };
 
 }
 
-#if ARDUINOJSON_ENABLE_ARDUINO_STRING
-template <>
-struct ReaderImplBase<String>
-  : StdString::Reader<String> {
-
-  using StdString::Reader<String>::Reader;
-};
-
-template <>
-struct ReaderImplBase<StringSumHelper>
-  : StdString::Reader<StringSumHelper> {
-
-  using StdString::Reader<StringSumHelper>::Reader;
-};
-#endif
-
 #if ARDUINOJSON_ENABLE_STD_STRING
 template <>
-struct ReaderImplBase<std::string>
-  : StdString::Reader<std::string> {
-
-  using StdString::Reader<std::string>::Reader;
+struct ReaderImplBase<std::string> {
+  using type = StdString::Reader<std::string>;
 };
 #endif
 

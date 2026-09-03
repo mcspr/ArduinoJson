@@ -6,6 +6,8 @@
 #include <catch.hpp>
 #include <string>
 
+using ArduinoJson::MakeStringView;
+
 TEST_CASE("JsonObject::set()") {
   DynamicJsonBuffer jb;
   JsonObject& _object = jb.createObject();
@@ -202,10 +204,10 @@ TEST_CASE("JsonObject::set()") {
     char* small_ptr = &val[5];
     size_t small_len = 4;
 
-    _object.set("hello", ArduinoJson::MakeStringView(small_ptr, small_len));
+    _object.set("hello", MakeStringView(small_ptr, small_len));
     REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
 
-    _object.set("world", ArduinoJson::MakeStringView(&val[0], std::strlen(val)));
+    _object.set("world", MakeStringView(&val[0], std::strlen(val)));
     REQUIRE(jb.size() > JSON_OBJECT_SIZE(2));
 
     auto it = _object.begin();
@@ -220,7 +222,7 @@ TEST_CASE("JsonObject::set()") {
   SECTION("immutable view would reference pointer as-is") {
     // TODO cstring pointer unaffected by size
     const char val[] = "helloworld";
-    _object.set("hello", ArduinoJson::MakeStringView(&val[5], 1));
+    _object.set("hello", MakeStringView(&val[5], 1));
     REQUIRE(jb.size() == JSON_OBJECT_SIZE(1));
     auto first = _object.begin();
     REQUIRE(first->key == std::string("hello"));

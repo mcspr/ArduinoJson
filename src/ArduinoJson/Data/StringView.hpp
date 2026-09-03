@@ -136,6 +136,15 @@ class SizedStringView : public BaseStringView<TChar> {
 
   using BaseStringView<TChar>::BaseStringView;
 
+  template <size_t Size>
+  constexpr SizedStringView(JsonStaticSpan<TChar, Size> span) :
+    BaseStringView<TChar>::BaseStringView(span.data(), span.size())
+  {}
+
+  SizedStringView(JsonDynamicSpan<TChar> span) :
+    BaseStringView<TChar>::BaseStringView(span.data(), span.size())
+  {}
+
   constexpr size_t length() const {
     return size();
   }
@@ -344,8 +353,13 @@ struct StringTraitsImpl<UnsizedStringView<TChar>, void> :
 } // namespace Internals
 
 template <typename T>
-Internals::UnsizedStringView<T> MakeStringView(T* str) {
+Internals::UnsizedStringView<T> MakeStringView(T str) {
   return Internals::UnsizedStringView<T>(str);
+}
+
+template <typename TChar, size_t Size>
+Internals::SizedStringView<TChar> MakeStringView(TChar (&str)[Size]) {
+  return Internals::SizedStringView<TChar>(str, Size);
 }
 
 template <typename T>

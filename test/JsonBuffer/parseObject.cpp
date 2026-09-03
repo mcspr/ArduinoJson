@@ -86,6 +86,26 @@ TEST_CASE("JsonBuffer::parseObject()") {
       REQUIRE(obj.size() == 1);
       REQUIRE(obj["_k_e_y_"] == 42);
     }
+
+    SECTION("No quotes, key without value") {
+      JsonObject& obj = jb.parseObject("{key}");
+      REQUIRE_FALSE(obj.success());
+    }
+
+    SECTION("No quotes, spaced out key without value") {
+      JsonObject& obj = jb.parseObject("{ key }");
+      REQUIRE_FALSE(obj.success());
+    }
+
+    SECTION("No quotes, brace after key") {
+      JsonObject& obj = jb.parseObject("{key}:value}");
+      REQUIRE_FALSE(obj.success());
+    }
+
+    SECTION("No quotes, brace after colon") {
+      JsonObject& obj = jb.parseObject("{key:}value}");
+      REQUIRE_FALSE(obj.success());
+    }
   }
 
   SECTION("Spaces") {

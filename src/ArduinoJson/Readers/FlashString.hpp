@@ -6,12 +6,12 @@
 
 #if ARDUINOJSON_ENABLE_PROGMEM
 
-#include <Arduino.h>
-
 #include "Base.hpp"
 #include "CharPointer.hpp"
 
 #include "../Strings/FlashString.hpp"
+
+#include <Arduino.h>
 
 class __FlashStringHelper;
 
@@ -28,8 +28,8 @@ struct Reader : Readers::CharPointer::ReaderBase<Reader> {
 }
 
 template <>
-struct ReaderImplBase<const __FlashStringHelper*>
-  : FlashString::Reader {
+struct ReaderImplBase<const __FlashStringHelper*> {
+  using type = FlashString::Reader;
 };
 
 }

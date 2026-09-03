@@ -8,22 +8,22 @@ namespace ArduinoJson {
 namespace Internals {
 namespace Readers {
 
-template <typename T, typename = void>
+template <typename TJson, typename = void>
 struct ReaderImplBase {
 };
 
-template <typename T>
+template <typename TJson>
 struct ReaderImplHelper {
-  typedef T raw_type;
-  typedef typename RemoveConstReference<T>::type type;
-  typedef ReaderImplBase<type> impl_type;
+  using raw_input_type = TJson;
+  using input_type = typename RemoveConstReference<raw_input_type>::type;
+  using type = typename ReaderImplBase<input_type>::type;
 };
 
 }
 
 template <typename T>
-struct ReaderImpl : Readers::ReaderImplHelper<T>::impl_type {
-  using Readers::ReaderImplHelper<T>::impl_type::impl_type;
+struct ReaderImpl {
+  using type = typename Readers::ReaderImplHelper<T>::type;
 };
 
 }

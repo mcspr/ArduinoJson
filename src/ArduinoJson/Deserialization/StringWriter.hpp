@@ -45,6 +45,12 @@ class StringWriter {
     _len(len)
   {}
 
+  StringWriter(const StringWriter&) = default;
+  StringWriter(StringWriter&&) = default;
+
+  StringWriter& operator=(const StringWriter&) = default;
+  StringWriter& operator=(StringWriter&&) = default;
+
   String startString() {
     return String(*this);
   }
@@ -77,5 +83,6 @@ class StringWriter {
 
   size_t _len;
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

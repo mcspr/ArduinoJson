@@ -4,21 +4,17 @@
 
 #pragma once
 
-#include "../Polyfills/attributes.hpp"
-#include "../Configuration.hpp"
-
 #include "../TypeTraits/AddConst.hpp"
-#include "../TypeTraits/IsConst.hpp"
-#include "../TypeTraits/IsPointer.hpp"
+#include "../TypeTraits/Conditional.hpp"
 #include "../TypeTraits/IsInstantiationOf.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
-#include "../TypeTraits/RemovePointer.hpp"
 
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/VoidType.hpp"
 #include "../TypeTraits/Declval.hpp"
 
 #include "../Data/JsonVariantContent.hpp"
+#include "../Data/StringViewRef.hpp"
 #include "../Data/Unicode.hpp"
 
 #include "../JsonVariant.hpp"
@@ -162,10 +158,10 @@ struct StringContext {
 };
 
 // per spec: skip spaces between braces / brackets and strings aka values
-// sort-of in spec: BOM, which is generally frowned upon, but it is adviced to simply ignore it
+// sort-of in spec: BOM, which is generally frowned upon, but it is advised to simply ignore it
 // (note that invalid BOM *WOULD* trigger a parsing error)
 // not in spec: comments in C/C++ style that appear before or after JSON tokens
-// (nb. unused funcs generally get optimized away, unless determined by runtime)
+// (nb. unused funcs generally get optimized away, but this heavily depends on whether the compiler actually switches into constexpr context)
 template <typename TInput>
 struct SkipUnreadable {
   SkipUnreadable() = delete;
@@ -222,7 +218,7 @@ struct SkipUnreadable {
 };
 
 // abi helper for unicode configuration options, binding TState & TCodepoint to the parser type
-// so the compiler generates different method signatures for different configuration options
+// so the compiler generates different method identity for different configuration options
 template <typename TState, typename TCodepoint>
 struct ParseString {
   using state_type = TState;
@@ -247,8 +243,8 @@ class JsonParser {
 
   JsonParser(JsonBuffer *buffer, TReader reader, TWriter writer, DeserializationOptions options) :
     _buffer(buffer),
-    _reader(reader),
-    _writer(writer),
+    _reader(std::move(reader)),
+    _writer(std::move(writer)),
     _nesting(0),
     _nestingLimit(options.nestingLimit),
     _skipUnreadable(options)
@@ -352,64 +348,124 @@ class JsonKeyValueParser final :
   using Base::parseVariant;
 };
 
-// generic reader, deduced by the reader traits and used by default if nothing else matches
 template <typename TJson, typename = void>
-struct JsonParserReader {
-  using json_type = TJson;
-  using reader_type =
-    ReaderImpl<typename RemoveConstReference<json_type>::type>;
-
-  static reader_type make(json_type&& json) {
-    static_assert(!IsPointer<typename RemoveConstReference<json_type>::type>::value &&
-                  !IsChar<typename RemovePointer<json_type>::type>::value,
-                  "Avoid using T* w/ unknown size");
-    return reader_type(json);
-  }
+struct JsonParserInput {
+  using type = TJson;
 };
 
-// arbitrary character data spans w/ a fixed size are preferred
+template <typename TJson>
+struct JsonParserInput<TJson,
+    typename EnableIf<HasStringTraits<TJson>::value>::type> {
+
+  using type =
+    typename Internals::StringRefWrapperHelper<TJson>::wrapper_type;
+};
+
 template <typename TChar, size_t Size>
-struct JsonParserReader<JsonSpan<TChar, Size>> {
-  using json_type = JsonSpan<TChar, Size>;
-  using reader_type =
-    typename StringTraits<typename Internals::AddConst<TChar>::type *>::Reader;
+struct JsonParserInput<JsonSpan<TChar, Size>> {
+  using type =
+    typename Internals::StringRefWrapper<SizedStringView<TChar>>;
+};
+
+// generic reader, deduced through the reader traits and used by default if nothing else matches
+// this usually means it is some kind of special object or stream, since string-like types prefer specializations below
+template <typename TJson, typename = void>
+struct JsonParserReader {
+  using reader_type = typename ReaderImpl<
+    typename RemoveConstReference<TJson>::type>::type;
+
+  static reader_type make(TJson&& json) {
+    return reader_type(std::forward<TJson>(json));
+  }
+};
+ 
+// Fixed size view, usually generated through inline string literals or explicit char array references
+template <typename TChar>
+struct JsonParserReader<Internals::StringRefWrapper<SizedStringView<TChar>>> {
+  using json_type = Internals::SizedStringView<TChar>;
+  using reader_type = typename StringTraits<
+    typename AddConst<TChar>::type *>::Reader;
 
   static reader_type make(json_type json) {
     return reader_type(json.data(), json.size());
   }
 };
 
+// Unknown size view, ignore
+template <typename TChar>
+struct JsonParserReader<Internals::StringRefWrapper<UnsizedStringView<TChar>>> {
+  static_assert(!IsChar<TChar>::value, "Avoid using T* w/ unknown size");
+};
+
+// Anything else that was previously deduced to have StringTraits present, but should not be reduced to a string view
+template <typename TJson>
+struct JsonParserReader<Internals::StringRefWrapper<TJson>> {
+  using json_type = TJson;
+
+  // nb. avoid dangling reference (oops) from within string ref for ephemeral objects
+  // JsonParser & TJson&& lifetime usually ends within JsonBufferBase::parse... methods
+  // Since JsonParser holds the reader instance, make sure ref survives through it
+  struct reader_type :
+      Internals::StringRefWrapper<TJson>,
+      StringTraits<TJson>::Reader {
+
+   explicit reader_type(Internals::StringRefWrapper<TJson> str) :
+     Internals::StringRefWrapper<TJson>(std::move(str)),
+     StringTraits<TJson>::Reader(Internals::StringRefWrapper<TJson>::get())
+   {}
+
+   reader_type(reader_type&& other) noexcept :
+     Internals::StringRefWrapper<TJson>(std::move(other)),
+     StringTraits<TJson>::Reader(Internals::StringRefWrapper<TJson>::get())
+   {}
+  };
+
+  static reader_type make(Internals::StringRefWrapper<TJson> json) {
+    return reader_type(std::move(json));
+  }
+};
+
 // internals set up 'writer' a bit differently, depending on the type of input
 // by default, duplicates read data in the provided TJsonBuffer
+struct JsonParserWriterBufferTag {
+};
+
 template <typename TJsonBuffer, typename TJson, typename = void>
-struct JsonParserWriter {
+struct JsonParserWriter : JsonParserWriterBufferTag {
   using json_type = TJson;
   using writer_type = StringBufferedWriter<TJsonBuffer>;
 
-  static writer_type make(TJsonBuffer* buffer, json_type&&) {
+  static writer_type make(TJsonBuffer* buffer) {
     return writer_type(*buffer);
   }
 };
 
 // reuse input buffer instead of duplicating data in the TJsonBuffer. note that this causes input to be thrashed
 // only enabled when data span is not marked as const
-template <typename TJsonBuffer, typename TChar, size_t Size>
-struct JsonParserWriter<TJsonBuffer, JsonSpan<TChar, Size>> {
-  using json_type = JsonSpan<TChar, Size>;
+struct JsonParserWriterInputTag {
+};
+
+template <typename TJsonBuffer, typename TChar>
+struct JsonParserWriter<TJsonBuffer,
+    StringRefWrapper<SizedStringView<TChar>>> : JsonParserWriterInputTag {
+
+  using json_type = SizedStringView<TChar>;
   using writer_type = StringWriter<TChar>;
 
-  static StringWriter<TChar> make(TJsonBuffer*, json_type json) {
+  static StringWriter<TChar> make(SizedStringView<TChar> json) {
     return StringWriter<TChar>(json.data(), json.size());
   }
 };
 
 // points to existing data when no escaped characters encountered
-template <typename TJsonBuffer, typename TChar, size_t Size>
-struct JsonParserWriter<TJsonBuffer, JsonSpan<const TChar, Size>> {
-  using json_type = JsonSpan<const TChar, Size>;
+template <typename TJsonBuffer, typename TChar>
+struct JsonParserWriter<TJsonBuffer,
+    StringRefWrapper<SizedStringView<const TChar>>> : JsonParserWriterBufferTag {
+
+  using json_type = SizedStringView<const TChar>;
   using writer_type = StringBufferedWriter<TJsonBuffer>;
 
-  static writer_type make(TJsonBuffer* buffer, json_type&&) {
+  static writer_type make(TJsonBuffer* buffer) {
     return writer_type(*buffer);
   }
 };
@@ -417,21 +473,55 @@ struct JsonParserWriter<TJsonBuffer, JsonSpan<const TChar, Size>> {
 template <template <typename, typename, typename> class TJsonParser,
   typename TParseString, typename TJsonBuffer, typename TJson>
 struct JsonParserBuilder {
-  using parser_reader_type = JsonParserReader<TJson>;
-  using parser_writer_type = JsonParserWriter<TJsonBuffer, TJson>;
+  using json_type = typename JsonParserInput<TJson>::type;
+
+  using parser_reader_type = JsonParserReader<json_type>;
+  using parser_writer_type = JsonParserWriter<TJsonBuffer, json_type>;
   using parser_type = TJsonParser<
     typename parser_reader_type::reader_type,
     typename parser_writer_type::writer_type,
     TParseString>;
 
-  static parser_type makeParser(TJsonBuffer* buffer,
-      TJson&& json, DeserializationOptions deserializationOptions)
+  static parser_type
+  makeParser(TJsonBuffer* buffer, TJson&& json,
+    DeserializationOptions deserializationOptions)
   {
-    return parser_type(buffer,
-      parser_reader_type::make(std::forward<TJson>(json)),
-      parser_writer_type::make(buffer, std::forward<TJson>(json)),
-      deserializationOptions);
+    return make_parser::Operator(
+      buffer, json_type(std::forward<TJson>(json)), deserializationOptions);
   }
+
+ private:
+  struct make_parser_with_buffer_writer {
+    static parser_type
+    Operator(TJsonBuffer* buffer, json_type&& json,
+      DeserializationOptions deserializationOptions)
+    {
+      return parser_type(buffer,
+        parser_reader_type::make(std::forward<json_type>(json)),
+        parser_writer_type::make(buffer),
+        deserializationOptions);
+    }
+  };
+
+  struct make_parser_with_json_writer {
+    static parser_type
+    Operator(TJsonBuffer* buffer, json_type&& json,
+      DeserializationOptions deserializationOptions)
+    {
+      return parser_type(buffer,
+        parser_reader_type::make(json),
+        parser_writer_type::make(json),
+        deserializationOptions);
+    }
+  };
+
+  static constexpr bool is_buffer_writer =
+    IsBaseOf<JsonParserWriterBufferTag, parser_writer_type>::type::value;
+
+  using make_parser = Conditional<
+    is_buffer_writer,
+    make_parser_with_buffer_writer,
+    make_parser_with_json_writer>;
 };
 
 template <template <typename, typename, typename> class TJsonParser, typename TParseString,
@@ -440,30 +530,6 @@ inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, TJson>
 makeParser(TJsonBuffer* buffer, TJson&& json, DeserializationOptions deserializationOptions) {
   return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, TJson>::makeParser(
     buffer, std::forward<TJson>(json), deserializationOptions);
-}
-
-template <template <typename, typename, typename> class TJsonParser, typename TParseString,
-    typename TJsonBuffer, typename TChar, size_t Size>
-inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::parser_type
-makeParser(TJsonBuffer *buffer, TChar (&json)[Size], DeserializationOptions deserializationOptions) {
-  return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::makeParser(
-    buffer, Internals::JsonSpan<TChar, Size>(json), deserializationOptions);
-}
-
-template <template <typename, typename, typename> class TJsonParser, typename TParseString,
-    typename TJsonBuffer, typename TChar, size_t Size>
-inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::parser_type
-makeParser(TJsonBuffer *buffer, JsonStaticSpan<TChar, Size> json, DeserializationOptions deserializationOptions) {
-  return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, Internals::JsonSpan<TChar, Size>>::makeParser(
-    buffer, json, deserializationOptions);
-}
-
-template <template <typename, typename, typename> class TJsonParser, typename TParseString,
-    typename TJsonBuffer, typename TChar>
-inline typename JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonDynamicSpan<TChar>>::parser_type
-makeParser(TJsonBuffer *buffer, JsonDynamicSpan<TChar> json, DeserializationOptions deserializationOptions) {
-  return JsonParserBuilder<TJsonParser, TParseString, TJsonBuffer, JsonDynamicSpan<TChar>>::makeParser(
-    buffer, json, deserializationOptions);
 }
 
 }  // namespace Internals

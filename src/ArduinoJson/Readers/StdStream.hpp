@@ -58,9 +58,9 @@ class Reader {
 
 template <typename T>
 struct ReaderImplBase<T,
-  typename EnableIf<IsBaseOf<std::istream, T>::value>::type> : Istream::Reader {
+  typename EnableIf<IsBaseOf<std::istream, T>::value>::type> {
 
-  using Istream::Reader::Reader;
+  using type = Istream::Reader;
 };
 
 }  // namespace Readers
