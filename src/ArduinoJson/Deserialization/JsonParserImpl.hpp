@@ -75,7 +75,7 @@ inline bool JsonParser<TReader, TWriter, TParseString>::parseAnythingTo(
   }
 
   return parseStringTo(destination,
-      StringContext::stringLiteral(_nesting.value()));
+      string_context_type::stringLiteral(_nesting.value()));
 }
 
 template <typename TReader, typename TWriter, typename TParseString>
@@ -411,7 +411,7 @@ RETURN_JSON_STRING:
 
 template <typename TReader, typename TWriter, typename TParseString>
 inline bool JsonParser<TReader, TWriter, TParseString>::parseStringTo(
-    JsonVariant *destination, StringContext context) {
+    JsonVariant *destination, string_context_type context) {
 
   const auto hasQuotes = context.forceString || isQuote(_reader.current());
   const auto parsed = parseString(context.stopChars);
@@ -425,13 +425,13 @@ inline bool JsonParser<TReader, TWriter, TParseString>::parseStringTo(
 
 template <typename TReader, typename TWriter, typename TParseString>
 inline bool JsonParser<TReader, TWriter, TParseString>::parseStringTo(JsonVariant *destination) {
-  return parseStringTo(destination, StringContext());
+  return parseStringTo(destination, string_context_type());
 }
 
 template <typename TReader, typename TWriter, typename TParseString>
 inline bool JsonParser<TReader, TWriter, TParseString>::parseObjectKeyTo(
     JsonVariant *destination) {
-  return parseStringTo(destination, StringContext::objectKey());
+  return parseStringTo(destination, string_context_type::objectKey());
 }
 
 template <typename TReader, typename TWriter, typename TParseString>

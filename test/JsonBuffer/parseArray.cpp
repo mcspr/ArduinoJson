@@ -190,28 +190,28 @@ TEST_CASE("JsonBuffer::parseArray()") {
   }
 
   SECTION("String with null byte") {
-    JsonArray& arr = jb.parseArray("['\0','\1', '\2']", 1);
+    JsonArray& arr = jb.parseArray("['\0','\1', '\2']", {1});
     REQUIRE_FALSE(arr.success());
   }
 
   SECTION("String with control character") {
-    JsonArray& arr = jb.parseArray("['\1', '\2', '\3']", 1);
+    JsonArray& arr = jb.parseArray("['\1', '\2', '\3']", {1});
     REQUIRE_FALSE(arr.success());
   }
 
   SECTION("String with unterminated escape Sequence") {
-    JsonArray& arr = jb.parseArray("\"\\\0\"", 4);
+    JsonArray& arr = jb.parseArray("\"\\\0\"", {4});
     REQUIRE_FALSE(arr.success());
   }
 
   SECTION("Deeply nested failure") {
     const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
-    REQUIRE_FALSE(jb.parseArray(input, 18).success());
+    REQUIRE_FALSE(jb.parseArray(input, {18}).success());
   }
 
   SECTION("Deeply nested success") {
     const char input[] = "[[[[[[[[[[[[[[[[[[[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
-    REQUIRE(jb.parseArray(input, 19).success());
+    REQUIRE(jb.parseArray(input, {19}).success());
   }
 
   SECTION("Multi-line comment before opening bracket") {

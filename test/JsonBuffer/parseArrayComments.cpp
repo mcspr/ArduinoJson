@@ -136,11 +136,11 @@ TEST_CASE("JsonBuffer::parseArray() w/ Comments") {
 
   SECTION("Deeply nested success") {
     const char input[] = "[// allowing\n[[[/* some */[[[[/***comments\n*/[[[[[[[[[[[\"Not too deep\"]]/*within*/]]]]]]]]]// this array\r\n]]]]]]]]// trailing";
-    REQUIRE(jb.parseArray(input, 19).success());
+    REQUIRE(jb.parseArray(input, {19}).success());
   }
 
   SECTION("Deeply nested failure") {
     const char input[] = "[[[[[[[[[[[[[[[[[[/* whatever */[\"Not too deep\"]]]]]]]]]]]]]]]]]]]";
-    REQUIRE_FALSE(jb.parseArray(input, 18).success());
+    REQUIRE_FALSE(jb.parseArray(input, {18}).success());
   }
 }
