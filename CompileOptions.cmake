@@ -16,6 +16,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wformat=2
 		-Winit-self
 		-Wmissing-include-dirs
+		-Wnull-dereference
 		-Wold-style-cast
 		-Woverloaded-virtual
 		-Wparentheses
@@ -74,6 +75,7 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	add_compile_options(
+		-Wlogical-op
 		-Wstrict-null-sentinel
 		-Wvla
 	)
@@ -102,7 +104,9 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	add_compile_options(
 		-Wc++11-compat
+		-Wconstant-logical-operand
 		-Wdeprecated-register
+		-Wlogical-op-parentheses
 		-Wnon-virtual-dtor
 	)
 endif()
