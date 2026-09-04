@@ -31,7 +31,7 @@ TEST_CASE("StaticJsonBuffer::startString()") {
     str.append('l');
     str.append('o');
 
-    REQUIRE(0 == str.c_str());
+    REQUIRE(nullptr == str.c_str());
   }
 
   SECTION("SizeIncreases") {

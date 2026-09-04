@@ -72,7 +72,7 @@ class DynamicJsonBufferBase final :
       _allocator->deallocate(currentBlock);
       currentBlock = nextBlock;
     }
-    _head = 0;
+    _head = nullptr;
   }
 
   class String {

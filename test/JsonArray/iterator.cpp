@@ -5,6 +5,8 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+static constexpr const char* nullptr_const_char = nullptr;
+
 template <typename TIterator>
 static void run_iterator_test() {
   StaticJsonBuffer<JSON_ARRAY_SIZE(2)> jsonBuffer;
@@ -12,7 +14,7 @@ static void run_iterator_test() {
   JsonArray &array = jsonBuffer.createArray();
   array.add(12);
   array.add(34);
-  array.add(static_cast<const char*>(0));
+  array.add(nullptr_const_char);
 
   REQUIRE(2 == array.size());
 

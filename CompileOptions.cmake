@@ -27,6 +27,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wsign-promo
 		-Wstrict-aliasing
 		-Wundef
+		-Wzero-as-null-pointer-constant
 	)
 
 	# error: '__COUNTER__' is a C2y extension [-Werror,-Wc2y-extensions]

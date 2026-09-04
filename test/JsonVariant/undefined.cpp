@@ -17,7 +17,7 @@ TEST_CASE("JsonVariant undefined") {
   }
 
   SECTION("AsStringReturnsNull") {
-    REQUIRE(0 == variant.as<char*>());
+    REQUIRE(nullptr == variant.as<const char*>());
   }
 
   SECTION("AsDoubleReturns0") {
