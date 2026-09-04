@@ -6,22 +6,24 @@
 
 #include "../Configuration.hpp"
 
+#include <cstdint>
+
 namespace ArduinoJson {
 namespace Internals {
 
 using JsonInteger =
 #if ARDUINOJSON_USE_LONG_LONG
-  long long
+  int64_t
 #else
-  long
+  int32_t
 #endif
   ;
 
 using JsonUnsignedInteger =
 #if ARDUINOJSON_USE_LONG_LONG
-  unsigned long long
+  uint64_t
 #else
-  unsigned long
+  uint32_t
 #endif
   ;
 

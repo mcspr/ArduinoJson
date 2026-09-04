@@ -84,7 +84,6 @@ class JsonVariant :
   {}
 
   // Create a JsonVariant containing an integer value.
-  // JsonVariant(char)
   // JsonVariant(signed char)
   // JsonVariant(signed short)
   // JsonVariant(signed int)
@@ -95,7 +94,8 @@ class JsonVariant :
   JsonVariant(T value) noexcept :
     _content(static_cast<Internals::JsonInteger>(value))
   {}
-
+  //
+  // JsonVariant(unsigned char)
   // JsonVariant(unsigned short)
   // JsonVariant(unsigned int)
   // JsonVariant(unsigned long)
@@ -147,12 +147,13 @@ class JsonVariant :
   // Get the variant as the specified type.
   //
   // char as<char>() const;
+  //
   // signed char as<signed char>() const;
   // signed short as<signed short>() const;
   // signed int as<signed int>() const;
   // signed long as<signed long>() const;
   // signed long long as<signed long long>() const;
-  // unsigned char as<unsigned char>() const;
+  //
   // unsigned short as<unsigned short>() const;
   // unsigned int as<unsigned int>() const;
   // unsigned long as<unsigned long>() const;
@@ -165,6 +166,7 @@ class JsonVariant :
   as() const {
     return variantAsInteger<T>();
   }
+  //
   // bool as<bool>() const
   template <typename T>
   typename Internals::EnableIf<
