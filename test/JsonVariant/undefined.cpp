@@ -53,12 +53,12 @@ TEST_CASE("JsonVariant undefined") {
 #endif
 
   SECTION("AsFloatReturns0") {
-    REQUIRE(0.0 == variant.as<float>());
+    REQUIRE(Approx(0.0f) == variant.as<float>());
   }
 
 #if ARDUINOJSON_USE_DOUBLE
   SECTION("AsDoubleReturns0") {
-    REQUIRE(0.0 == variant.as<double>());
+    REQUIRE(Approx(0.0) == variant.as<double>());
   }
 #endif
 

@@ -64,23 +64,23 @@ TEST_CASE("JsonVariant::printTo()") {
     check(false, "false");
   }
 
-#if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
-  SECTION("NegativeInt64") {
+#if ARDUINOJSON_USE_LONG_LONG
+  SECTION("NegativeSignedLongLong") {
     constexpr auto value = std::numeric_limits<signed long long>::min();
     check(value, std::to_string(value));
   }
 
-  SECTION("PositiveInt64") {
+  SECTION("PositiveSignedLongLong") {
     constexpr auto value = std::numeric_limits<signed long long>::max();
     check(value, std::to_string(value));
   }
 
-  SECTION("UInt64 min") {
+  SECTION("UnsignedLongLongMin") {
     constexpr auto value = std::numeric_limits<unsigned long long>::min();
     check(value, std::to_string(value));
   }
 
-  SECTION("UInt64 max") {
+  SECTION("UnsignedLongLongMax") {
     constexpr auto value = std::numeric_limits<unsigned long long>::max();
     check(value, std::to_string(value));
   }

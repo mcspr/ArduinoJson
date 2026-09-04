@@ -19,6 +19,9 @@ void checkIsArray(JsonVariant var) {
   REQUIRE_FALSE(var.is<float>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<const char*>());
   REQUIRE_FALSE(var.is<JsonObject>());
 }
@@ -30,6 +33,9 @@ void checkIsBool(JsonVariant var) {
   REQUIRE_FALSE(var.is<float>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<const char*>());
   REQUIRE_FALSE(var.is<JsonArray>());
   REQUIRE_FALSE(var.is<JsonObject>());
@@ -43,11 +49,17 @@ void checkIsStringBool(JsonVariant var) {
   REQUIRE_FALSE(var.is<float>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<JsonArray>());
   REQUIRE_FALSE(var.is<JsonObject>());
 }
 
 void checkIsInteger(JsonVariant var) {
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE(var.is<long long>());
+#endif
   REQUIRE(var.is<long>());
   REQUIRE(var.is<int>());
   REQUIRE(var.is<float>());
@@ -61,6 +73,9 @@ void checkIsInteger(JsonVariant var) {
 
 void checkIsStringInteger(JsonVariant var) {
   REQUIRE(var.is<const char*>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE(var.is<long long>());
+#endif
   REQUIRE(var.is<long>());
   REQUIRE(var.is<int>());
   REQUIRE(var.is<float>());
@@ -78,6 +93,9 @@ void checkIsFloat(JsonVariant var) {
   REQUIRE_FALSE(var.is<bool>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<const char*>());
   REQUIRE_FALSE(var.is<JsonArray>());
   REQUIRE_FALSE(var.is<JsonObject>());
@@ -91,6 +109,9 @@ void checkIsStringFloat(JsonVariant var) {
   REQUIRE_FALSE(var.is<bool>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<JsonArray>());
   REQUIRE_FALSE(var.is<JsonObject>());
 }
@@ -101,6 +122,9 @@ void checkIsNull(JsonVariant var) {
   REQUIRE_FALSE(var.is<bool>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<const char*>());
   REQUIRE_FALSE(var.is<float>());
   REQUIRE_FALSE(var.is<double>());
@@ -115,6 +139,9 @@ void checkIsStringNull(JsonVariant var) {
   REQUIRE_FALSE(var.is<bool>());
   REQUIRE_FALSE(var.is<int>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<float>());
   REQUIRE_FALSE(var.is<double>());
   REQUIRE_FALSE(var.is<JsonArray>());
@@ -130,6 +157,9 @@ void checkIsString(JsonVariant var) {
   REQUIRE_FALSE(var.is<double>());
   REQUIRE_FALSE(var.is<float>());
   REQUIRE_FALSE(var.is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+  REQUIRE_FALSE(var.is<long long>());
+#endif
   REQUIRE_FALSE(var.is<JsonArray>());
   REQUIRE_FALSE(var.is<JsonObject>());
 }
@@ -150,9 +180,15 @@ TEST_CASE("JsonVariant::is()") {
     checkIsBool(false);
   }
 
+  SECTION("float") {
+    checkIsFloat(4.2f);
+  }
+
+#if ARDUINOJSON_USE_DOUBLE
   SECTION("double") {
     checkIsFloat(4.2);
   }
+#endif
 
   SECTION("int") {
     checkIsInteger(42);
@@ -161,6 +197,12 @@ TEST_CASE("JsonVariant::is()") {
   SECTION("long") {
     checkIsInteger(42L);
   }
+
+#if ARDUINOJSON_USE_LONG_LONG
+  SECTION("long long") {
+    checkIsInteger(42LL);
+  }
+#endif
 
   SECTION("string") {
     checkIsString("42");

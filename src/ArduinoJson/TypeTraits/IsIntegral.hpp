@@ -39,12 +39,6 @@ struct IsSignedTypeImpl<signed long long> : TrueType {
 };
 #endif
 
-#if ARDUINOJSON_USE_INT64
-template <>
-struct IsSignedTypeImpl<signed __int64> : TrueType {
-};
-#endif
-
 // A meta-function that returns true if T is a type that is signed.
 template <typename T>
 struct IsSignedType : IsSignedTypeImpl<T>::type {
@@ -85,12 +79,6 @@ struct IsUnsignedTypeImpl<unsigned long> : TrueType {
 #if ARDUINOJSON_USE_LONG_LONG
 template <>
 struct IsUnsignedTypeImpl<unsigned long long> : TrueType {
-};
-#endif
-
-#if ARDUINOJSON_USE_INT64
-template <>
-struct IsUnsignedTypeImpl<unsigned __int64> : TrueType {
 };
 #endif
 

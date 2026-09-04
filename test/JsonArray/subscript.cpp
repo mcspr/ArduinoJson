@@ -11,53 +11,99 @@ TEST_CASE("JsonArray::operator[]") {
   _array.add(9876);
 
   SECTION("char") {
-    _array[0] = 1;
+    signed char value = 12;
+    _array[0] = value;
 
     REQUIRE(_array[0].is<char>());
+    REQUIRE(_array[0].is<signed char>());
     REQUIRE(_array[0].is<short>());
     REQUIRE(_array[0].is<int>());
     REQUIRE(_array[0].is<long>());
-    REQUIRE(1 == _array[0].as<char>());
-    REQUIRE(1 == _array[0].as<short>());
-    REQUIRE(1 == _array[0].as<int>());
-    REQUIRE(1 == _array[0].as<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<long long>());
+#endif
+
+    REQUIRE(12 == _array[0].as<char>());
+    REQUIRE(12 == _array[0].as<short>());
+    REQUIRE(12 == _array[0].as<int>());
+    REQUIRE(12 == _array[0].as<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(12 == _array[0].as<long long>());
+#endif
 
     REQUIRE_FALSE(_array[0].is<bool>());
   }
 
   SECTION("short") {
-    _array[0] = 1234;
+    short value = 12345;
+    _array[0] = value;
 
     REQUIRE(_array[0].is<char>());
     REQUIRE(_array[0].is<short>());
     REQUIRE(_array[0].is<int>());
     REQUIRE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<long long>());
+#endif
 
     REQUIRE(0 == _array[0].as<char>());
-    REQUIRE(1234 == _array[0].as<short>());
-    REQUIRE(1234 == _array[0].as<int>());
-    REQUIRE(1234 == _array[0].as<long>());
+    REQUIRE(12345 == _array[0].as<short>());
+    REQUIRE(12345 == _array[0].as<int>());
+    REQUIRE(12345 == _array[0].as<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(12345 == _array[0].as<long long>());
+#endif
 
     REQUIRE_FALSE(_array[0].is<bool>());
   }
 
   SECTION("int") {
-    _array[0] = 123456;
+    int value = -123456;
+    _array[0] = value;
 
     REQUIRE(_array[0].is<char>());
     REQUIRE(_array[0].is<short>());
     REQUIRE(_array[0].is<int>());
     REQUIRE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<long long>());
+#endif
+
+    REQUIRE(0 == _array[0].as<char>());
+    REQUIRE(0 == _array[0].as<short>());
+    REQUIRE(-123456 == _array[0].as<int>());
+    REQUIRE(-123456 == _array[0].as<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(-123456 == _array[0].as<long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
+  SECTION("long") {
+    long value = 123456;
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<char>());
+    REQUIRE(_array[0].is<short>());
+    REQUIRE(_array[0].is<int>());
+    REQUIRE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<long long>());
+#endif
 
     REQUIRE(0 == _array[0].as<char>());
     REQUIRE(0 == _array[0].as<short>());
     REQUIRE(123456 == _array[0].as<int>());
     REQUIRE(123456 == _array[0].as<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(123456 == _array[0].as<long long>());
+#endif
 
     REQUIRE_FALSE(_array[0].is<bool>());
   }
 
-#if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
+#if ARDUINOJSON_USE_LONG_LONG
   SECTION("long long") {
     static constexpr long long value = std::numeric_limits<long long>::max();
     _array[0] = value;
@@ -66,6 +112,7 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(_array[0].is<short>());
     REQUIRE(_array[0].is<int>());
     REQUIRE(_array[0].is<long>());
+    REQUIRE(_array[0].is<long long>());
 
     REQUIRE(0 == _array[0].as<char>());
     REQUIRE(0 == _array[0].as<short>());
@@ -76,9 +123,146 @@ TEST_CASE("JsonArray::operator[]") {
   }
 #endif
 
+  SECTION("unsigned char") {
+    unsigned char value = 123;
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<unsigned char>());
+    REQUIRE(_array[0].is<unsigned short>());
+    REQUIRE(_array[0].is<unsigned int>());
+    REQUIRE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<unsigned long long>());
+#endif
+
+    REQUIRE(123 == _array[0].as<unsigned char>());
+    REQUIRE(123 == _array[0].as<unsigned short>());
+    REQUIRE(123 == _array[0].as<unsigned int>());
+    REQUIRE(123 == _array[0].as<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(123 == _array[0].as<unsigned long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
+  SECTION("unsigned short") {
+    unsigned short value = 1234;
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<unsigned char>());
+    REQUIRE(_array[0].is<unsigned short>());
+    REQUIRE(_array[0].is<unsigned int>());
+    REQUIRE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<unsigned long long>());
+#endif
+
+    REQUIRE(0 == _array[0].as<unsigned char>());
+    REQUIRE(1234 == _array[0].as<unsigned short>());
+    REQUIRE(1234 == _array[0].as<unsigned int>());
+    REQUIRE(1234 == _array[0].as<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(1234 == _array[0].as<unsigned long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
+  SECTION("unsigned int") {
+    unsigned int value = 123456;
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<unsigned char>());
+    REQUIRE(_array[0].is<unsigned short>());
+    REQUIRE(_array[0].is<unsigned int>());
+    REQUIRE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<unsigned long long>());
+#endif
+
+    REQUIRE(0 == _array[0].as<unsigned char>());
+    REQUIRE(0 == _array[0].as<unsigned short>());
+    REQUIRE(123456 == _array[0].as<unsigned int>());
+    REQUIRE(123456 == _array[0].as<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(123456 == _array[0].as<unsigned long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
+  SECTION("unsigned long") {
+    unsigned long value = 123456;
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<unsigned char>());
+    REQUIRE(_array[0].is<unsigned short>());
+    REQUIRE(_array[0].is<unsigned int>());
+    REQUIRE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(_array[0].is<unsigned long long>());
+#endif
+
+    REQUIRE(0 == _array[0].as<unsigned char>());
+    REQUIRE(0 == _array[0].as<unsigned short>());
+    REQUIRE(123456 == _array[0].as<unsigned int>());
+    REQUIRE(123456 == _array[0].as<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE(123456 == _array[0].as<unsigned long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+
+#if ARDUINOJSON_USE_LONG_LONG
+  SECTION("unsigned long long") {
+    static constexpr auto value =
+      std::numeric_limits<unsigned long long>::max();
+    _array[0] = value;
+
+    REQUIRE(_array[0].is<unsigned char>());
+    REQUIRE(_array[0].is<unsigned short>());
+    REQUIRE(_array[0].is<unsigned int>());
+    REQUIRE(_array[0].is<unsigned long>());
+    REQUIRE(_array[0].is<unsigned long long>());
+
+    REQUIRE(0 == _array[0].as<unsigned char>());
+    REQUIRE(0 == _array[0].as<unsigned short>());
+    REQUIRE(0 == _array[0].as<unsigned int>());
+    REQUIRE(value == _array[0].as<unsigned long long>());
+
+    REQUIRE_FALSE(_array[0].is<bool>());
+  }
+#endif
+
+  SECTION("float") {
+    _array[0] = 123.45f;
+
+    REQUIRE(_array[0].is<float>());
+    REQUIRE(_array[0].is<double>());
+    REQUIRE(Approx(123.45f) == _array[0].as<float>());
+
+    REQUIRE_FALSE(_array[0].is<char>());
+    REQUIRE_FALSE(_array[0].is<short>());
+    REQUIRE_FALSE(_array[0].is<int>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<unsigned char>());
+    REQUIRE_FALSE(_array[0].is<unsigned short>());
+    REQUIRE_FALSE(_array[0].is<unsigned int>());
+    REQUIRE_FALSE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<unsigned long long>());
+#endif
+  }
+
   SECTION("double") {
     _array[0] = 123.45;
 
+    REQUIRE(_array[0].is<float>());
     REQUIRE(_array[0].is<double>());
     REQUIRE(Approx(123.45) == _array[0].as<double>());
 
@@ -86,6 +270,17 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<unsigned char>());
+    REQUIRE_FALSE(_array[0].is<unsigned short>());
+    REQUIRE_FALSE(_array[0].is<unsigned int>());
+    REQUIRE_FALSE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<unsigned long long>());
+#endif
   }
 
   SECTION("bool") {
@@ -98,6 +293,17 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<unsigned char>());
+    REQUIRE_FALSE(_array[0].is<unsigned short>());
+    REQUIRE_FALSE(_array[0].is<unsigned int>());
+    REQUIRE_FALSE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<unsigned long long>());
+#endif
   }
 
   SECTION("const char*") {
@@ -106,12 +312,23 @@ TEST_CASE("JsonArray::operator[]") {
     _array[0] = str;
     REQUIRE(str == _array[0].as<const char*>());
     REQUIRE(str == _array[0].as<char*>());  // <- shorthand
-    REQUIRE(true == _array[0].is<const char*>());
+    REQUIRE(_array[0].is<const char*>());
 
     REQUIRE_FALSE(_array[0].is<char>());
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<unsigned char>());
+    REQUIRE_FALSE(_array[0].is<unsigned short>());
+    REQUIRE_FALSE(_array[0].is<unsigned int>());
+    REQUIRE_FALSE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<unsigned long long>());
+#endif
   }
 
   SECTION("nested array") {
@@ -125,12 +342,23 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray&>()));
     REQUIRE(std::addressof(arr) == std::addressof(_array[0].as<const JsonArray>()));  // shorthand
 
-    REQUIRE(_array[0].is<JsonArray&>());
     REQUIRE_FALSE(_array[0].is<char>());
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<long long>());
+#endif
 
+    REQUIRE_FALSE(_array[0].is<unsigned char>());
+    REQUIRE_FALSE(_array[0].is<unsigned short>());
+    REQUIRE_FALSE(_array[0].is<unsigned int>());
+    REQUIRE_FALSE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<unsigned long long>());
+#endif
+
+    REQUIRE(_array[0].is<JsonArray&>());
     REQUIRE(_array[0][0].is<int>());
     REQUIRE(42 == _array[0][0]);
   }
@@ -150,8 +378,20 @@ TEST_CASE("JsonArray::operator[]") {
     REQUIRE_FALSE(_array[0].is<short>());
     REQUIRE_FALSE(_array[0].is<int>());
     REQUIRE_FALSE(_array[0].is<long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<long long>());
+#endif
+
+    REQUIRE_FALSE(_array[0].is<unsigned char>());
+    REQUIRE_FALSE(_array[0].is<unsigned short>());
+    REQUIRE_FALSE(_array[0].is<unsigned int>());
+    REQUIRE_FALSE(_array[0].is<unsigned long>());
+#if ARDUINOJSON_USE_LONG_LONG
+    REQUIRE_FALSE(_array[0].is<unsigned long long>());
+#endif
 
     REQUIRE(_array[0].is<JsonObject&>());
+    REQUIRE(_array[0]["x"].is<int>());
     REQUIRE(42 == _array[0]["x"]);
   }
 
@@ -160,7 +400,6 @@ TEST_CASE("JsonArray::operator[]") {
     const char* str = "hello";
 
     arr.add(str);
-
     _array[0] = arr[0];
 
     REQUIRE(str == _array[0]);
@@ -205,7 +444,6 @@ TEST_CASE("JsonArray::operator[]") {
     const char* str = "hello";
 
     obj["x"] = str;
-
     _array[0] = obj["x"];
 
     REQUIRE(str == _array[0]);
@@ -274,28 +512,25 @@ TEST_CASE("JsonArray::operator[]") {
   }
 
   SECTION("should use variant string buffer for short char*") {
-    _array[0] = const_cast<char*>("world");
-    const size_t expectedSize = JSON_ARRAY_SIZE(1);
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    const char buffer[] = "world";
+    _array[0] = const_cast<char*>(&buffer[0]);
+    REQUIRE(JSON_ARRAY_SIZE(1) == _jsonBuffer.size());
   }
 
   SECTION("should duplicate long char*") {
-    const char* val = "thisstringisaprettybigonetofitintothevariantstringbuffer";
-    _array[0] = const_cast<char*>(val);
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + strlen(val) + 1;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    const char buffer[] = "thisstringisaprettybigonetofitintothevariantstringbuffer";
+    _array[0] = const_cast<char*>(&buffer[0]);
+    REQUIRE((sizeof(buffer) + JSON_ARRAY_SIZE(1)) == _jsonBuffer.size());
   }
 
   SECTION("should use variant string buffer for short std::string") {
     _array[0] = std::string("world");
-    const size_t expectedSize = JSON_ARRAY_SIZE(1);
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE(JSON_ARRAY_SIZE(1) == _jsonBuffer.size());
   }
 
   SECTION("should duplicate long std::string") {
     std::string val = "thisstringistoolongforthisarray";
     _array[0] = val;
-    const size_t expectedSize = JSON_ARRAY_SIZE(1) + val.length() + 1;
-    REQUIRE(expectedSize == _jsonBuffer.size());
+    REQUIRE((val.length() + 1 + JSON_ARRAY_SIZE(1)) == _jsonBuffer.size());
   }
 }

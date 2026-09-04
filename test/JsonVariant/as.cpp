@@ -3,7 +3,6 @@
 // MIT License
 
 #include <ArduinoJson.h>
-#include <stdint.h>
 #include <catch.hpp>
 
 TEST_CASE("JsonVariant::as()") {
@@ -132,14 +131,24 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(std::string("null") == variant.as<std::string>());
   }
 
+  SECTION("NumberZeroStringAsBool") {
+    JsonVariant variant = "0";
+    REQUIRE(variant.as<bool>());
+  }
+
   SECTION("NumberStringAsBool") {
     JsonVariant variant = "42";
     REQUIRE(variant.as<bool>());
   }
 
-  SECTION("NumberRawStringAsBool") {
-    JsonVariant variant = RawJson("12345");
-    REQUIRE(variant.as<bool>());
+  SECTION("NumberZeroRawStringAsBool") {
+    JsonVariant variant = RawJson("0");
+    REQUIRE(true == variant.as<bool>());
+  }
+
+  SECTION("NumberZeroRawStringAsBool") {
+    JsonVariant variant = RawJson("42");
+    REQUIRE(true == variant.as<bool>());
   }
 
   SECTION("NumberStringAsLong") {
@@ -147,16 +156,58 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(42L == variant.as<long>());
   }
 
-#if ARDUINOJSON_USE_LONG_LONG || ARDUINOJSON_USE_INT64
-  SECTION("NumberStringAsInt64Negative") {
-    JsonVariant variant = "-9223372036854775808";
-    REQUIRE_FALSE(variant.is<long long int>());
-    REQUIRE_FALSE(variant.is<double>());
+  SECTION("NumberRawStringAsLong") {
+    JsonVariant variant = RawJson("42");
+    REQUIRE(42L == variant.as<long>());
   }
 
-  SECTION("NumberStringAsInt64Positive") {
+#if ARDUINOJSON_USE_LONG_LONG
+  SECTION("NumberStringAsLongLongMin") {
+    JsonVariant variant = "-9223372036854775808";
+    REQUIRE(std::numeric_limits<long long>::min() ==
+            variant.as<long long>());
+  }
+
+  SECTION("NumberRawStringAsLongLongMin") {
+    JsonVariant variant = RawJson("-9223372036854775808");
+    REQUIRE(std::numeric_limits<long long>::min() ==
+            variant.as<long long>());
+  }
+
+  SECTION("NumberStringAsLongLongMax") {
     JsonVariant variant = "9223372036854775807";
-    REQUIRE(9223372036854775807 == variant.as<long long>());
+    REQUIRE(std::numeric_limits<long long>::max() ==
+            variant.as<long long>());
+  }
+
+  SECTION("NumberRawStringAsLongLongMax") {
+    JsonVariant variant = RawJson("9223372036854775807");
+    REQUIRE(std::numeric_limits<long long>::max() ==
+            variant.as<long long>());
+  }
+
+  SECTION("NumberStringAsUnsignedLongLongMin") {
+    JsonVariant variant = "0";
+    REQUIRE(std::numeric_limits<unsigned long long>::min() ==
+            variant.as<unsigned long long>());
+  }
+
+  SECTION("NumberRawStringAsUnsignedLongLongMin") {
+    JsonVariant variant = RawJson("0");
+    REQUIRE(std::numeric_limits<unsigned long long>::min() ==
+            variant.as<unsigned long long>());
+  }
+
+  SECTION("NumberStringAsUnsignedLongLongMax") {
+    JsonVariant variant = "18446744073709551615";
+    REQUIRE(std::numeric_limits<unsigned long long>::max() ==
+            variant.as<unsigned long long>());
+  }
+
+  SECTION("NumberRawStringAsUnsignedLongLongMax") {
+    JsonVariant variant = RawJson("18446744073709551615");
+    REQUIRE(std::numeric_limits<unsigned long long>::max() ==
+            variant.as<unsigned long long>());
   }
 #endif
 

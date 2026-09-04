@@ -12,8 +12,6 @@ namespace Internals {
 using JsonInteger =
 #if ARDUINOJSON_USE_LONG_LONG
   long long
-#elif ARDUINOJSON_USE_INT64
-  __int64
 #else
   long
 #endif
@@ -22,8 +20,6 @@ using JsonInteger =
 using JsonUnsignedInteger =
 #if ARDUINOJSON_USE_LONG_LONG
   unsigned long long
-#elif ARDUINOJSON_USE_INT64
-  unsigned __int64
 #else
   unsigned long
 #endif
