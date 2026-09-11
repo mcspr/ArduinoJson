@@ -7,6 +7,7 @@
 #include "JsonFloat.hpp"
 #include "JsonInteger.hpp"
 #include "JsonNull.hpp"
+#include "JsonUndefined.hpp"
 #include "JsonVariantType.hpp"
 
 #include "../TypeTraits/Declval.hpp"
@@ -48,9 +49,6 @@ namespace Internals {
 
 // The enum JsonVariantType determines which member is in use.
 // Take care and only access the active union member data fields other than 'type'.
-
-struct JsonVariantUndefined {
-};
 
 union JsonVariantContent {
   // default variant state
@@ -190,7 +188,7 @@ union JsonVariantContent {
   StringBuffer asStringBuffer;
 
   template <typename T,
-    typename R = decltype(Declval<T>().Operator(Declval<Internals::JsonVariantUndefined>()))>
+    typename R = decltype(Declval<T>().Operator(Declval<JsonUndefined>()))>
   R visit(T&& visitor) const;
 };
 

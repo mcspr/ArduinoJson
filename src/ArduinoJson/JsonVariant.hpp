@@ -23,6 +23,7 @@
 #include "TypeTraits/RemoveReference.hpp"
 
 #include "Data/JsonNull.hpp"
+#include "Data/JsonUndefined.hpp"
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonVariantType.hpp"
 
@@ -60,6 +61,10 @@ class JsonVariant :
  public:
   // Creates an empty variant by default
   JsonVariant() noexcept :
+    _content()
+  {}
+
+  JsonVariant(JsonUndefined) noexcept :
     _content()
   {}
 
@@ -278,6 +283,16 @@ class JsonVariant :
   }
 
   // Tells weither the variant has the specified type.
+
+  // Contains nothing / is undefined
+  //
+  // bool is<JsonUndefined>() const;
+  template <typename T>
+  typename Internals::EnableIf<
+    Internals::IsSame<T, JsonUndefined>::value, bool>::type
+  is() const {
+    return variantIsUndefined();
+  }
 
   // Contains null type or is a raw "null" string
   //

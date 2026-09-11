@@ -13,6 +13,7 @@
 #include "Data/JsonFloat.hpp"
 #include "Data/JsonInteger.hpp"
 #include "Data/JsonNull.hpp"
+#include "Data/JsonUndefined.hpp"
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonStringPointer.hpp"
 #include "Data/JsonVariantType.hpp"
@@ -360,7 +361,7 @@ struct JsonVariantSuccess {
     return true;
   }
 
-  static bool Operator(Internals::JsonVariantUndefined) {
+  static bool Operator(JsonUndefined) {
     return false;
   }
 
@@ -455,7 +456,7 @@ R JsonVariantContent::visit(T&& visitor) const {
 
   }
 
-  return visitor.Operator(Internals::JsonVariantUndefined{});
+  return visitor.Operator(JsonUndefined{});
 }
 
 }

@@ -80,7 +80,7 @@ inline void ArduinoJson::Internals::JsonSerializer<Writer>::serialize(
 }
 
 template <typename Writer>
-inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(Internals::JsonVariantUndefined) {
+inline void ArduinoJson::Internals::JsonSerializer<Writer>::VariantVisitor::Operator(JsonUndefined) {
   _writer.writeNull();
 }
 

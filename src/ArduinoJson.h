@@ -10,8 +10,10 @@
 
 using ArduinoJson::JsonVariant;
 
-using ArduinoJson::JsonArray;
 using ArduinoJson::JsonNull;
+using ArduinoJson::JsonUndefined;
+
+using ArduinoJson::JsonArray;
 using ArduinoJson::JsonObject;
 using ArduinoJson::JsonSpan;
 
