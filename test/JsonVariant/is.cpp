@@ -5,283 +5,240 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-using StringBufferValue = ArduinoJson::Internals::JsonVariantContent::StringBufferValue;
 using ArduinoJson::Internals::JsonString;
+using StringBufferValue =
+  ArduinoJson::Internals::JsonVariantContent::StringBufferValue;
 
-void checkIsArray(JsonVariant var) {
-  REQUIRE(var.is<JsonArray>());
-  REQUIRE(var.is<JsonArray&>());
-  REQUIRE(var.is<const JsonArray>());
-  REQUIRE(var.is<const JsonArray&>());
+namespace {
 
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<JsonObject>());
+struct Check {
+  bool is_undefined;
+
+  bool is_null;
+
+  bool is_bool;
+
+  bool is_array;
+  bool is_object;
+
+  bool is_number;
+
+  bool is_float;
+  bool is_signed;
+  bool is_unsigned;
+
+  bool is_string;
+};
+
+// ref. Numbers/parseNumber.ipp
+// limit the number of repeating CHECK(...) to limit the number of unique catch-generated assert object instances
+#pragma push_macro("CATCH_INTERNAL_LINEINFO")
+#undef CATCH_INTERNAL_LINEINFO
+#define CATCH_INTERNAL_LINEINFO source_line_info
+
+#define __CATCH_LOCAL_LINEINFO ::Catch::SourceLineInfo source_line_info = ::Catch::SourceLineInfo(__builtin_FILE(), __builtin_LINE())
+#define __CATCH_NESTED_LINEINFO ::Catch::SourceLineInfo source_line_info
+
+void checkVariant(JsonVariant variant, Check check, __CATCH_LOCAL_LINEINFO) {
+  CHECK(variant.is<JsonUndefined>() == check.is_undefined);
+  CHECK(variant.is<JsonNull>() == check.is_null);
+  CHECK(variant.is<bool>() == check.is_bool);
+
+  CHECK(variant.is<const JsonArray>() == check.is_array);
+  CHECK(variant.is<JsonArray>() == check.is_array);
+  CHECK(variant.is<const JsonArray&>() == check.is_array);
+  CHECK(variant.is<JsonArray&>() == check.is_array);
+
+  CHECK(variant.is<const JsonObject>() == check.is_object);
+  CHECK(variant.is<JsonObject>() == check.is_object);
+  CHECK(variant.is<const JsonObject&>() == check.is_object);
+  CHECK(variant.is<JsonObject&>() == check.is_object);
+
+  CHECK(variant.is<JsonNumber>() == check.is_number);
+
+  CHECK(variant.is<float>() == check.is_float);
+  CHECK(variant.is<double>() == check.is_float);
+
+  CHECK(variant.is<int8_t>() == check.is_signed);
+  CHECK(variant.is<int16_t>() == check.is_signed);
+  CHECK(variant.is<int32_t>() == check.is_signed);
+  CHECK(variant.is<int64_t>() == check.is_signed);
+
+  CHECK(variant.is<uint8_t>() == check.is_unsigned);
+  CHECK(variant.is<uint16_t>() == check.is_unsigned);
+  CHECK(variant.is<uint32_t>() == check.is_unsigned);
+  CHECK(variant.is<uint64_t>() == check.is_unsigned);
+
+  CHECK(variant.is<const char*>() == check.is_string);
+  CHECK(variant.is<std::string>() == check.is_string);
 }
 
-void checkIsObject(JsonVariant var) {
-  REQUIRE(var.is<JsonObject>());
-  REQUIRE(var.is<JsonObject&>());
-  REQUIRE(var.is<const JsonObject>());
-  REQUIRE(var.is<const JsonObject&>());
+#pragma pop_macro("CATCH_INTERNAL_LINEINFO")
 
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-}
-
-void checkIsBool(JsonVariant var) {
-  REQUIRE(var.is<bool>());
-
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsStringBool(JsonVariant var) {
-  REQUIRE(var.is<const char*>());
-  REQUIRE(var.is<bool>());
-
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsInteger(JsonVariant var) {
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE(var.is<long long>());
-#endif
-  REQUIRE(var.is<long>());
-  REQUIRE(var.is<int>());
-  REQUIRE(var.is<float>());
-  REQUIRE(var.is<double>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsStringInteger(JsonVariant var) {
-  REQUIRE(var.is<const char*>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE(var.is<long long>());
-#endif
-  REQUIRE(var.is<long>());
-  REQUIRE(var.is<int>());
-  REQUIRE(var.is<float>());
-  REQUIRE(var.is<double>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsFloat(JsonVariant var) {
-  REQUIRE(var.is<double>());
-  REQUIRE(var.is<float>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsStringFloat(JsonVariant var) {
-  REQUIRE(var.is<const char*>());
-  REQUIRE(var.is<double>());
-  REQUIRE(var.is<float>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsUndefined(JsonVariant var) {
-  REQUIRE(var.is<JsonUndefined>());
-  REQUIRE_FALSE(var.success());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsNull(JsonVariant var) {
-  REQUIRE(var.is<JsonNull>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<const char*>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsStringNull(JsonVariant var) {
-  REQUIRE(var.is<const char*>());
-  REQUIRE(var.is<JsonNull>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
-}
-
-void checkIsString(JsonVariant var) {
-  REQUIRE(var.is<const char*>());
-  REQUIRE(var.is<std::string>());
-
-  REQUIRE_FALSE(var.is<bool>());
-  REQUIRE_FALSE(var.is<int>());
-  REQUIRE_FALSE(var.is<double>());
-  REQUIRE_FALSE(var.is<float>());
-  REQUIRE_FALSE(var.is<long>());
-#if ARDUINOJSON_USE_LONG_LONG
-  REQUIRE_FALSE(var.is<long long>());
-#endif
-  REQUIRE_FALSE(var.is<JsonArray>());
-  REQUIRE_FALSE(var.is<JsonObject>());
 }
 
 TEST_CASE("JsonVariant::is()") {
+  SECTION("undefined") {
+    JsonVariant variant;
+
+    Check check{};
+    check.is_undefined = true;
+
+    checkVariant(variant, check);
+  }
+
+  SECTION("null") {
+    JsonVariant variant = JsonNull{};
+
+    Check check{};
+    check.is_null = true;
+
+    checkVariant(variant, check);
+  }
+
+  SECTION("bool") {
+    JsonVariant variant = false;
+
+    Check check{};
+    check.is_bool = true;
+
+    checkVariant(variant, check);
+  }
+
   SECTION("JsonArray") {
     DynamicJsonBuffer jb;
-    checkIsArray(jb.createArray());
+    JsonVariant variant = jb.createArray();
+
+    Check check{};
+    check.is_array = true;
+
+    checkVariant(variant, check);
   }
 
   SECTION("JsonObject") {
     DynamicJsonBuffer jb;
-    checkIsObject(jb.createObject());
-  }
+    JsonVariant variant = jb.createObject();
 
-  SECTION("default") {
-    checkIsUndefined(JsonVariant());
-  }
+    Check check{};
+    check.is_object = true;
 
-  SECTION("undefined") {
-    checkIsUndefined(JsonUndefined{});
-  }
-
-  SECTION("null") {
-    checkIsNull(JsonNull{});
-  }
-
-  SECTION("bool") {
-    checkIsBool(true);
-    checkIsBool(false);
+    checkVariant(variant, check);
   }
 
   SECTION("float") {
-    checkIsFloat(4.2f);
+    JsonVariant variant = 4.2f;
+
+    Check check{};
+    check.is_number = true;
+    check.is_float = true;
+
+    checkVariant(variant, check);
   }
 
 #if ARDUINOJSON_USE_DOUBLE
   SECTION("double") {
-    checkIsFloat(4.2);
+    JsonVariant variant = 4.2;
+
+    Check check{};
+    check.is_number = true;
+    check.is_float = true;
+
+    checkVariant(variant, check);
   }
 #endif
 
   SECTION("int") {
-    checkIsInteger(42);
-  }
+    JsonVariant variant = 42;
 
-  SECTION("long") {
-    checkIsInteger(42L);
-  }
+    Check check{};
+    check.is_number = true;
+    check.is_float = true;
+    check.is_signed = true;
+    check.is_unsigned = true;
 
-#if ARDUINOJSON_USE_LONG_LONG
-  SECTION("long long") {
-    checkIsInteger(42LL);
+    checkVariant(variant, check);
   }
-#endif
 
   SECTION("string") {
-    checkIsString("42");
-    checkIsString(StringBufferValue{"42"});
+    JsonVariant variant = "42";
+
+    Check check{};
+    check.is_string = true;
+
+    checkVariant(variant, check);
   }
 
-  SECTION("string to string conversion") {
-    checkIsString(JsonVariant(
-      JsonString("42"), true));
-    checkIsString(JsonVariant(
-      JsonString(StringBufferValue{"42"}), true));
-    checkIsString(JsonVariant(
-      JsonString("wat"), false));
-    checkIsString(JsonVariant(
-      JsonString(StringBufferValue{"wat"}), false));
+  SECTION("string buffer") {
+    JsonVariant variant = StringBufferValue{"42"};
+
+    Check check{};
+    check.is_string = true;
+
+    checkVariant(variant, check);
+  }
+
+  SECTION("parsed string") {
+    auto variant = JsonVariant(JsonString("42"), true);
+
+    Check check{};
+    check.is_string = true;
+
+    checkVariant(variant, check);
+
+    variant = JsonVariant(JsonString(StringBufferValue{"42"}), true);
+    checkVariant(variant, check);
+
+    variant = JsonVariant(JsonString("wat"), false);
+    checkVariant(variant, check);
+
+    variant = JsonVariant(JsonString(StringBufferValue{"wat"}), false);
+    checkVariant(variant, check);
   }
 
   SECTION("unparsed null") {
-    checkIsString(RawJson("null"));
-    checkIsStringNull(RawJson("null"));
+    JsonVariant variant = RawJson("null");
+
+    Check check{};
+    check.is_null = true;
+    check.is_string = true;
+
+    checkVariant(variant, check);
   }
 
   SECTION("unparsed bool") {
-    checkIsStringBool(RawJson("true"));
-    checkIsStringBool(RawJson("false"));
+    JsonVariant variant = RawJson("false");
+
+    Check check{};
+    check.is_bool = true;
+    check.is_string = true;
+
+    checkVariant(variant, check);
+
+    variant = RawJson("true");
+    checkVariant(variant, check);
   }
 
   SECTION("unparsed int") {
-    checkIsStringInteger(RawJson("42"));
+    JsonVariant variant = RawJson("42");
+
+    Check check{};
+    check.is_number = true;
+    check.is_float = true;
+    check.is_signed = true;
+    check.is_unsigned = true;
+    check.is_string = true;
+
+    checkVariant(variant, check);
   }
 
   SECTION("unparsed float") {
-    checkIsStringFloat(RawJson("4.2e-10"));
+    JsonVariant variant = RawJson("42e-10");
+
+    Check check{};
+    check.is_number = true;
+    check.is_float = true;
+    check.is_string = true;
+
+    checkVariant(variant, check);
   }
 }
