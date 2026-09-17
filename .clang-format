@@ -1,5 +1,17 @@
 # http://clang.llvm.org/docs/ClangFormatStyleOptions.html
 
 BasedOnStyle: Google
-Standard: Cpp03
+Standard: c++11
 AllowShortFunctionsOnASingleLine: Empty
+IncludeBlocks: Preserve
+IndentPPDirectives: AfterHash
+DerivePointerAlignment: false
+
+# Always break after if to get accurate coverage
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# Dont overcommit to line breaks
+ReflowComments: true
+PenaltyBreakComment: 300
+ColumnLimit: 100
