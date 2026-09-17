@@ -249,7 +249,8 @@ class JsonWriter {
       return;
     }
 
-    if (SignBit(value)) {
+    const bool negative = SignBit(value);
+    if (negative) {
       writeRaw('-');
       value = -value;
     }
@@ -261,6 +262,10 @@ class JsonWriter {
 
     if (value == TFloat(0)) {
       writeRaw('0');
+      if (negative) {
+        writeRaw('.');
+        writeRaw('0');
+      }
       return;
     }
 

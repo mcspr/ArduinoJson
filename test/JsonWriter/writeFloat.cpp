@@ -49,7 +49,7 @@ TEST_CASE("JsonWriter::writeFloat(double)") {
 
   SECTION("Zero") {
     check<double>(0.0, "0");
-    check<double>(-0.0, "-0");
+    check<double>(-0.0, "-0.0");
   }
 
   SECTION("Epsilon") {
@@ -139,7 +139,7 @@ TEST_CASE("JsonWriter::writeFloat(float)") {
 
   SECTION("Zero") {
     check<float>(0.0f, "0");
-    check<float>(-0.0f, "-0");
+    check<float>(-0.0f, "-0.0");
   }
 
   SECTION("Epsilon") {
