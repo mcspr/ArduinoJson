@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "ArduinoJson/Polyfills/attributes.hpp"
-#include "ArduinoJson/StringTraits/StringTraitsBase.hpp"
-#include "ArduinoJson/TypeTraits/IsVariant.hpp"
+#include "Polyfills/attributes.hpp"
+#include "StringTraits/StringTraitsBase.hpp"
+#include "TypeTraits/IsVariant.hpp"
 #include "Data/JsonBufferAllocated.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"

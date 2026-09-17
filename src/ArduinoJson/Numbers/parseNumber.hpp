@@ -4,16 +4,17 @@
 
 #pragma once
 
-#include "../Configuration.hpp"
 #include "../Strings/Strings.hpp"
 
-#include "../TypeTraits/FloatTraits.hpp"
 #include "../TypeTraits/Conditional.hpp"
+#include "../TypeTraits/FloatTraits.hpp"
 
-#include "../Data/JsonInteger.hpp"
-#include "../Data/JsonFloat.hpp"
 #include "../Polyfills/ctype.hpp"
 #include "../Polyfills/math.hpp"
+
+#include "../Data/JsonFloat.hpp"
+#include "../Data/JsonInteger.hpp"
+#include "../Data/JsonNumber.hpp"
 
 #include "convertNumber.hpp"
 
@@ -22,169 +23,98 @@
 namespace ArduinoJson {
 namespace Internals {
 
-enum class NumberType : uint8_t {
-  Invalid,
-  Float,
-  SignedInteger,
-  UnsignedInteger,
-#if ARDUINOJSON_USE_DOUBLE
-  Double,
-#endif
-};
+template <typename TSigned, typename TUnsigned, typename TFloat>
+struct ParsedNumberResultImpl {
+  using Number = NumberImpl<TSigned, TUnsigned, TFloat>;
+  using ValueType = typename Number::ValueType;
+  using Type = typename Number::Type;
 
-union NumberValue {
-  NumberValue() {}
-  NumberValue(float x) : asFloat(x) {}
-  NumberValue(JsonInteger x) : asSignedInteger(x) {}
-  NumberValue(JsonUnsignedInteger x) : asUnsignedInteger(x) {}
-#if ARDUINOJSON_USE_DOUBLE
-  NumberValue(double x) : asDouble(x) {}
-#endif
-
-  JsonInteger asSignedInteger;
-  JsonUnsignedInteger asUnsignedInteger;
-  float asFloat;
-#if ARDUINOJSON_USE_DOUBLE
-  double asDouble;
-#endif
-};
-
-class Number {
-  NumberType _type;
-  NumberValue _value;
-
- public:
-  Number() :
-    _type(NumberType::Invalid)
-  {}
-
-  Number(float value) :
-    _type(NumberType::Float),
-    _value(value)
-  {}
-
-  Number(JsonInteger value) :
-    _type(NumberType::SignedInteger),
-    _value(value)
-  {}
-
-  Number(JsonUnsignedInteger value) :
-    _type(NumberType::UnsignedInteger),
-    _value(value)
-  {}
-
-#if ARDUINOJSON_USE_DOUBLE
-  Number(double value) :
-    _type(NumberType::Double),
-    _value(value)
-  {}
-#endif
-
-  template <typename T>
-  ConvertResult<T> convertTo() const {
-    switch (_type) {
-      case NumberType::Float:
-        return convertNumber<T>(_value.asFloat);
-      case NumberType::SignedInteger:
-        return convertNumber<T>(_value.asSignedInteger);
-      case NumberType::UnsignedInteger:
-        return convertNumber<T>(_value.asUnsignedInteger);
-#if ARDUINOJSON_USE_DOUBLE
-      case NumberType::Double:
-        return convertNumber<T>(_value.asDouble);
-#endif
-      default:
-        break;
-    }
-
-    return ConvertResult<T>{};
-  }
-
-  NumberType type() const {
-    return _type;
-  }
-
-  JsonInteger asSignedInteger() const {
-    return _value.asSignedInteger;
-  }
-
-  JsonUnsignedInteger asUnsignedInteger() const {
-    return _value.asUnsignedInteger;
-  }
-
-  float asFloat() const {
-    return _value.asFloat;
-  }
-
-#if ARDUINOJSON_USE_DOUBLE
-  double asDouble() const {
-    return _value.asDouble;
-  }
-#endif
-};
-
-struct ParsedNumberResult {
   Number value;
-  
+
   bool ok() const {
-    return value.type() != NumberType::Invalid;
+    return value.ok();
   }
 
   explicit operator bool() const {
     return ok();
   }
-  
+
   template <typename T>
   ConvertResult<T> convertTo() const {
-    return value.convertTo<T>();
+    return value.template convertTo<T>();
+  }
+};
+
+using ParsedNumberResult =
+    ParsedNumberResultImpl<Internals::JsonInteger,
+                           Internals::JsonUnsignedInteger,
+                           Internals::JsonFloat>;
+
+template <typename T>
+static ParsedNumberResult fixedResult(char sign, T value) {
+  ParsedNumberResult out;
+  out.value = (sign == '-') ? -value : value;
+  return out;
+}
+
+template <typename TOutput, typename TFloat>
+struct FitIntoFloatResultImpl;
+
+template <typename TOutput>
+struct FitIntoFloatResultImpl<TOutput, float> {
+  template <typename TMantissa, typename TExponent>
+  static ParsedNumberResultImpl<JsonInteger, JsonUnsignedInteger, float>
+  Operator(char sign, TMantissa mantissa, TExponent exponent) {
+    return TOutput::template Operator<float>(sign, mantissa, exponent);
+  }
+};
+
+template <typename TOutput>
+struct FitIntoFloatResultImpl<TOutput, double> {
+  template <typename TMantissa, typename TExponent>
+  static ParsedNumberResultImpl<JsonInteger, JsonUnsignedInteger, double>
+  Operator(char sign, TMantissa mantissa, TExponent exponent) {
+    auto out = TOutput::template Operator<float>(sign, mantissa, exponent);
+    if (!out)
+      out = TOutput::template Operator<double>(sign, mantissa, exponent);
+
+    return out;
   }
 };
 
 template <typename T, typename TMantissa, typename TExponent>
 static constexpr bool floatWithinRange(TMantissa mantissa, TExponent exponent) {
-   return (exponent >= FloatTraits<T>::exponent_min) &&
-          (exponent <= FloatTraits<T>::exponent_max) &&
-          (mantissa <= FloatTraits<T>::mantissa_max);
+  return (exponent >= FloatTraits<T>::exponent_min) &&
+         (exponent <= FloatTraits<T>::exponent_max) &&
+         (mantissa <= FloatTraits<T>::mantissa_max);
 }
 
-struct JsonNumberParser {
-  template <typename A, typename B>
-  using LargestType = Conditional<(sizeof(A) > sizeof(B)), A, B>;
+template <typename TFloat, typename TExponent>
+static TFloat makeFloat(TFloat m, TExponent e) {
+  using float_traits = FloatTraits<TFloat>;
+  auto* const powersOfTen =
+    e > 0
+      ? &float_traits::positiveBinaryPowerOfTen
+      : &float_traits::negativeBinaryPowerOfTen;
 
-  template <typename T>
-  static ParsedNumberResult fixedResult(char sign, T value) {
-    ParsedNumberResult out;
-    out.value = (sign == '-') ? -value : value;
-    return out;
+  if (e <= 0)
+    e = TExponent(-e);
+
+  for (size_t index = 0; e != 0; index++) {
+    if (index >= float_traits::binaryPowersOfTen)
+      return float_traits::nan();
+    if (e & 1)
+      m *= powersOfTen(index);
+    e >>= 1;
   }
 
-  template <typename TFloat, typename TExponent>
-  static TFloat makeFloat(TFloat m, TExponent e) {
-    typedef FloatTraits<TFloat> traits;
+  return m;
+}
 
-    auto* const powersOfTen =
-      e > 0
-        ? &traits::positiveBinaryPowerOfTen
-        : &traits::negativeBinaryPowerOfTen;
-
-    if (e <= 0)
-      e = TExponent(-e);
-
-    for (size_t index = 0; e != 0; index++) {
-      if (index >= traits::binaryPowersOfTen)
-        return traits::nan();
-      if (e & 1)
-        m *= powersOfTen(index);
-      e >>= 1;
-    }
-
-    return m;
-  }
-
+struct FloatResultWithinRangeImpl {
   template <typename T, typename TMantissa, typename TExponent>
-  static ParsedNumberResult floatResultWithinRange(
-        char sign, TMantissa mantissa, TExponent exponent)
-  {
+  static ParsedNumberResult
+  Operator(char sign, TMantissa mantissa, TExponent exponent) {
     ParsedNumberResult out;
 
     if (floatWithinRange<T>(mantissa, exponent)) {
@@ -195,12 +125,19 @@ struct JsonNumberParser {
 
     return out;
   }
+};
+
+using FloatResultWithinRange =
+    FitIntoFloatResultImpl<FloatResultWithinRangeImpl, JsonFloat>;
+
+struct JsonNumberParser {
+  template <typename A, typename B>
+  using LargestType = Conditional<(sizeof(A) > sizeof(B)), A, B>;
 
   static ParsedNumberResult parse(const char* s, size_t len) {
-    using traits = FloatTraits<JsonFloat>;
-    using mantissa_type = LargestType<
-      typename traits::mantissa_type, JsonUnsignedInteger>;
-    using exponent_type = typename traits::exponent_type;
+    using float_traits = FloatTraits<JsonFloat>;
+    using mantissa_type = LargestType<typename float_traits::mantissa_type, JsonUnsignedInteger>;
+    using exponent_type = typename float_traits::exponent_type;
 
     ParsedNumberResult out;
     if (!s || !len)
@@ -222,8 +159,9 @@ struct JsonNumberParser {
     if (it == end)
       return out;
 
-    // inf, Inf, infinity, Infinity
     c = Strings::Copy::Operator(it);
+
+    // inf, Inf, infinity, Infinity
     if (c == 'i' || c == 'I') {
       const auto remaining = end - it;
       if (!((c == 'i' && remaining == 3) ||
@@ -233,40 +171,39 @@ struct JsonNumberParser {
       const uint8_t expected[] = {'n', 'f', 'i', 'n', 'i', 't', 'y'};
       const auto common = Min(sizeof(expected), static_cast<size_t>(remaining - 1));
       if (Strings::Equals::Operator(&expected[0], common, it + 1, common))
-        out = fixedResult(result_sign, traits::inf());
+        out = fixedResult(result_sign, float_traits::inf());
 
       return out;
     }
 
     // NaN, nan
-    c = Strings::Copy::Operator(it);
     if (c == 'n' || c == 'N') {
-      if ((end - it) != 3)
-        return out;
+      if (((it + 3) == end) &&
+          (Strings::Copy::Operator(it + 1) == 'a') &&
+          (Strings::Copy::Operator(it + 2) == c))
+      {
+        // no-op sign value, being lenient on any weird raw data
+        out.value = float_traits::nan();
+      }
 
-      c = Strings::Copy::Operator(++it);
-      if (c != 'a')
-        return out;
-
-      c = Strings::Copy::Operator(++it);
-      if (c != 'n' && c != 'N')
-        return out;
-
-      // no-op sign value, being lenient on any weird raw data
-      out.value = traits::nan();
       return out;
     }
+
+    // only accept integral part or start of decimal part next
+    if (!isdigit(c) && (c != '.'))
+      return out;
 
     mantissa_type mantissa = 0;
     exponent_type exponent_offset = 0;
 
-    const mantissa_type maxUint = JsonUnsignedInteger(-1);
+    uint8_t digit = 0xff;
+    constexpr mantissa_type maxUint = JsonUnsignedInteger(-1);
     while (it != end) {
       c = Strings::Copy::Operator(it);
       if (!isdigit(c))
         break;
 
-      uint8_t digit = uint8_t(c - '0');
+      digit = static_cast<uint8_t>(c - '0');
       if (mantissa > maxUint / 10)
         break;
       mantissa *= 10;
@@ -278,71 +215,102 @@ struct JsonNumberParser {
 
     if (it == end) {
       if (result_sign == '-') {
-        const mantissa_type sintMantissaMax =
-          mantissa_type(1) << (sizeof(JsonInteger) * 8 - 1);
+        constexpr mantissa_type sintMantissaMax =
+            mantissa_type(1) << (sizeof(JsonInteger) * 8 - 1);
         if (mantissa <= sintMantissaMax) {
-          out.value = Number(JsonInteger(~mantissa + 1));
+          out.value = JsonNumber(JsonInteger(~mantissa + 1));
         }
+
       } else {
-        out.value = Number(JsonUnsignedInteger(mantissa));
+        out.value = JsonNumber(JsonUnsignedInteger(mantissa));
       }
 
       if (out)
         return out;
     }
 
-    // avoid mantissa overflow
-    while (mantissa > traits::mantissa_max) {
+    // avoid mantissa overflow by offseting it w/ an exponent value
+    constexpr exponent_type sintExponentMax =
+        -float_traits::exponent_min + float_traits::exponent_max;
+
+    while (mantissa > float_traits::mantissa_max) {
       mantissa /= 10;
+      if ((exponent_offset + 1) > sintExponentMax)
+        return out;
+
       exponent_offset++;
     }
 
-    // remaing digits can't fit in the mantissa
+    // ...since not every remaing digit can fit in the mantissa as-is
+    // nb. while mantissa could be offset, exponent overflow is a failure state
     while (it != end) {
       c = Strings::Copy::Operator(it);
       if (!isdigit(c))
         break;
+
+      if ((exponent_offset + 1) > sintExponentMax)
+        return out;
+
       exponent_offset++;
       ++it;
     }
 
     if ((it != end) && Strings::Copy::Operator(it) == '.') {
       ++it;
+  
+      // both integral and decimal parts missing
+      if ((it == end) && (digit == 0xff))
+        return out;
+
       while (it != end) {
         c = Strings::Copy::Operator(it);
         if (!isdigit(c))
           break;
-        if (mantissa < traits::mantissa_max / 10) {
-          mantissa = mantissa * 10 + uint8_t(c - '0');
+
+        // repeat the same overflow calc as its done for the integral part
+        if (mantissa < float_traits::mantissa_max / 10) {
+          mantissa *= 10;
+
+          digit = static_cast<uint8_t>(c - '0');
+          if (mantissa > float_traits::mantissa_max + digit)
+            break;
+
+          if ((exponent_offset - 1) < -sintExponentMax)
+            return out;
+
+          mantissa += digit;
           exponent_offset--;
         }
+
         ++it;
       }
     }
 
-    int exponent = 0;
+    exponent_type exponent = 0;
     char exponent_sign = '\0';
 
-    c = Strings::Copy::Operator(it);
+    if (it != end)
+      c = Strings::Copy::Operator(it);
+
     if ((it != end) && (c == 'e' || c == 'E')) {
       ++it;
 
       // exponent value missing after specifier
       if (it == end)
         return out;
-      
+
       c = Strings::Copy::Operator(it);
       switch (c) {
-      case '-':
-      case '+':
-        exponent_sign = c;
-        ++it;
+        case '-':
+        case '+':
+          exponent_sign = c;
+          ++it;
 
-        // exponent value missing after sign
-        if (it == end)
-          return out;
+          // exponent value missing after sign
+          if (it == end)
+            return out;
 
-        break;
+          break;
       }
 
       // the rest of exponent digits
@@ -351,45 +319,70 @@ struct JsonNumberParser {
         if (!isdigit(c))
           break;
 
-        exponent = exponent * 10 + (c - '0');
-
-        // 5.x and 7.x attepted to mimic js behaviour and return *something*
-        // - negative exponent overflow would've returned 0.0
-        // - positive exponent overflow would've returned inf
-        // prefer a failure state instead, since we do return result instead of val by itself
-        if (exponent_sign == '-') {
-          if ((exponent + exponent_offset) > -traits::exponent_min)
-            return out;
-        } else if ((exponent + exponent_offset) > traits::exponent_max)
+        digit = static_cast<uint8_t>(c - '0');
+        if (exponent > (sintExponentMax / 10))
           return out;
 
+        exponent *= 10;
+
+        if (exponent > (sintExponentMax - digit))
+          return out;
+
+        exponent += static_cast<exponent_type>(digit);
         ++it;
       }
 
       if (exponent_sign == '-')
-        exponent = -exponent;
+        exponent = static_cast<exponent_type>(-exponent);
+    }
+
+    // 5.x and 7.x mimic js behaviour and return *something*
+    // - negative exponent overflow returned 0.0
+    // - positive exponent overflow returned inf
+    // prefer a failure state instead, since we do return result instead of val by itself
+    {
+      exponent_type exponent_shift = sintExponentMax;
+      exponent_shift -= Abs(exponent_offset);
+      exponent_shift -= Abs(exponent);
+      if (exponent_shift < 0)
+        return out;
     }
 
     exponent += exponent_offset;
 
     // we should be at the end of the string, otherwise it's an error
-    if (it != end) {
-      out = ParsedNumberResult();
-      return out;
+    if (it == end) {
+      // output defaults to smallest floating point type that could contain the value
+      out = FloatResultWithinRange::Operator(result_sign, mantissa, exponent);
     }
 
-    // probe for possible output types before returning
-    out = floatResultWithinRange<float>(result_sign, mantissa, exponent);
-#if ARDUINOJSON_USE_DOUBLE
-    if (!out) {
-        out = floatResultWithinRange<double>(result_sign, mantissa, exponent);
-    }
-#endif
-
-    // couldn't fit into any type specified above
     return out;
   }
 };
+
+// shortcuts for parser invocation w/ the current configuration options
+
+inline ParsedNumberResult parseJsonNumber(const char* s, size_t len) {
+  return JsonNumberParser::parse(s, len);
+}
+
+inline ParsedNumberResult parseJsonNumber(const char* s) {
+  return parseJsonNumber(s, Strings::Length::Operator(s));
+}
+
+template <typename T>
+inline ConvertResult<T> parseNumber(const char* s, size_t len) {
+  const auto result = JsonNumberParser::parse(s, len);
+  if (!result)
+    return ConvertResult<T>();
+
+  return result.template convertTo<T>();
+}
+
+template <typename T>
+inline ConvertResult<T> parseNumber(const char* s) {
+  return parseNumber<T>(s, Strings::Length::Operator(s));
+}
 
 }  // namespace Internals
 }  // namespace ArduinoJson

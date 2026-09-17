@@ -23,6 +23,7 @@
 #include "TypeTraits/RemoveReference.hpp"
 
 #include "Data/JsonNull.hpp"
+#include "Data/JsonNumber.hpp"
 #include "Data/JsonUndefined.hpp"
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonVariantType.hpp"
@@ -189,6 +190,14 @@ class JsonVariant :
     return variantAsFloat<T>();
   }
   //
+  // JsonNumber as<JsonNumber>() const;
+  template <typename T>
+  typename Internals::EnableIf<
+    Internals::IsSame<T, JsonNumber>::value, T>::type
+  as() const {
+    return variantAsNumber();
+  }
+  //
   // const char* as<const unsigned char*>() const;
   // const char* as<const char*>() const;
   // const char* as<unsigned char*>() const;
@@ -304,6 +313,26 @@ class JsonVariant :
     return variantMaybeNull();
   }
 
+  // Contains a boolean
+  //
+  // bool is<bool>() const
+  template <typename T>
+  typename Internals::EnableIf<
+    Internals::IsSame<T, bool>::value, bool>::type
+  is() const {
+    return variantMaybeBoolean();
+  }
+
+  // Contains *some* numeric value or number-like unparsed string
+  //
+  // bool is<JsonNumber>() const;
+  template <typename T>
+  typename Internals::EnableIf<
+    Internals::IsSame<T, JsonNumber>::value, bool>::type
+  is() const {
+    return variantMaybeNumber();
+  }
+
   // Returns true if the variant has type type T, false otherwise.
   //
   // bool is<char>() const;
@@ -312,6 +341,7 @@ class JsonVariant :
   // bool is<signed int>() const;
   // bool is<signed long>() const;
   // bool is<signed long long>() const;
+  //
   // bool is<unsigned char>() const;
   // bool is<unsigned short>() const;
   // bool is<unsigned int>() const;
@@ -323,7 +353,7 @@ class JsonVariant :
                    typename Internals::Not<Internals::IsSame<T, bool>>>::value,
     bool>::type
   is() const {
-    return variantMaybeInteger();
+    return variantMaybeInteger<T>();
   }
   //
   // bool is<double>() const;
@@ -332,15 +362,7 @@ class JsonVariant :
   typename Internals::EnableIf<
     Internals::IsFloatingPoint<T>::value, bool>::type
   is() const {
-    return variantMaybeFloat();
-  }
-  //
-  // bool is<bool>() const
-  template <typename T>
-  typename Internals::EnableIf<
-    Internals::IsSame<T, bool>::value, bool>::type
-  is() const {
-    return variantMaybeBoolean();
+    return variantMaybeFloat<T>();
   }
   //
   // bool is<char*>() const;
@@ -442,7 +464,10 @@ class JsonVariant :
       Internals::JsonVariantType::JSON_BOOLEAN;
   }
 
-  bool variantMaybeFloat() const; // for types other that JSON_FLOAT
+  bool variantMaybeNumber() const; // either a numeric type or a number-like string
+
+  template <typename T>
+  bool variantMaybeFloat() const; // for types other than JSON_FLOAT
   bool variantIsFloat() const {
     return _content.asFloat.type ==
       Internals::JsonVariantType::JSON_FLOAT;
@@ -458,7 +483,8 @@ class JsonVariant :
       Internals::JsonVariantType::JSON_UNSIGNED_INTEGER;
   }
 
-  bool variantMaybeInteger() const; // for types other than JSON_{SIGNED,UNSIGNED}_INTEGER
+  template <typename T>
+  bool variantMaybeInteger() const; // for types other than JSON_..._INTEGER
   bool variantIsInteger() const {
     return variantIsSignedInteger() || variantIsUnsignedInteger();
   }
@@ -509,6 +535,8 @@ class JsonVariant :
 
   const JsonArray& variantAsConstArray() const;
   JsonArray& variantAsMutableArray() const;
+
+  JsonNumber variantAsNumber() const;
 
   template <typename T>
   T variantAsFloat() const;

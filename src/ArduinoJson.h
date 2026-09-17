@@ -12,6 +12,7 @@ using ArduinoJson::JsonVariant;
 
 using ArduinoJson::JsonNull;
 using ArduinoJson::JsonUndefined;
+using ArduinoJson::JsonNumber;
 
 using ArduinoJson::JsonArray;
 using ArduinoJson::JsonObject;

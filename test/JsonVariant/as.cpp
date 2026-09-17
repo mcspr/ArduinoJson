@@ -5,7 +5,40 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+using ArduinoJson::Internals::JsonInteger;
+using ArduinoJson::Internals::JsonUnsignedInteger;
+
 TEST_CASE("JsonVariant::as()") {
+  SECTION("UndefinedAsBool") {
+    JsonVariant variant;
+    REQUIRE_FALSE(variant.as<bool>());
+  }
+
+  SECTION("UndefinedAsCstr") {
+    JsonVariant variant;
+    REQUIRE_FALSE(variant.as<const char*>());
+  }
+
+  SECTION("UndefinedAsString") {
+    JsonVariant variant;
+    REQUIRE(std::string("null") == variant.as<std::string>());
+  }
+
+  SECTION("UndefinedAsLong") {
+    JsonVariant variant;
+    REQUIRE(0 == variant.as<long>());
+  }
+
+  SECTION("UndefinedAsFloat") {
+    JsonVariant variant;
+    REQUIRE(0.0f == variant.as<float>());
+  }
+
+  SECTION("UndefinedAsDouble") {
+    JsonVariant variant;
+    REQUIRE(0.0 == variant.as<double>());
+  }
+
   SECTION("DoubleAsBool") {
     JsonVariant variant = 4.2;
     REQUIRE(variant.as<bool>());
@@ -109,6 +142,97 @@ TEST_CASE("JsonVariant::as()") {
   SECTION("LongZeroAsDouble") {
     JsonVariant variant = 0L;
     REQUIRE(0.0 == variant.as<double>());
+  }
+
+  SECTION("UndefinedAsJsonNumber") {
+    JsonVariant variant = JsonUndefined{};
+    CHECK_FALSE(variant.as<JsonNumber>());
+  }
+
+  SECTION("NullAsJsonNumber") {
+    JsonVariant variant = JsonNull{};
+    CHECK_FALSE(variant.as<JsonNumber>());
+  }
+
+  SECTION("FalseAsJsonNumber") {
+    JsonVariant variant = false;
+    JsonNumber number = variant.as<JsonNumber>();
+    CHECK(number);
+
+    const auto convert = number.convertTo<JsonUnsignedInteger>();
+    CHECK(convert);
+    REQUIRE(convert.value == 0);
+  }
+
+  SECTION("TrueAsJsonNumber") {
+    JsonVariant variant = true;
+    JsonNumber number = variant.as<JsonNumber>();
+    CHECK(number);
+
+    const auto convert = number.convertTo<JsonUnsignedInteger>();
+    CHECK(convert);
+    REQUIRE(convert.value == 1);
+  }
+
+  SECTION("SignedIntegerAsJsonNumber") {
+    JsonVariant variant = -42;
+    JsonNumber number = variant.as<JsonNumber>();
+    CHECK(number);
+
+    const auto convert = number.convertTo<JsonInteger>();
+    CHECK(convert);
+    REQUIRE(convert.value == -42);
+  }
+
+  SECTION("UnsignedIntegerAsJsonNumber") {
+    JsonVariant variant = 42;
+    JsonNumber number = variant.as<JsonNumber>();
+    CHECK(number);
+
+    const auto convert = number.convertTo<JsonUnsignedInteger>();
+    CHECK(convert);
+    REQUIRE(convert.value == 42);
+  }
+
+  SECTION("FloatAsJsonNumber") {
+    JsonVariant variant = 3.14;
+    JsonNumber number = variant.as<JsonNumber>();
+    CHECK(number);
+
+    const auto asFloat = number.convertTo<float>();
+    CHECK(asFloat);
+    REQUIRE(asFloat.value == Approx(3.14f));
+
+    const auto asDouble = number.convertTo<double>();
+    CHECK(asDouble);
+    REQUIRE(asDouble.value == Approx(3.14));
+  }
+
+  SECTION("StringAsJsonNumber") {
+    JsonVariant variant = "hello world";
+    CHECK_FALSE(variant.as<JsonNumber>());
+  }
+
+  SECTION("NumberStringAsJsonNumber") {
+    JsonVariant variant = "3.14";
+    JsonNumber number = variant.as<JsonNumber>();
+    CHECK(number);
+
+    const auto asFloat = number.convertTo<float>();
+    CHECK(asFloat);
+    REQUIRE(asFloat.value == Approx(3.14f));
+
+    const auto asDouble = number.convertTo<double>();
+    CHECK(asDouble);
+    REQUIRE(asDouble.value == Approx(3.14));
+
+    const auto asSigned = number.convertTo<JsonInteger>();
+    CHECK(asSigned);
+    REQUIRE(asSigned.value == 3);
+
+    const auto asUnsigned = number.convertTo<JsonUnsignedInteger>();
+    CHECK(asUnsigned);
+    REQUIRE(asUnsigned.value == 3);
   }
 
   SECTION("NullAsBool") {
@@ -256,13 +380,9 @@ TEST_CASE("JsonVariant::as()") {
     REQUIRE(std::string("hello") == variant.as<std::string>());
   }
 
-  SECTION("NullptrStringAsConstCharPtr") {
-    JsonVariant variant = static_cast<const char *>(nullptr);
-    REQUIRE(nullptr == variant.as<const char*>());
-  }
-
   SECTION("NullptrStringAsCharPtr") {
     JsonVariant variant = static_cast<const char *>(nullptr);
+    REQUIRE(nullptr == variant.as<const char*>());
     REQUIRE(nullptr == variant.as<char*>());
   }
 
@@ -272,55 +392,59 @@ TEST_CASE("JsonVariant::as()") {
   }
 
   SECTION("UnparsedStringAsConstCharPtr") {
-    JsonVariant variant = RawJson("null");
-    REQUIRE(std::string("null") == variant.as<const char*>());
+    JsonVariant variant = RawJson("nulle");
+    REQUIRE(std::string("nulle") == variant.as<const char*>());
+    REQUIRE(std::string("nulle") == variant.as<char*>());
   }
 
-  SECTION("UnparsedStringAsConstCharPtr") {
-    JsonVariant variant = RawJson("null");
-    REQUIRE(std::string("null") == variant.as<const char*>());
-  }
+  SECTION("BufferAllocated") {
+    DynamicJsonBuffer jb;
 
-  SECTION("ObjectAsString") {
-    DynamicJsonBuffer buffer;
+    SECTION("ObjectAsString") {
+      JsonObject& obj = jb.createObject();
+      obj["key"] = "value";
 
-    JsonObject& obj = buffer.createObject();
-    obj["key"] = "value";
+      JsonVariant variant = obj;
+      REQUIRE(std::string("{\"key\":\"value\"}") == variant.as<std::string>());
+    }
 
-    JsonVariant variant = obj;
-    REQUIRE(std::string("{\"key\":\"value\"}") == variant.as<std::string>());
-  }
+    SECTION("ArrayAsString") {
+      JsonArray& arr = jb.createArray();
+      arr.add(4);
+      arr.add(2);
 
-  SECTION("ArrayAsString") {
-    DynamicJsonBuffer buffer;
+      JsonVariant variant = arr;
+      REQUIRE(std::string("[4,2]") == variant.as<std::string>());
+    }
 
-    JsonArray& arr = buffer.createArray();
-    arr.add(4);
-    arr.add(2);
+    // as<...>() for reference-only types always resolves as T&
 
-    JsonVariant variant = arr;
-    REQUIRE(std::string("[4,2]") == variant.as<std::string>());
-  }
+    SECTION("ArrayAsJsonArray") {
+      JsonArray& arr = jb.createArray();
 
-  SECTION("ArrayAsJsonArray") {
-    DynamicJsonBuffer buffer;
-    JsonArray& arr = buffer.createArray();
+      JsonVariant variant = arr;
+      REQUIRE(std::addressof(arr) ==
+              std::addressof(variant.as<const JsonArray&>()));
+      REQUIRE(std::addressof(arr) ==
+              std::addressof(variant.as<JsonArray&>()));
+      REQUIRE(std::addressof(arr) ==
+              std::addressof(variant.as<const JsonArray>()));
+      REQUIRE(std::addressof(arr) ==
+              std::addressof(variant.as<JsonArray>()));
+    }
 
-    JsonVariant variant = arr;
-    REQUIRE(std::addressof(arr) == std::addressof(variant.as<const JsonArray&>()));
-    REQUIRE(std::addressof(arr) == std::addressof(variant.as<JsonArray&>()));
-    REQUIRE(std::addressof(arr) == std::addressof(variant.as<const JsonArray>()));  // <- shorthand
-    REQUIRE(std::addressof(arr) == std::addressof(variant.as<JsonArray>()));  // <- shorthand
-  }
+    SECTION("ObjectAsJsonObject") {
+      JsonObject& obj = jb.createObject();
 
-  SECTION("ObjectAsJsonObject") {
-    DynamicJsonBuffer buffer;
-    JsonObject& obj = buffer.createObject();
-
-    JsonVariant variant = obj;
-    REQUIRE(std::addressof(obj) == std::addressof(variant.as<const JsonObject&>()));
-    REQUIRE(std::addressof(obj) == std::addressof(variant.as<JsonObject&>()));
-    REQUIRE(std::addressof(obj) == std::addressof(variant.as<const JsonObject>()));  // <- shorthand
-    REQUIRE(std::addressof(obj) == std::addressof(variant.as<JsonObject>()));  // <- shorthand
+      JsonVariant variant = obj;
+      REQUIRE(std::addressof(obj) ==
+              std::addressof(variant.as<const JsonObject&>()));
+      REQUIRE(std::addressof(obj) ==
+              std::addressof(variant.as<JsonObject&>()));
+      REQUIRE(std::addressof(obj) ==
+              std::addressof(variant.as<const JsonObject>()));
+      REQUIRE(std::addressof(obj) ==
+              std::addressof(variant.as<JsonObject>()));
+    }
   }
 }

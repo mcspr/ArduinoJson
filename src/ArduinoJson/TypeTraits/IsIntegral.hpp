@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "../Configuration.hpp"
-
 #include "Constant.hpp"
 #include "Or.hpp"
 
@@ -33,11 +31,9 @@ template <>
 struct IsSignedTypeImpl<signed long> : TrueType {
 };
 
-#if ARDUINOJSON_USE_LONG_LONG
 template <>
 struct IsSignedTypeImpl<signed long long> : TrueType {
 };
-#endif
 
 // A meta-function that returns true if T is a type that is signed.
 template <typename T>
@@ -76,11 +72,9 @@ template <>
 struct IsUnsignedTypeImpl<unsigned long> : TrueType {
 };
 
-#if ARDUINOJSON_USE_LONG_LONG
 template <>
 struct IsUnsignedTypeImpl<unsigned long long> : TrueType {
 };
-#endif
 
 // A meta-function that returns true if T is a type that is unsigned.
 template <typename T>

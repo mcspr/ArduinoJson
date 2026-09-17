@@ -48,5 +48,21 @@ inline constexpr const T& Max(const T& lhs, const T& rhs) {
   return  lhs < rhs ? rhs : lhs;
 }
 
+inline constexpr int8_t Abs(int8_t x) {
+  return x >= 0 ? x : static_cast<int8_t>(-x);
+}
+
+inline constexpr int16_t Abs(int16_t x) {
+  return x >= 0 ? x : static_cast<int16_t>(-x);
+}
+
+inline constexpr int32_t Abs(int32_t x) {
+  return x >= 0 ? x : static_cast<int32_t>(-x);
+}
+
+inline constexpr int64_t Abs(int64_t x) {
+  return x >= 0 ? x : static_cast<int64_t>(-x);
+}
+
 }  // namespace Internals
 }  // namespace ArduinoJson

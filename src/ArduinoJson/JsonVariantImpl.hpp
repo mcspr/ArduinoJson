@@ -4,19 +4,21 @@
 
 #pragma once
 
-#include "ArduinoJson/Data/JsonVariantDefault.hpp"
-#include "ArduinoJson/Data/ValueSaver.hpp"
-#include "ArduinoJson/Numbers/convertNumber.hpp"
 #include "Configuration.hpp"
+
+#include "Data/JsonVariantDefault.hpp"
 
 #include "Data/JsonLiterals.hpp"
 #include "Data/JsonFloat.hpp"
 #include "Data/JsonInteger.hpp"
 #include "Data/JsonNull.hpp"
 #include "Data/JsonUndefined.hpp"
+#include "Data/JsonNumber.hpp"
 #include "Data/JsonVariantContent.hpp"
 #include "Data/JsonStringPointer.hpp"
 #include "Data/JsonVariantType.hpp"
+
+#include "Data/ValueSaver.hpp"
 
 #include "JsonArray.hpp"
 #include "JsonObject.hpp"
@@ -24,11 +26,9 @@
 
 #include "Strings/Strings.hpp"
 
-#include "Numbers/isFloat.hpp"
-#include "Numbers/parseFloat.hpp"
-
-#include "Numbers/isInteger.hpp"
-#include "Numbers/parseInteger.hpp"
+#include "Numbers/convertNumber.hpp"
+#include "Numbers/isNumber.hpp"
+#include "Numbers/parseNumber.hpp"
 
 namespace ArduinoJson {
 namespace Internals {
@@ -191,7 +191,7 @@ struct JsonVariantAsMutableObject {
   }
 };
 
-template <typename TOut, typename TImpl>
+template <typename TOut>
 struct JsonVariantAsNumber {
  public:
   template <typename... TArgs>
@@ -200,7 +200,7 @@ struct JsonVariantAsNumber {
   }
 
   static TOut Operator(bool value) {
-    return value ? TOut(1) : TOut(0);
+    return TOut(value ? 1 : 0);
   }
 
   static TOut Operator(JsonFloat value) {
@@ -216,9 +216,9 @@ struct JsonVariantAsNumber {
   }
 
   static TOut Operator(JsonStringPointer str) {
-    const auto converted = TImpl::Parse::Operator(str);
-    if (converted)
-      return converted.value;
+    const auto result = Internals::parseNumber<TOut>(str.data);
+    if (result)
+      return result.value;
 
     return defaultValue();
   }
@@ -238,32 +238,65 @@ struct JsonVariantAsNumber {
   }
 };
 
-template <typename TOut>
-struct JsonVariantParseFloat {
-  static ConvertResult<TOut> Operator(JsonStringPointer str) {
-    return Internals::parseFloat<TOut>(str.data);
+struct JsonVariantAsJsonNumber {
+ public:
+  template <typename... TArgs>
+  static JsonNumber Operator(TArgs&&...) {
+    return defaultValue();
+  }
+
+  static JsonNumber Operator(bool value) {
+    return JsonNumber(
+      static_cast<JsonUnsignedInteger>(value ? 1 : 0));
+  }
+
+  static JsonNumber Operator(JsonFloat value) {
+    return JsonNumber(value);
+  }
+
+  static JsonNumber Operator(JsonUnsignedInteger value) {
+    return JsonNumber(value);
+  }
+
+  static JsonNumber Operator(JsonInteger value) {
+    return JsonNumber(value);
+  }
+
+  static JsonNumber Operator(JsonStringPointer str) {
+    const auto result = parseJsonNumber(str.data);
+    if (result)
+      return result.value;
+
+    return defaultValue();
+  }
+
+ private:
+  static JsonNumber defaultValue() {
+    return JsonNumber();
   }
 };
 
-template <typename TOut>
-struct JsonVariantAsFloat :
-    JsonVariantAsNumber<TOut, JsonVariantAsFloat<TOut>> {
-
-  using Parse = JsonVariantParseFloat<TOut>;
-};
-
-template <typename TOut>
-struct JsonVariantParseInteger {
-  static ConvertResult<TOut> Operator(JsonStringPointer str) {
-    return Internals::parseInteger<TOut>(str.data);
+struct JsonVariantMaybeJsonNumber {
+  template <typename... TArgs>
+  static bool Operator(TArgs&&...) {
+    return false;
   }
-};
 
-template <typename TOut>
-struct JsonVariantAsInteger :
-    JsonVariantAsNumber<TOut, JsonVariantAsInteger<TOut>> {
+  static bool Operator(JsonFloat) {
+    return true;
+  }
 
-  using Parse = JsonVariantParseInteger<TOut>;
+  static bool Operator(JsonInteger) {
+    return true;
+  }
+
+  static bool Operator(JsonUnsignedInteger) {
+    return true;
+  }
+
+  static bool Operator(JsonStringPointer str) {
+    return str.data && !str.parsed && isNumber(str.data);
+  }
 };
 
 struct JsonVariantMaybeNull {
@@ -313,6 +346,7 @@ struct JsonVariantMaybeBoolean {
   }
 };
 
+template <typename T>
 struct JsonVariantMaybeInteger {
   template <typename... TArgs>
   static bool Operator(TArgs&&...) {
@@ -328,13 +362,23 @@ struct JsonVariantMaybeInteger {
   }
 
   static bool Operator(JsonStringPointer str) {
-    return str.data && !str.parsed && isInteger(str.data);
+    if (str.data && !str.parsed) {
+      const auto number = parseJsonNumber(str.data);
+      using type = decltype(number.value.type());
+      if (number.ok()) {
+          return (number.value.type() == type::SignedInteger ||
+                  number.value.type() == type::UnsignedInteger);
+      }
+    }
+
+    return false;
   }
 };
 
+template <typename T>
 struct JsonVariantMaybeFloat {
-  template <typename T>
-  static bool Operator(T&&) {
+  template <typename... TArgs>
+  static bool Operator(TArgs&&...) {
     return false;
   }
 
@@ -351,7 +395,12 @@ struct JsonVariantMaybeFloat {
   }
 
   static bool Operator(JsonStringPointer str) {
-    return str.data && !str.parsed && isFloat(str.data);
+    if (str.data && !str.parsed) {
+      const auto number = parseJsonNumber(str.data);
+      return number.ok();
+    }
+
+    return false;
   }
 };
 
@@ -502,14 +551,18 @@ inline JsonArray& JsonVariant::variantAsMutableArray() const {
   return _content.visit(Internals::JsonVariantAsMutableArray());
 }
 
+inline JsonNumber JsonVariant::variantAsNumber() const {
+  return _content.visit(Internals::JsonVariantAsJsonNumber());
+}
+
 template <typename T>
 inline T JsonVariant::variantAsFloat() const {
-  return _content.visit(Internals::JsonVariantAsFloat<T>());
+  return _content.visit(Internals::JsonVariantAsNumber<T>());
 }
 
 template <typename T>
 inline T JsonVariant::variantAsInteger() const {
-  return _content.visit(Internals::JsonVariantAsInteger<T>());
+  return _content.visit(Internals::JsonVariantAsNumber<T>());
 }
 
 inline const char *JsonVariant::variantAsString() const {
@@ -524,12 +577,18 @@ inline bool JsonVariant::variantMaybeBoolean() const {
   return _content.visit(Internals::JsonVariantMaybeBoolean());
 }
 
+template <typename T>
 inline bool JsonVariant::variantMaybeInteger() const {
-  return _content.visit(Internals::JsonVariantMaybeInteger());
+  return _content.visit(Internals::JsonVariantMaybeInteger<T>());
 }
 
+template <typename T>
 inline bool JsonVariant::variantMaybeFloat() const {
-  return _content.visit(Internals::JsonVariantMaybeFloat());
+  return _content.visit(Internals::JsonVariantMaybeFloat<T>());
+}
+
+inline bool JsonVariant::variantMaybeNumber() const {
+  return _content.visit(Internals::JsonVariantMaybeJsonNumber());
 }
 
 inline bool JsonVariant::success() const {
