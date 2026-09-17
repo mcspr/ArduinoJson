@@ -69,6 +69,28 @@ PARSE_FLOAT_TEST_CASE("parseJsonNumber() common tests") {
     REQUIRE_PARSE_VALUE(<float>, s, -3.14f);
     REQUIRE_PARSE_VALUE(<double>, s, -3.14);
   }
+
+  SECTION("String bounds") {
+    static constexpr const char s[4] = {'4', '2', '.', '0'};
+    const auto result = parseJsonNumber(&s[0], sizeof(s));
+    CHECK(result.value.type() == NumberType::Float);
+
+    const auto s8 = result.convertTo<int8_t>();
+    CHECK(s8);
+    REQUIRE(s8.value == 42);
+
+    const auto u8 = result.convertTo<uint8_t>();
+    CHECK(u8);
+    REQUIRE(u8.value == 42);
+
+    const auto f32 = result.convertTo<float>();
+    CHECK(f32);
+    REQUIRE(f32.value == Approx(42.0f));
+
+    const auto f64 = result.convertTo<double>();
+    CHECK(f64);
+    REQUIRE(f64.value == Approx(42.0));
+  }
 }
 
 PARSE_FLOAT_TEMPLATE_TEST_CASE("parseNumber<TestType>() common",

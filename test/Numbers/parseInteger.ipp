@@ -68,6 +68,20 @@ PARSE_INTEGER_TEST_CASE("parseJsonNumber() common tests") {
     REQUIRE_PARSE_VALUE(<float>, s, -42.0f);
     REQUIRE_PARSE_VALUE(<double>, s, -42.0);
   }
+
+  SECTION("String bounds") {
+    static constexpr const char s[3] = {'1', '2', '3'};
+    const auto result = parseJsonNumber(&s[0], 3);
+    CHECK(result.value.type() == NumberType::UnsignedInteger);
+
+    const auto s8 = result.convertTo<int8_t>();
+    CHECK(s8);
+    REQUIRE(s8.value == 123);
+
+    const auto u8 = result.convertTo<uint8_t>();
+    CHECK(u8);
+    REQUIRE(u8.value == 123);
+  }
 }
 
 PARSE_INTEGER_TEST_CASE("parseNumber<int8_t>()") {
