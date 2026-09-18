@@ -16,7 +16,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 		-Wformat=2
 		-Winit-self
 		-Wmissing-include-dirs
-		-Wnull-dereference
 		-Wold-style-cast
 		-Woverloaded-virtual
 		-Wparentheses
@@ -100,6 +99,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 		# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62232
 		add_compile_options(-Wnon-virtual-dtor)
 	endif()
+
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0)
+		# not supported with < GCC 6.0
+		# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=16351
+		add_compile_options(-Wnull-dereference)
+	endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -109,6 +114,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 		-Wdeprecated-register
 		-Wlogical-op-parentheses
 		-Wnon-virtual-dtor
+		-Wnull-dereference
 	)
 endif()
 
