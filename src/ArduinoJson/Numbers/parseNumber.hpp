@@ -105,7 +105,7 @@ static TFloat makeFloat(TFloat m, TExponent e) {
       return float_traits::nan();
     if (e & 1)
       m *= powersOfTen(index);
-    e >>= 1;
+    e = static_cast<TExponent>(e >> 1);
   }
 
   return m;
@@ -323,12 +323,12 @@ struct JsonNumberParser {
         if (exponent > (sintExponentMax / 10))
           return out;
 
-        exponent *= 10;
-
+        exponent = static_cast<exponent_type>(exponent * 10);
         if (exponent > (sintExponentMax - digit))
           return out;
 
-        exponent += static_cast<exponent_type>(digit);
+        exponent = static_cast<exponent_type>(
+          exponent + static_cast<exponent_type>(digit));
         ++it;
       }
 
@@ -342,13 +342,13 @@ struct JsonNumberParser {
     // prefer a failure state instead, since we do return result instead of val by itself
     {
       exponent_type exponent_shift = sintExponentMax;
-      exponent_shift -= Abs(exponent_offset);
-      exponent_shift -= Abs(exponent);
+      exponent_shift = static_cast<exponent_type>(exponent_shift - Abs(exponent_offset));
+      exponent_shift = static_cast<exponent_type>(exponent_shift - Abs(exponent));
       if (exponent_shift < 0)
         return out;
     }
 
-    exponent += exponent_offset;
+    exponent = static_cast<exponent_type>(exponent + exponent_offset);
 
     // we should be at the end of the string, otherwise it's an error
     if (it == end) {
