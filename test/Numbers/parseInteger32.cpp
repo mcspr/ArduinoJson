@@ -94,16 +94,16 @@ PARSE_INTEGER_TEST_CASE("parseNumber<uint32_t>()") {
 
 PARSE_INTEGER_TEST_CASE("parseNumber<int64_t>()") {
   SECTION("Min value") {
-    static constexpr auto s64_min = std::numeric_limits<int64_t>::min(); // -9223372036854775808
-    STATIC_REQUIRE(std::numeric_limits<JsonInteger>::min() > s64_min);
+    STATIC_REQUIRE(std::numeric_limits<JsonInteger>::min() >
+                   std::numeric_limits<int64_t>::min()); // -9223372036854775808
 
     REQUIRE_PARSE_TYPED_CONVERTIBLE(<int64_t>, NumberType::Float, "-9223372036854775808");
     REQUIRE_PARSE_TYPED_CONVERTIBLE(<int64_t>, NumberType::Float, "-9223372036854775809");
   }
 
   SECTION("Max value") {
-    static constexpr auto s64_max = std::numeric_limits<int64_t>::max(); // +9223372036854775807
-    STATIC_REQUIRE(std::numeric_limits<JsonInteger>::max() < s64_max);
+    STATIC_REQUIRE(std::numeric_limits<JsonInteger>::max() <
+                   std::numeric_limits<int64_t>::max()); // +9223372036854775807
 
     REQUIRE_PARSE_TYPED_CONVERTIBLE(<int64_t>, NumberType::Float, "9223372036854775807");
     REQUIRE_PARSE_TYPED_CONVERTIBLE(<int64_t>, NumberType::Float, "+9223372036854775807");
@@ -120,8 +120,8 @@ PARSE_INTEGER_TEST_CASE("parseNumber<int64_t>()") {
 
 PARSE_INTEGER_TEST_CASE("parseNumber<uint64_t>()") {
   SECTION("Max value") {
-    static constexpr auto u64_max = std::numeric_limits<uint64_t>::max(); // 18446744073709551615
-    STATIC_REQUIRE(std::numeric_limits<JsonUnsignedInteger>::max() < u64_max);
+    STATIC_REQUIRE(std::numeric_limits<JsonUnsignedInteger>::max() <
+                   std::numeric_limits<uint64_t>::max()); // 18446744073709551615
 
     REQUIRE_PARSE_TYPED_CONVERTIBLE(<uint64_t>, NumberType::Float, "18446744073709551615");
     REQUIRE_PARSE_TYPED_CONVERTIBLE(<uint64_t>, NumberType::Float, "18446744073709551616");
