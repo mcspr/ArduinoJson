@@ -6,6 +6,7 @@
 
 #include "StringTraits/StringTraits.hpp"
 
+#include "Data/JsonVariantAs.hpp"
 #include "Data/JsonBufferAllocated.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"
@@ -271,6 +272,34 @@ struct JsonVariantDefault<const JsonObject&> {
   static const JsonObject& get() {
     return JsonObject::invalid();
   }
+};
+
+template <>
+struct JsonVariantAs<JsonObject> {
+  typedef JsonObject& type;
+};
+
+template <>
+struct JsonVariantAs<JsonObject&> {
+  typedef JsonObject& type;
+};
+
+template <>
+struct JsonVariantAs<const JsonObject> {
+  typedef const JsonObject& type;
+};
+
+template <>
+struct JsonVariantAs<const JsonObject&> {
+  typedef const JsonObject& type;
+};
+
+template <>
+struct JsonVariantAsConst<JsonObject> : JsonVariantAsConst<const JsonObject&> {
+};
+
+template <>
+struct JsonVariantAsConst<const JsonObject> : JsonVariantAsConst<const JsonObject&> {
 };
 
 }  // namespace Internals

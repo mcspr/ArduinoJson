@@ -7,11 +7,6 @@
 #include <cstddef>
 
 namespace ArduinoJson {
-
-// Forward declarations
-class JsonObject;
-class JsonArray;
-
 namespace Internals {
 
 // A metafunction that returns the type of the value returned by
@@ -51,46 +46,6 @@ struct JsonVariantAs<TChar(&)[Size]> {
   typedef const char* type;
 };
 
-template <>
-struct JsonVariantAs<JsonArray> {
-  typedef JsonArray& type;
-};
-
-template <>
-struct JsonVariantAs<JsonArray&> {
-  typedef JsonArray& type;
-};
-
-template <>
-struct JsonVariantAs<const JsonArray> {
-  typedef const JsonArray& type;
-};
-
-template <>
-struct JsonVariantAs<const JsonArray&> {
-  typedef const JsonArray& type;
-};
-
-template <>
-struct JsonVariantAs<JsonObject> {
-  typedef JsonObject& type;
-};
-
-template <>
-struct JsonVariantAs<JsonObject&> {
-  typedef JsonObject& type;
-};
-
-template <>
-struct JsonVariantAs<const JsonObject> {
-  typedef const JsonObject& type;
-};
-
-template <>
-struct JsonVariantAs<const JsonObject&> {
-  typedef const JsonObject& type;
-};
-
 // A metafunction that *prefers* to return the const reference type of the value returned by
 // JsonVariant::as<T>()
 template <typename T>
@@ -103,22 +58,6 @@ struct JsonVariantAsConst<T&> : JsonVariantAs<const T&> {
 
 template <typename T>
 struct JsonVariantAsConst<const T&> : JsonVariantAs<const T&> {
-};
-
-template <>
-struct JsonVariantAsConst<JsonArray> : JsonVariantAsConst<const JsonArray&> {
-};
-
-template <>
-struct JsonVariantAsConst<const JsonArray> : JsonVariantAsConst<const JsonArray&> {
-};
-
-template <>
-struct JsonVariantAsConst<JsonObject> : JsonVariantAsConst<const JsonObject&> {
-};
-
-template <>
-struct JsonVariantAsConst<const JsonObject> : JsonVariantAsConst<const JsonObject&> {
 };
 
 }  // namespace Internals

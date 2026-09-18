@@ -7,6 +7,7 @@
 #include "Polyfills/attributes.hpp"
 #include "StringTraits/StringTraitsBase.hpp"
 #include "TypeTraits/IsVariant.hpp"
+#include "Data/JsonVariantAs.hpp"
 #include "Data/JsonBufferAllocated.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"
@@ -305,5 +306,32 @@ struct JsonVariantDefault<const JsonArray&> {
   }
 };
 
+template <>
+struct JsonVariantAs<JsonArray> {
+  typedef JsonArray& type;
+};
+
+template <>
+struct JsonVariantAs<JsonArray&> {
+  typedef JsonArray& type;
+};
+
+template <>
+struct JsonVariantAs<const JsonArray> {
+  typedef const JsonArray& type;
+};
+
+template <>
+struct JsonVariantAs<const JsonArray&> {
+  typedef const JsonArray& type;
+};
+
+template <>
+struct JsonVariantAsConst<JsonArray> : JsonVariantAsConst<const JsonArray&> {
+};
+
+template <>
+struct JsonVariantAsConst<const JsonArray> : JsonVariantAsConst<const JsonArray&> {
+};
 }  // namespace Internals
 }  // namespace ArduinoJson
