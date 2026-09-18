@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "JsonBuffer.hpp"
+
 #include "Deserialization/JsonParser.hpp"
 #include "Deserialization/DeserializationOptions.hpp"
 

@@ -4,19 +4,21 @@
 
 #pragma once
 
-#include "../JsonBuffer.hpp"
+#include <cstddef>
 
 namespace ArduinoJson {
+
+class JsonBuffer;
+
 namespace Internals {
 
 class JsonBufferAllocated {
  public:
-  static void *operator new(size_t n, JsonBuffer *jsonBuffer) noexcept {
-    return jsonBuffer->alloc(n);
-  }
+  static void* operator new(size_t, JsonBuffer*) noexcept;
 
   // note that operator new above generally works as new w/ std::nothrow
   // no special delete, data just thrown in here and never leaves
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

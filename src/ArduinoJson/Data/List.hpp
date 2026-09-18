@@ -4,12 +4,13 @@
 
 #pragma once
 
-#include "../JsonBuffer.hpp"
-#include "../EmptyJsonBuffer.hpp"
 #include "ListNode.hpp"
 #include "ListIterator.hpp"
 
 namespace ArduinoJson {
+
+class JsonBuffer;
+
 namespace Internals {
 
 // A singly linked list of T.
@@ -37,9 +38,7 @@ class List {
   // Would return false in the following situation:
   // - the memory allocation failed (StaticJsonBuffer was too small)
   // - the JSON parsing failed
-  bool success() const {
-    return _buffer != EmptyJsonBuffer::instance();
-  }
+  bool success() const;
 
   // Returns the numbers of elements in the list.
   // For a JsonObject, it would return the number of key-value pairs
@@ -104,10 +103,11 @@ class List {
   }
 
  protected:
-  JsonBuffer *_buffer;
+  JsonBuffer* _buffer;
 
  private:
   node_type *_firstNode;
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

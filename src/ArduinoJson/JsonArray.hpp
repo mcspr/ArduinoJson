@@ -193,10 +193,7 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
   // Returns a reference an invalid JsonArray.
   // This object is meant to replace `_buffer(nullptr)`
   // when memory allocation or JSON parsing fail.
-  static JsonArray& invalid() {
-    static JsonArray instance(Internals::EmptyJsonBuffer::instance());
-    return instance;
-  }
+  static JsonArray& invalid();
 
   // Imports a 1D array
   template <typename T, size_t N>

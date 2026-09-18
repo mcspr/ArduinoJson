@@ -39,6 +39,9 @@ struct TJsonMutableObjectSubscriptType;
 template <typename>
 struct TJsonConstObjectSubscriptType;
 
+template <typename, typename, typename>
+class JsonParser;
+
 }
 
 // A dictionary of JsonVariant indexed by string (char*)
@@ -198,10 +201,7 @@ class JsonObject : public Internals::JsonPrintable<JsonObject>,
   // Returns a reference an invalid JsonObject.
   // This object is meant to replace a `_buffer(nullptr)`
   // when memory allocation or JSON parsing fail.
-  static JsonObject& invalid() {
-    static JsonObject instance(Internals::EmptyJsonBuffer::instance());
-    return instance;
-  }
+  static JsonObject& invalid();
 
  private:
   // Returns the list node that matches the specified key.
