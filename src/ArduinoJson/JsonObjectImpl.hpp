@@ -13,6 +13,8 @@
 #include "Polyfills/attributes.hpp"
 #include "StringTraits/StringTraits.hpp"
 
+#include "Serialization/JsonWriter.hpp"
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -173,7 +175,41 @@ inline JsonMutableSubscripts<TImpl>::operator[](TKey&& key) const {
     impl()->template as<JsonObject&>(), std::forward<TKey>(key));
 }
 
+inline void serialize(const JsonObject& object, JsonWriter& writer) {
+  writer.beginObject();
+
+  JsonObject::const_iterator it = object.begin();
+  while (it != object.end()) {
+    serialize(it->key, writer);
+    writer.writeColon();
+    serialize(it->value, writer);
+
+    ++it;
+    if (it == object.end()) break;
+
+    writer.writeComma();
+  }
+
+  writer.endObject();
 }
+
+template <typename TKey>
+inline void serialize(
+    const JsonConstObjectSubscript<TKey>& objectSubscript,
+    JsonWriter& writer)
+{
+  serialize(objectSubscript.template as<JsonVariant>(), writer);
+}
+
+template <typename TKey>
+inline void serialize(
+    const JsonMutableObjectSubscript<TKey>& objectSubscript,
+    JsonWriter& writer)
+{
+  serialize(objectSubscript.template as<JsonVariant>(), writer);
+}
+
+}  // namespace Internals
 
 template <typename TKey>
 inline JsonObject::iterator JsonObject::find_impl(TKey key) {

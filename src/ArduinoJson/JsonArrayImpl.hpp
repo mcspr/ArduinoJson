@@ -8,6 +8,8 @@
 #include "JsonObject.hpp"
 #include "JsonArraySubscript.hpp"
 
+#include "Serialization/JsonWriter.hpp"
+
 namespace ArduinoJson {
 namespace Internals {
 
@@ -137,6 +139,30 @@ template <typename TImpl>
 JsonMutableArraySubscript
 inline JsonMutableSubscripts<TImpl>::operator[](size_t index) const {
   return JsonMutableArraySubscript(impl()->template as<JsonArray&>(), index);
+}
+
+inline void serialize(const JsonArray& array, JsonWriter& writer) {
+  writer.beginArray();
+
+  auto it = array.begin();
+  while (it != array.end()) {
+    serialize(*it, writer);
+
+    ++it;
+    if (it == array.end()) break;
+
+    writer.writeComma();
+  }
+
+  writer.endArray();
+}
+
+inline void serialize(const JsonConstArraySubscript& arraySubscript, JsonWriter& writer) {
+  serialize(arraySubscript.as<JsonVariant>(), writer);
+}
+
+inline void serialize(const JsonMutableArraySubscript& arraySubscript, JsonWriter& writer) {
+  serialize(arraySubscript.as<JsonVariant>(), writer);
 }
 
 }  // namespace Internals

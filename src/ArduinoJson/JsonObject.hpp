@@ -6,19 +6,22 @@
 
 #include "StringTraits/StringTraits.hpp"
 
-#include "Data/JsonVariantAs.hpp"
 #include "Data/JsonBufferAllocated.hpp"
+#include "Data/JsonVariantAs.hpp"
 #include "Data/JsonVariantDefault.hpp"
 #include "Data/List.hpp"
 #include "Data/ReferenceType.hpp"
 #include "Data/ValueSaver.hpp"
+
 #include "Data/StringViewRef.hpp"
 
 #include "Serialization/JsonPrintable.hpp"
 
 #include "TypeTraits/EnableIf.hpp"
 
+#include "JsonVariant.hpp"
 #include "JsonPair.hpp"
+#include "JsonObjectSubscript.hpp"
 
 // Returns the size (in bytes) of an object with n elements.
 // Can be very handy to determine the size of a StaticJsonBuffer.
@@ -33,12 +36,6 @@ class JsonArray;
 class JsonBuffer;
 
 namespace Internals {
-
-template <typename>
-struct TJsonMutableObjectSubscriptType;
-
-template <typename>
-struct TJsonConstObjectSubscriptType;
 
 template <typename, typename, typename>
 class JsonParser;
@@ -301,6 +298,14 @@ struct JsonVariantAsConst<JsonObject> : JsonVariantAsConst<const JsonObject&> {
 template <>
 struct JsonVariantAsConst<const JsonObject> : JsonVariantAsConst<const JsonObject&> {
 };
+
+void serialize(const JsonObject&, JsonWriter&);
+
+template <typename TKey>
+void serialize(const JsonConstObjectSubscript<TKey>&, JsonWriter&);
+
+template <typename TKey>
+void serialize(const JsonMutableObjectSubscript<TKey>&, JsonWriter&);
 
 }  // namespace Internals
 }  // namespace ArduinoJson

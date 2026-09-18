@@ -333,5 +333,11 @@ struct JsonVariantAsConst<JsonArray> : JsonVariantAsConst<const JsonArray&> {
 template <>
 struct JsonVariantAsConst<const JsonArray> : JsonVariantAsConst<const JsonArray&> {
 };
+
+void serialize(const JsonArray&, JsonWriter&);
+
+void serialize(const JsonConstArraySubscript&, JsonWriter&);
+void serialize(const JsonMutableArraySubscript&, JsonWriter&);
+
 }  // namespace Internals
 }  // namespace ArduinoJson

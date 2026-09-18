@@ -37,6 +37,13 @@ namespace ArduinoJson {
 class JsonArray;
 class JsonObject;
 
+namespace Internals {
+
+class JsonVariantSerializer;
+void serialize(const JsonVariant&, JsonWriter&);
+
+}  // namespace Internals
+
 // A variant that can be a any value serializable to a JSON value.
 //
 // It can be set to:
@@ -53,8 +60,8 @@ class JsonVariant :
     public Internals::JsonVariantTag {
 
  private:
-  template <typename>
-  friend class Internals::JsonSerializer;
+  // allow to invoke contents visitor
+  friend class Internals::JsonVariantSerializer;
 
   // The various alternatives for the value of the variant
   Internals::JsonVariantContent _content;

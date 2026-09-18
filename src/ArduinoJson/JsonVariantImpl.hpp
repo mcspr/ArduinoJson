@@ -25,6 +25,7 @@
 #include "JsonVariant.hpp"
 
 #include "Strings/Strings.hpp"
+#include "Serialization/JsonWriter.hpp"
 
 #include "Numbers/convertNumber.hpp"
 #include "Numbers/isNumber.hpp"
@@ -506,6 +507,73 @@ R JsonVariantContent::visit(T&& visitor) const {
   }
 
   return visitor.Operator(JsonUndefined{});
+}
+
+class JsonVariantSerializer {
+ private:
+  const JsonVariant& _variant;
+  JsonWriter& _writer;
+
+ public:
+  explicit JsonVariantSerializer(const JsonVariant& variant, JsonWriter& writer) :
+    _variant(variant),
+    _writer(writer)
+  {}
+
+  void visit() {
+    _variant._content.visit(*this);
+  }
+
+  void Operator(JsonUndefined) {
+    _writer.writeNull();
+  }
+
+  void Operator(JsonNull) {
+    _writer.writeNull();
+  }
+
+  void Operator(bool value) {
+    _writer.writeBoolean(value);
+  }
+
+  void Operator(const JsonObject* object) {
+    serialize(*object, _writer);
+  }
+
+  void Operator(JsonObject* object) {
+    serialize(*object, _writer);
+  }
+
+  void Operator(const JsonArray* array) {
+    serialize(*array, _writer);
+  }
+
+  void Operator(JsonArray* array) {
+    serialize(*array, _writer);
+  }
+
+  void Operator(JsonFloat value) {
+    _writer.writeFloat(value);
+  }
+
+  void Operator(JsonInteger value) {
+    _writer.writeInteger(value);
+  }
+
+  void Operator(JsonUnsignedInteger value) {
+    _writer.writeUnsignedInteger(value);
+  }
+
+  void Operator(JsonStringPointer str) {
+    if (str.parsed)
+      _writer.writeString(str.data);
+    else
+      _writer.writeRaw(str.data);
+  }
+};
+
+inline void serialize(const JsonVariant& variant, JsonWriter& writer) {
+  JsonVariantSerializer(variant, writer).visit();
 }
 
 }

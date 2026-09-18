@@ -325,5 +325,6 @@ class JsonWriter {
     writeRaw(repr.c_str());
   }
 };
+
 }  // namespace Internals
 }  // namespace ArduinoJson

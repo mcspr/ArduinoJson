@@ -5,12 +5,14 @@
 #pragma once
 
 #include "../Configuration.hpp"
+
+#include "../TypeTraits/And.hpp"
+#include "../TypeTraits/Constant.hpp"
 #include "../TypeTraits/EnableIf.hpp"
+
 #include "DummyPrint.hpp"
 #include "DynamicStringBuilder.hpp"
 #include "IndentedPrint.hpp"
-#include "JsonSerializer.hpp"
-#include "JsonWriter.hpp"
 #include "Prettifier.hpp"
 #include "StaticStringBuilder.hpp"
 
@@ -20,6 +22,11 @@
 
 namespace ArduinoJson {
 namespace Internals {
+
+class JsonWriter;
+
+template <typename T>
+void serialize(const T&, JsonWriter& writer) = delete;
 
 template <typename T, typename = void>
 struct HasPrint : FalseType {
@@ -36,17 +43,12 @@ struct HasPrint<T, VoidType<
 // Caution: this class use a template parameter to avoid virtual methods.
 // This is a bit curious but allows to reduce the size of JsonVariant, JsonArray
 // and JsonObject.
-template <typename T>
+template <typename TImpl>
 class JsonPrintable {
  public:
   template <typename Print,
     typename EnableIf<HasPrint<Print>::value>::type* = nullptr>
-  size_t printTo(Print &print) const {
-    JsonWriterSink<Print> sink(print);
-    JsonWriter writer(&sink);
-    JsonSerializer<JsonWriter>::serialize(downcast(), writer);
-    return writer.bytesWritten();
-  }
+  size_t printTo(Print&) const;
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
   std::ostream &printTo(std::ostream &os) const {
@@ -114,8 +116,8 @@ class JsonPrintable {
   }
 
  private:
-  const T &downcast() const {
-    return *static_cast<const T *>(this);
+  const TImpl& impl() const {
+    return *static_cast<const TImpl*>(this);
   }
 };
 
