@@ -113,7 +113,7 @@ PARSE_FLOAT_TEMPLATE_TEST_CASE("parseNumber<TestType>() common",
   }
 
   SECTION("No exponent") {
-    static constexpr auto value = TestType{ 3.14 };
+    static constexpr auto value = TestType{ 3.14f };
 
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "3.14", value);
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "-3.14", -value);
@@ -121,7 +121,7 @@ PARSE_FLOAT_TEMPLATE_TEST_CASE("parseNumber<TestType>() common",
   }
 
   SECTION("No decimal point") {
-    static constexpr auto positive_exponent = TestType{ 1e+38 };
+    static constexpr auto positive_exponent = TestType{ 1e+38f };
 
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "1E+38", positive_exponent);
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "1e+38", positive_exponent);
@@ -130,7 +130,7 @@ PARSE_FLOAT_TEMPLATE_TEST_CASE("parseNumber<TestType>() common",
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "+1E+38", +positive_exponent);
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "+1e+38", +positive_exponent);
 
-    static constexpr auto negative_exponent = TestType{ 1e-38 };
+    static constexpr auto negative_exponent = TestType{ 1e-38f };
 
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "1E-38", negative_exponent);
     REQUIRE_PARSE_TYPED_VALUE(<TestType>, NumberType::Float, "1e-38", negative_exponent);
