@@ -28,42 +28,38 @@ inline std::ostream& operator<<(std::ostream&, NumberType);
 #define CATCH_CONFIG_FAST_COMPILE
 #include <catch.hpp>
 
+namespace Catch {
+namespace {
+
+// workaround -Wsign-promo and std::to_string greedy overloads for types less than u32
+inline std::string to_string_helper(uint8_t value) {
+  return std::to_string(static_cast<uint32_t>(value));
+}
+
+inline std::string to_string_helper(uint16_t value) {
+  return std::to_string(static_cast<uint32_t>(value));
+}
+
+template <typename T>
+inline std::string to_string_helper(T value) {
+  return std::to_string(value);
+}
+
+}  // namespace
+
 // generic stringifier for CHECK{,_FALSE}(convert)
 template <typename T>
-struct Catch::StringMaker<ConvertResult<T>> {
+struct StringMaker<ConvertResult<T>> {
   static std::string convert(ConvertResult<T> convert) {
     if (convert)
-      return std::to_string(convert.value);
+      return to_string_helper(convert.value);
 
     return "FAILED";
   }
 };
 
-// workaround -Wsign-promo and std::to_string greedy overloads for types less than u32
 template <>
-struct Catch::StringMaker<ConvertResult<uint8_t>> {
-  static std::string convert(ConvertResult<uint8_t> convert) {
-    return Catch::StringMaker<ConvertResult<uint32_t>>::convert(
-      ConvertResult<uint32_t>(static_cast<uint32_t>(convert.value)));
-  }
-};
-
-template <>
-struct Catch::StringMaker<ConvertResult<uint16_t>> {
-  static std::string convert(ConvertResult<uint16_t> convert) {
-    return Catch::StringMaker<ConvertResult<uint32_t>>::convert(
-      ConvertResult<uint32_t>(static_cast<uint32_t>(convert.value)));
-  }
-};
-
-template <typename T>
-inline std::ostream& operator<<(std::ostream& out, const ConvertResult<T>& convert) {
-  out << Catch::StringMaker<ConvertResult<T>>::convert(convert);
-  return out;
-}
-
-template <>
-struct Catch::StringMaker<NumberType> {
+struct StringMaker<NumberType> {
   // xxx: catch builtin enum registration wants explicit member names as vaargs
   static std::string convert(NumberType type) {
     switch (static_cast<std::underlying_type<NumberType>::type>(type)) {
@@ -87,22 +83,30 @@ struct Catch::StringMaker<NumberType> {
   }
 };
 
-inline std::ostream& operator<<(std::ostream& out, NumberType type) {
-  out << Catch::StringMaker<NumberType>::convert(type);
-  return out;
-}
-
 template <>
-struct Catch::StringMaker<ParsedNumberResult> {
+struct StringMaker<ParsedNumberResult> {
   static std::string convert(const ParsedNumberResult& result) {
     std::string out;
     out += "ParsedNumberResult<";
-    out += Catch::StringMaker<NumberType>::convert(result.value.type());
+    out += StringMaker<NumberType>::convert(result.value.type());
     out += '>';
 
     return out;
   }
 };
+
+}  // namespace Catch
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& out, const ConvertResult<T>& convert) {
+  out << Catch::StringMaker<ConvertResult<T>>::convert(convert);
+  return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, NumberType type) {
+  out << Catch::StringMaker<NumberType>::convert(type);
+  return out;
+}
 
 inline std::ostream& operator<<(std::ostream& out, const ParsedNumberResult& result) {
   out << Catch::StringMaker<ParsedNumberResult>::convert(result);
