@@ -28,6 +28,7 @@ inline std::ostream& operator<<(std::ostream&, NumberType);
 #define CATCH_CONFIG_FAST_COMPILE
 #include <catch.hpp>
 
+// generic stringifier for CHECK{,_FALSE}(convert)
 template <typename T>
 struct Catch::StringMaker<ConvertResult<T>> {
   static std::string convert(ConvertResult<T> convert) {
@@ -35,6 +36,23 @@ struct Catch::StringMaker<ConvertResult<T>> {
       return std::to_string(convert.value);
 
     return "FAILED";
+  }
+};
+
+// workaround -Wsign-promo and std::to_string greedy overloads for types less than u32
+template <>
+struct Catch::StringMaker<ConvertResult<uint8_t>> {
+  static std::string convert(ConvertResult<uint8_t> convert) {
+    return Catch::StringMaker<ConvertResult<uint32_t>>::convert(
+      ConvertResult<uint32_t>(static_cast<uint32_t>(convert.value)));
+  }
+};
+
+template <>
+struct Catch::StringMaker<ConvertResult<uint16_t>> {
+  static std::string convert(ConvertResult<uint16_t> convert) {
+    return Catch::StringMaker<ConvertResult<uint32_t>>::convert(
+      ConvertResult<uint32_t>(static_cast<uint32_t>(convert.value)));
   }
 };
 
