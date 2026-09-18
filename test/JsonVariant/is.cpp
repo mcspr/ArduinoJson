@@ -36,7 +36,7 @@ struct Check {
 #undef CATCH_INTERNAL_LINEINFO
 #define CATCH_INTERNAL_LINEINFO source_line_info
 
-#define __CATCH_LOCAL_LINEINFO ::Catch::SourceLineInfo source_line_info = ::Catch::SourceLineInfo(__builtin_FILE(), __builtin_LINE())
+#define __CATCH_LOCAL_LINEINFO ::Catch::SourceLineInfo source_line_info = ::Catch::SourceLineInfo(__builtin_FILE(), static_cast<size_t>(__builtin_LINE()))
 #define __CATCH_NESTED_LINEINFO ::Catch::SourceLineInfo source_line_info
 
 void checkVariant(JsonVariant variant, Check check, __CATCH_LOCAL_LINEINFO) {
