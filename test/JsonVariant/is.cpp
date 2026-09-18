@@ -12,22 +12,22 @@ using StringBufferValue =
 namespace {
 
 struct Check {
-  bool is_undefined;
+  bool is_undefined{};
 
-  bool is_null;
+  bool is_null{};
 
-  bool is_bool;
+  bool is_bool{};
 
-  bool is_array;
-  bool is_object;
+  bool is_array{};
+  bool is_object{};
 
-  bool is_number;
+  bool is_number{};
 
-  bool is_float;
-  bool is_signed;
-  bool is_unsigned;
+  bool is_float{};
+  bool is_signed{};
+  bool is_unsigned{};
 
-  bool is_string;
+  bool is_string{};
 };
 
 // ref. Numbers/parseNumber.ipp
