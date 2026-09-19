@@ -1,11 +1,12 @@
-#include <ArduinoJson.h>
-#include "ArduinoJson/Numbers/parseNumber.hpp"
+#include <ArduinoJson/Numbers/parseNumber.hpp>
+
+using ArduinoJson::Internals::parseJsonNumber;
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  // Make a copy to ensure the input is null-terminated
-  std::string str(reinterpret_cast<const char*>(data), size);
+  // Don't make a copy to ensure the input is NOT null-terminated
+  const char* str = reinterpret_cast<const char*>(data);
 
-  ArduinoJson::Internals::JsonNumberParser::parse(str.c_str(), str.length());
+  parseJsonNumber(str, size);
 
   return 0;
 }
