@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "../JsonBuffer.hpp"
-
 #include <cstddef>
 #include <cstring>
 
@@ -63,31 +61,6 @@ struct Equals {
       return str == expected;
 
     return TImpl::StringCompare::Operator(str, expected) == 0;
-  }
-};
-
-template <typename TImpl>
-struct Duplicate {
-  static const char* Operator(JsonBuffer* buffer, const void* str, size_t len) {
-    void* dup = nullptr;
-    if (str != nullptr) {
-      dup = buffer->alloc(len + 1);
-      if (dup != nullptr) {
-        TImpl::Copy::Operator(dup, str, len);
-        reinterpret_cast<char *>(dup)[len] = '\0';
-      }
-    }
-
-    return static_cast<const char *>(dup);
-  }
-
-  template <typename TChar, size_t Size>
-  static const char* Operator(JsonBuffer* buffer, TChar (&str)[Size]) {
-    return Operator(buffer, &str[0], Size - 1);
-  }
-
-  static const char* Operator(JsonBuffer* buffer, const void* str) {
-    return Operator(buffer, str, TImpl::Length::Operator(str));
   }
 };
 
@@ -155,7 +128,7 @@ struct Reference {
   }
 };
 
-struct Duplicate : Impl::Duplicate<Duplicate> {
+struct Duplicate {
   using Copy = CharPointer::Copy;
   using Length = CharPointer::Length;
 };

@@ -9,6 +9,8 @@
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/Declval.hpp"
 
+#include <utility>
+
 namespace ArduinoJson {
 namespace Internals {
 namespace Strings {
@@ -130,14 +132,19 @@ struct Append<TString,
 };
 
 template <typename TString>
-struct Duplicate {
-  static const char* Operator(JsonBuffer* buffer, const TString& str, size_t length) {
-    return Strings::CharPointer::Duplicate::Operator(buffer, str.c_str(), length);
+struct Reference {
+  static const char* Operator(const TString& str) {
+    return str.c_str();
   }
+};
 
-  static const char* Operator(JsonBuffer* buffer, const TString& str) {
-    return Operator(buffer, str, str.length());
   }
+};
+
+template <typename TString>
+struct Duplicate {
+  using Copy = StdString::Copy<TString>;
+  using Length = StdString::Length<TString>;
 };
 
 }

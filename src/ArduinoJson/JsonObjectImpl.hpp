@@ -240,9 +240,7 @@ inline bool JsonObject::set_impl(TKey key, TValue value) {
     if (it == end())
       return false;
 
-    if (!Internals::ValueSaver<TKey>::save(
-      _buffer, it->key, std::move(key)))
-    {
+    if (!Internals::saveValue(_buffer, it->key, std::move(key))) {
       remove(it);
       return false;
     }
@@ -251,12 +249,9 @@ inline bool JsonObject::set_impl(TKey key, TValue value) {
   }
 
   if (it != end()) {
-    if (!Internals::ValueSaver<TValue>::save(
-      _buffer, it->value, std::move(value)))
-    {
+    if (!Internals::saveValue(_buffer, it->value, std::move(value))) {
       if (out)
         remove(it);
-
       return false;
     }
 

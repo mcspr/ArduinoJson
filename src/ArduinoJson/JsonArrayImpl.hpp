@@ -190,4 +190,26 @@ inline JsonObject& JsonArray::createNestedObject() {
   return JsonObject::invalid();
 }
 
+template <typename TValue>
+inline bool JsonArray::set_impl(size_t index, TValue value) {
+  iterator it = begin() + index;
+  if (it != end())
+    return Internals::saveValue(_buffer, *it, std::move(value));
+
+  return false;
+}
+
+template <typename TValue>
+inline bool JsonArray::add_impl(TValue value) {
+  auto it = Internals::List<JsonVariant>::add();
+  if (it != end()) {
+    if (Internals::saveValue(_buffer, *it, std::move(value)))
+      return true;
+
+    remove(it);
+  }
+
+  return false;
+}
+
 }  // namespace ArduinoJson

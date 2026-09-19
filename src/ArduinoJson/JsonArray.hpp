@@ -251,26 +251,10 @@ class JsonArray : public Internals::JsonPrintable<JsonArray>,
 
  private:
   template <typename TValue>
-  bool set_impl(size_t index, TValue value) {
-    iterator it = begin() + index;
-    if (it != end())
-      return Internals::ValueSaver<TValue>::save(_buffer, *it, std::move(value));
-
-    return false;
-  }
+  bool set_impl(size_t index, TValue);
 
   template <typename TValue>
-  bool add_impl(TValue value) {
-    auto it = Internals::List<JsonVariant>::add();
-    if (it != end()) {
-      if (Internals::ValueSaver<TValue>::save(_buffer, *it, std::move(value)))
-        return true;
-
-      remove(it);
-    }
-
-    return false;
-  }
+  bool add_impl(TValue);
 
   friend class Internals::JsonMutableArraySubscript;
   friend class Internals::JsonConstArraySubscript;

@@ -7,8 +7,6 @@
 #include "../TypeTraits/IsChar.hpp"
 #include "../TypeTraits/Not.hpp"
 
-#include "../JsonBuffer.hpp"
-
 #include "../StringTraits/StringTraitsBase.hpp"
 #include "../Strings/Strings.hpp"
 
@@ -207,9 +205,8 @@ struct SizedStringViewCopy {
 
 template <typename T>
 struct SizedStringViewDuplicate {
-  static const char* Operator(JsonBuffer *buffer, SizedStringView<T> view) {
-    return Strings::Duplicate::Operator(buffer, view.data(), view.size());
-  }
+  using Copy = SizedStringViewCopy<T>;
+  using Length = SizedStringViewLength<T>;
 };
 
 template <typename T, typename = void>
@@ -320,9 +317,8 @@ struct UnsizedStringViewReference {
 
 template <typename T>
 struct UnsizedStringViewDuplicate {
-  static const char* Operator(JsonBuffer* buffer, UnsizedStringView<T> view) {
-    return Strings::Duplicate::Operator(buffer, view.data());
-  }
+  using Copy = UnsizedStringViewCopy<T>;
+  using Length = UnsizedStringViewLength<T>;
 };
 
 template <typename T, typename = void>

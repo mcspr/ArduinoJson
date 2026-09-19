@@ -8,7 +8,6 @@
 
 #if ARDUINOJSON_ENABLE_PROGMEM
 
-#include "../JsonBuffer.hpp"
 #include "CharPointer.hpp"
 
 #include <Arduino.h>
@@ -167,7 +166,7 @@ struct Equals : Strings::CharPointer::Impl::Equals<Equals> {
   using StringCompare = FlashString::StringCompare;
 };
 
-struct Duplicate : Strings::CharPointer::Impl::Duplicate<Duplicate> {
+struct Duplicate {
   using Copy = FlashString::Copy;
   using Length = FlashString::Length;
 };

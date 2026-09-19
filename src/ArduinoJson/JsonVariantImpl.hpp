@@ -33,37 +33,41 @@
 
 namespace ArduinoJson {
 namespace Internals {
+namespace ValueSaverImpl {
 
 template <typename Source>
-bool valueSaverDuplicate(JsonBuffer* buffer, JsonVariant& dst, Source src) {
+bool duplicate(JsonBuffer* buffer, JsonVariant& dst, Source src) {
   auto src_ref = MakeStringRef(src.get());
-  if (ValueSaverIsNull<decltype(src_ref)>::Operator(src_ref))
+  if (isNull(src_ref))
     return false;
 
-  typedef StringTraits<decltype(src_ref)> source_ref_traits;
-  const auto length = source_ref_traits::Length::Operator(src_ref);
+  using source_ref_string_traits = StringTraits<decltype(src_ref)>;
+  using source_ref_length = typename source_ref_string_traits::Length;
+  const auto length = source_ref_length::Operator(src_ref);
 
-  typedef ValueStringDuplicate<Source> duplicate_traits;
-  static constexpr auto is_raw_json = duplicate_traits::is_raw_json::value;
+  using source_duplicate_traits = DuplicateTraits<Source>;
 
-  typedef StringTraits<Source> source_traits;
-  typedef JsonVariantContent::StringBufferValue buffer_type;
-  static constexpr auto buffer_size = sizeof(buffer_type);
+  using source_string_traits = StringTraits<Source>;
+  using source_copy = typename source_string_traits::Copy;
 
-  if ((length + 1) <= buffer_size) {
-    buffer_type tmp{{}};
+  using is_raw_json = typename source_duplicate_traits::is_raw_json;
+
+  using string_buffer_type = JsonVariantContent::StringBufferValue;
+  if ((length + 1) <= sizeof(string_buffer_type)) {
+    string_buffer_type tmp{{}};
     if (length)
-      source_traits::Copy::Operator(&tmp.value[0], std::move(src), length);
-    if (is_raw_json)
+      source_copy::Operator(&tmp.value[0], std::move(src), length);
+    if (is_raw_json::value)
       dst = RawJson(tmp);
     else
       dst = tmp;
     return true;
   }
 
-  auto* dup = source_traits::Duplicate::Operator(buffer, std::move(src));
+  using make_duplicate = Duplicate<Source, typename source_string_traits::Duplicate>;
+  auto* dup = make_duplicate::Operator(buffer, std::move(src), length);
   if (dup) {
-    if (is_raw_json)
+    if (is_raw_json::value)
       dst = RawJson(dup);
     else
       dst = dup;
@@ -72,6 +76,8 @@ bool valueSaverDuplicate(JsonBuffer* buffer, JsonVariant& dst, Source src) {
 
   return false;
 }
+
+}  // namespace ValueSaverImpl
 
 inline bool JsonLiterals::isFalse(const char* str) {
   return Strings::Equals::Operator(str, False);
