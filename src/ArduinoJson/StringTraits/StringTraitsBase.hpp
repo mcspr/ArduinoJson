@@ -68,6 +68,16 @@ template <typename T>
 struct IsNullable<T, VoidType<typename T::IsNull>> : TrueType {
 };
 
+// object can construct from internal string representation (usually just a cstr pointer)
+
+template <typename T, typename = void>
+struct CanConstruct : FalseType {
+};
+
+template <typename T>
+struct CanConstruct<T, VoidType<typename T::Construct>> : TrueType {
+};
+
 // base class does not implement anything
 
 template <typename TString, typename = void>

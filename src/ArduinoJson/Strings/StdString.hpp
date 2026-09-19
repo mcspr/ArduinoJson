@@ -4,12 +4,13 @@
 
 #include "Strings.hpp"
 
+#if ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
+#include "../TypeTraits/And.hpp"
+#endif
 #include "../TypeTraits/Constant.hpp"
 #include "../TypeTraits/VoidType.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/Declval.hpp"
-
-#include <utility>
 
 namespace ArduinoJson {
 namespace Internals {
@@ -32,6 +33,26 @@ struct HasAppend<T, VoidType<
 };
 
 template <typename T, typename = void>
+struct HasResize : FalseType {
+};
+
+template <typename T>
+struct HasResize<T, VoidType<
+    decltype(Declval<T>().resize(Declval<size_t>()))>>
+  : TrueType {
+};
+
+template <typename T, typename = void>
+struct HasData : FalseType {
+};
+
+template <typename T>
+struct HasData<T, VoidType<
+    decltype(Declval<T>().data())>>
+  : TrueType {
+};
+
+template <typename T, typename = void>
 struct HasConcat : FalseType {
 };
 
@@ -41,7 +62,17 @@ struct HasConcat<T, VoidType<
   decltype(Declval<T>().concat(Declval<char>()))>> : TrueType {
 };
 
-}
+template <typename T>
+using CanAppendString =
+#if ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
+    And<Detail::HasAppend<T>,
+        Detail::HasData<T>,
+        Detail::HasResize<T>>;
+#else
+    Detail::HasAppend<T>;
+#endif
+
+}  // namespace Detail
 
 template <typename TString>
 struct Length {
@@ -93,7 +124,7 @@ struct Append {
 
 template <typename TString>
 struct Append<TString,
-  typename EnableIf<Detail::HasAppend<TString>::value>::type> {
+  typename EnableIf<Detail::CanAppendString<TString>::value>::type> {
 
   static void Operator(TString& str, const char* other, size_t len) {
 #if ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
@@ -138,8 +169,38 @@ struct Reference {
   }
 };
 
+template <typename TString, typename = void>
+struct Construct {
+  static TString Operator(const char* str) {
+    if (str)
+      return TString(str);
+
+    return TString();
   }
 };
+
+template <typename TString>
+struct Construct<TString,
+  typename EnableIf<Detail::CanAppendString<TString>::value>::type> {
+
+  static TString Operator(const char* str) {
+    TString out;
+    if (str)
+      Append<TString>::Operator(out, str);
+    return out;
+  }
+};
+
+#if ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
+template <typename TString>
+struct Construct<TString,
+  typename EnableIf<Strings::FlashString::IsConstructible<TString>::value>::type> {
+
+  static TString Operator(const char* str) {
+    return TString(reinterpret_cast<const __FlashStringHelper*>(str));
+  }
+};
+#endif
 
 template <typename TString>
 struct Duplicate {
@@ -147,7 +208,7 @@ struct Duplicate {
   using Length = StdString::Length<TString>;
 };
 
-}
-}
-}
-}
+}  // namespace StdString
+}  // namespace Strings
+}  // namespace Internals
+}  // namespace ArduinoJson

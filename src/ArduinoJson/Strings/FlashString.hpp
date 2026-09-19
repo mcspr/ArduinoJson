@@ -10,6 +10,10 @@
 
 #include "CharPointer.hpp"
 
+#include "../TypeTraits/Constant.hpp"
+#include "../TypeTraits/Declval.hpp"
+#include "../TypeTraits/VoidType.hpp"
+
 #include <Arduino.h>
 
 #include <cstddef>
@@ -38,6 +42,16 @@ static constexpr inline bool Probe(const void*) {
   return false;
 }
 #endif
+
+template <typename T, typename = void>
+struct IsConstructible : FalseType {
+};
+
+template <typename T>
+struct IsConstructible<T, VoidType<
+    decltype(T(Declval<const __FlashStringHelper*>()))>>
+  : TrueType {
+};
 
 struct Length {
   static size_t Operator(const void* str) {

@@ -29,6 +29,7 @@ struct StdStringTraits : StringTraitsTag {
   typedef Readers::StdString::Reader<TString> Reader;
 
   typedef Strings::StdString::Append<TString> Append;
+  typedef Strings::StdString::Construct<TString> Construct;
   typedef Strings::StdString::Copy<TString> Copy;
   typedef Strings::StdString::Duplicate<TString> Duplicate;
   typedef Strings::StdString::Equals<TString> Equals;

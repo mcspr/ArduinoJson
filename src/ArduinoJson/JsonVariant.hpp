@@ -216,34 +216,56 @@ class JsonVariant :
     return variantAsString();
   }
   //
-  // allow `const char*` conversion for types that could hold a reference to our data
-  template <typename T>
+  // allow direct conversion for types that could handle a `const char*`
+  template <typename T, typename StringTraits = Internals::StringTraits<T>>
   typename Internals::EnableIf<
-    Internals::And<Internals::Not<Internals::IsCharPointer<T>>,
-                   Internals::CanReference<Internals::StringTraits<T>>>::value,
+    Internals::And<Internals::Not<Internals::HasAppend<StringTraits>>,
+                   Internals::CanConstruct<StringTraits>>::value,
     T>::type
   as() const {
-    using reference_for = typename Internals::StringTraits<T>::Reference;
-    return reference_for::Operator(variantAsString());
+    using construct = typename StringTraits::Construct;
+    if (variantIsString())
+      return construct::Operator(variantAsString());
+
+    return construct::Operator();
   }
 
   // Any string type that is implemented in Internals::StringTraits and provides Append implementation
-  template <typename T>
+  template <typename T, typename StringTraits = Internals::StringTraits<T>>
   typename Internals::EnableIf<
-    Internals::HasAppend<Internals::StringTraits<T>>::value, T>::type
+    Internals::And<Internals::Not<Internals::CanConstruct<StringTraits>>,
+                   Internals::HasAppend<StringTraits>>::value,
+    T>::Type
   as() const {
     T out;
 
-    using append_to = typename Internals::StringTraits<T>::Append;
+    using append = typename StringTraits::Append;
     if (variantIsString()) {
       auto* cstr = variantAsString();
       if (cstr)
-        append_to::Operator(out, cstr);
+        append::Operator(out, variantAsString());
     } else
       printTo(out);
 
     return out;
   }
+
+  // Or, combination of both. Note that printTo implementation depends on the Append trait
+  template <typename T, typename StringTraits = Internals::StringTraits<T>>
+  typename Internals::EnableIf<
+    Internals::And<Internals::HasAppend<StringTraits>,
+                   Internals::CanConstruct<StringTraits>>::value,
+    T>::type
+  as() const {
+    using construct = typename StringTraits::Construct;
+    if (variantIsString())
+      return construct::Operator(variantAsString());
+
+    T out;
+    printTo(out);
+    return out;
+  }
+
   //
   // const JsonArray& as<const JsonArray> const;
   // const JsonArray& as<const JsonArray&> const;
