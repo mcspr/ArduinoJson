@@ -10,7 +10,7 @@
 #define strlen_P std::strlen
 
 inline char pgm_read_byte(const void* ptr) {
-  return *reinterpret_cast<const char *>(ptr);
+  return *reinterpret_cast<const char*>(ptr);
 }
 
 inline char pgm_read_byte_near(const void* ptr) {
@@ -29,7 +29,7 @@ static constexpr inline bool Probe(const void*) {
   return true;
 }
 
-}
-}
-}
-}
+}  // namespace FlashString
+}  // namespace Strings
+}  // namespace Internals
+}  // namespace ArduinoJson

@@ -194,7 +194,7 @@ struct Construct<TString,
 #if ARDUINOJSON_CHAR_POINTER_IS_PROGMEM
 template <typename TString>
 struct Construct<TString,
-  typename EnableIf<Strings::FlashString::IsConstructible<TString>::value>::type> {
+  typename EnableIf<Strings::FlashString::Detail::CanConstruct<TString>::value>::type> {
 
   static TString Operator(const char* str) {
     return TString(reinterpret_cast<const __FlashStringHelper*>(str));

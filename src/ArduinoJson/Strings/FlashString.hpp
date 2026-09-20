@@ -23,8 +23,32 @@ namespace ArduinoJson {
 namespace Internals {
 namespace Strings {
 namespace FlashString {
+namespace Detail {
 
-#if defined(ESP8266)
+template <typename T, typename = void>
+struct IsComplete : FalseType {
+};
+
+template <typename T>
+struct IsComplete<T, VoidType<decltype(void(sizeof(T)))>> : TrueType {
+};
+
+template <typename T, typename = void>
+struct IsConstructible : FalseType {
+};
+
+template <typename T>
+struct IsConstructible<T, VoidType<
+    decltype(T(Declval<const __FlashStringHelper*>()))>>
+  : TrueType {
+};
+
+template <typename T>
+using CanConstruct = typename And<IsComplete<T>, IsConstructible<T>>::type;
+
+}  // namespace Detail
+
+#  if defined(ESP8266)
 // anything above 0x4xxxxxx should use pgmspace.h helpers
 static constexpr uintptr_t FlashStringAddressMask { 1 << 30 };
 
@@ -42,16 +66,6 @@ static constexpr inline bool Probe(const void*) {
   return false;
 }
 #endif
-
-template <typename T, typename = void>
-struct IsConstructible : FalseType {
-};
-
-template <typename T>
-struct IsConstructible<T, VoidType<
-    decltype(T(Declval<const __FlashStringHelper*>()))>>
-  : TrueType {
-};
 
 struct Length {
   static size_t Operator(const void* str) {

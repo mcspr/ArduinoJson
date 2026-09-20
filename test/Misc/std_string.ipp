@@ -19,6 +19,9 @@ using ArduinoJson::Internals::JsonParserReader;
 #define ARDUINOJSON_STD_STRING_TEST_CASE "std::string"
 #endif
 
+namespace std_string_test_cases {
+namespace {
+
 TEST_CASE(ARDUINOJSON_STD_STRING_TEST_CASE) {
   DynamicJsonBuffer jb;
 
@@ -284,3 +287,6 @@ TEST_CASE(ARDUINOJSON_STD_STRING_TEST_CASE) {
     REQUIRE(reader2.get() == input);
   }
 }
+
+}  // namespace
+}  // namespace std_string_test_cases
