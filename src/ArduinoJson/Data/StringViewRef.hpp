@@ -4,12 +4,10 @@
 
 #include "../TypeTraits/And.hpp"
 #include "../TypeTraits/EnableIf.hpp"
-#include "../TypeTraits/IsChar.hpp"
 #include "../TypeTraits/IsInstantiationOf.hpp"
 #include "../TypeTraits/IsPointer.hpp"
 #include "../TypeTraits/Or.hpp"
 #include "../TypeTraits/RemoveExtent.hpp"
-#include "../TypeTraits/RemovePointer.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
 
 #if ARDUINOJSON_ENABLE_PROGMEM
@@ -63,11 +61,7 @@ class StringRefWrapper<UnsizedStringView<T>> :
   using StringViewWrapper<UnsizedStringView<T>>::StringViewWrapper;
 };
 
-// T*
-
-template <typename TString>
-using StringRefPointerType =
-    typename RemovePointer<typename RemoveReference<TString>::type>::type;
+// char T*
 
 template <typename TString>
 struct StringRefWrapperHelper<TString,
@@ -81,7 +75,7 @@ struct StringRefWrapperHelper<TString,
   typedef StringRefWrapper<string_type> wrapper_type;
 };
 
-// T[]
+// char T[]
 
 template <typename TString>
 struct StringRefWrapperHelper<TString,
@@ -105,22 +99,6 @@ struct StringRefWrapperHelper<TString,
   typedef typename RemoveConstReference<TString>::type string_type;
   typedef StringRefWrapper<string_type> wrapper_type;
 };
-
-#if ARDUINOJSON_ENABLE_PROGMEM
-
-template <typename TString>
-struct StringRefWrapperHelper<TString,
-  typename EnableIf<
-    And<IsPointer<typename RemoveReference<TString>::type>,
-        IsSame<typename RemoveConst<StringRefPointerType<TString>>::type,
-               __FlashStringHelper>>::value>::type> {
-
-  typedef TString raw_string_type;
-  typedef typename RemoveConstReference<raw_string_type>::type string_type;
-  typedef StringRefWrapper<string_type> wrapper_type;
-};
-
-#endif
 
 template <typename TString>
 struct StringTraitsImpl<StringRefWrapper<TString>, void> :

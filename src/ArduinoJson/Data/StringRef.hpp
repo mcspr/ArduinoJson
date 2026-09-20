@@ -1,8 +1,14 @@
 #pragma once
 
+#include "../TypeTraits/And.hpp"
 #include "../TypeTraits/EnableIf.hpp"
 #include "../TypeTraits/IsBaseInstantiationOf.hpp"
+#include "../TypeTraits/IsChar.hpp"
+#include "../TypeTraits/IsPointer.hpp"
+#include "../TypeTraits/Not.hpp"
+#include "../TypeTraits/RemovePointer.hpp"
 
+#include <memory>
 #include <utility>
 
 namespace ArduinoJson {
@@ -54,16 +60,18 @@ class StringRefWrapper<const TString&> {
   typedef const TString& string_type;
 
   StringRefWrapper() = delete;
-  explicit StringRefWrapper(TString& ref) noexcept :
-    _ref(ref)
+  explicit StringRefWrapper(const TString& ref) noexcept :
+    _ptr(std::addressof(ref))
   {}
 
-  explicit StringRefWrapper(const TString& ref) noexcept :
-    _ref(ref)
-  {}
+  StringRefWrapper(const StringRefWrapper&) = default;
+  StringRefWrapper& operator=(const StringRefWrapper&) = default;
+
+  StringRefWrapper(StringRefWrapper&&) = default;
+  StringRefWrapper& operator=(StringRefWrapper&&) = default;
 
   ref_type get() const {
-    return _ref;
+    return *_ptr;
   }
 
   operator ref_type() const {
@@ -71,7 +79,38 @@ class StringRefWrapper<const TString&> {
   }
 
  private:
-  const TString& _ref;
+  const TString* _ptr;
+};
+
+// various non-char pointers passed by value, allowed to be copied
+
+template <typename TString>
+class StringRefWrapper<const TString*> {
+ public:
+  typedef const TString* ref_type;
+  typedef const TString* string_type;
+
+  StringRefWrapper() = delete;
+  explicit StringRefWrapper(const TString* ptr) noexcept :
+    _ptr(ptr)
+  {}
+
+  StringRefWrapper(const StringRefWrapper&) = default;
+  StringRefWrapper& operator=(const StringRefWrapper&) = default;
+
+  StringRefWrapper(StringRefWrapper&&) = default;
+  StringRefWrapper& operator=(StringRefWrapper&&) = default;
+
+  ref_type get() const {
+    return _ptr;
+  }
+
+  operator ref_type() const {
+    return get();
+  }
+
+ private:
+  const TString* _ptr;
 };
 
 // by default, lose qualifiers before generating template instances
@@ -122,10 +161,24 @@ struct StringRefWrapperHelper {
   typedef typename StringRefType<string_type>::type wrapper_type;
 };
 
+template <typename TString>
+using StringRefPointerType = typename RemovePointer<typename RemoveReference<TString>::type>::type;
+
+template <typename TString>
+struct StringRefWrapperHelper<TString,
+  typename EnableIf<
+    And<IsPointer<typename RemoveReference<TString>::type>,
+        Not<IsChar<StringRefPointerType<TString>>>>::value>::type> {
+
+  typedef typename RemoveReference<TString>::type raw_string_type;
+  typedef const StringRefPointerType<raw_string_type>* string_type;
+  typedef StringRefWrapper<string_type> wrapper_type;
+};
+
 template <typename T>
 typename StringRefWrapperHelper<T>::wrapper_type MakeStringRef(T&& ref) {
   return typename StringRefWrapperHelper<T>::wrapper_type(std::forward<T>(ref));
 }
 
-}
-}
+}  // namespace Internals
+}  // namespace ArduinoJson

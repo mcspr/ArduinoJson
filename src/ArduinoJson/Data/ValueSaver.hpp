@@ -7,11 +7,11 @@
 #include "../JsonBuffer.hpp"
 #include "../RawJson.hpp"
 
+#include "../TypeTraits/And.hpp"
 #include "../TypeTraits/EnableIf.hpp"
+#include "../TypeTraits/Not.hpp"
 #include "../TypeTraits/RemoveConstReference.hpp"
 #include "../TypeTraits/RemoveReference.hpp"
-#include "../TypeTraits/And.hpp"
-#include "../TypeTraits/Not.hpp"
 
 #include "../StringTraits/StringTraits.hpp"
 
@@ -192,8 +192,19 @@ struct ValueSaver :
 };
 
 template <typename Destination, typename Source>
-bool saveValue(JsonBuffer* buf, Destination& dst, Source src) {
-  return ValueSaver<Source>::Operator(buf, dst, std::move(src));
+inline bool saveValue(JsonBuffer* buf, Destination& dst, StringRefWrapper<Source> src) {
+  return ValueSaver<decltype(MakeStringRef(src.get()))>::type::Operator(buf, dst,
+                                                                        MakeStringRef(src.get()));
+}
+
+template <typename Destination, typename Source>
+inline bool saveValue(JsonBuffer* buf, Destination& dst, RawJsonString<Source> src) {
+  return ValueSaver<decltype(RawJson(src.get()))>::type::Operator(buf, dst, RawJson(src.get()));
+}
+
+template <typename Destination, typename Source>
+inline bool saveValue(JsonBuffer* buf, Destination& dst, Source&& src) {
+  return ValueSaver<Source>::type::Operator(buf, dst, std::forward<Source>(src));
 }
 
 }  // namespace Internals
